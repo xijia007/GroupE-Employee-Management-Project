@@ -26,4 +26,4 @@ const registrationTokenSchema = new mongoose.Schema({
     }
 });
 
-const RegistrationToken = mongoose.model('RegistrationToken', registrationTokenSchema);
+export default RegistrationToken;
