@@ -24,6 +24,8 @@ const registrationTokenSchema = new mongoose.Schema({
         default: Date.now,
         expires: 259200 // expired in 3 days
     }
+}, {
+    collection: 'RegistrationToken'  // Specify exact collection name
 });
 
-export default RegistrationToken;
+export default mongoose.model('RegistrationToken', registrationTokenSchema);
