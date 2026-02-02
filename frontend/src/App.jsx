@@ -10,7 +10,7 @@ function App() {
     <>
 
       <h1>
-        projcet 2
+       projcet 2
       </h1>
     </>
   )
