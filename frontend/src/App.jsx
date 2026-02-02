@@ -1,19 +1,43 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from "react";
+import { Layout } from "antd";
+import HeaderComponent from "./components/Header/Header.jsx";
+import Sider_component from "./components/Sider/Sider_component.jsx";
+import FooterComponent from "./components/Footer/Footer.jsx";
+import DashboardPage from "./pages/Dashborad.jsx";
+import OnboardingApplication from "./pages/Onboarding_application.jsx";
+import PersonApplication from "./pages/Person_Application.jsx";
+import PersonInformation from "./pages/Person_information.jsx";
+import VisaStatusManagement from "./pages/Visa_status.jsx";
+import { Route, Routes } from "react-router-dom";
+const { Content } = Layout;
+const contentStyle = {
+  textAlign: "center",
+  minHeight: "calc(100vh - 128px)",
+  lineHeight: "120px",
+  color: "#000",
+  backgroundColor: "#f6f7fb",
+};
 
-function App() {
-  const [count, setCount] = useState(0)
+const layoutStyle = {
+  minHeight: "100vh",
+};
+const App = () => (
+  <Layout style={layoutStyle}>
+    <Sider_component />
+    <Layout>
+      <HeaderComponent />
+      <Content style={contentStyle}>
+        <Routes>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/onboarding" element={<OnboardingApplication />} />
+          <Route path="/personApplication" element={<PersonApplication />} />
+          <Route path="/personInformation" element={<PersonInformation />} />
+          <Route path="/visaStatus" element={<VisaStatusManagement />} />
+        </Routes>
+      </Content>
+      <FooterComponent />
+    </Layout>
+  </Layout>
+);
 
-  return (
-    <>
-
-      <h1>
-       projcet 2
-      </h1>
-    </>
-  )
-}
-
-export default App
+export default App;
