@@ -8,7 +8,8 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        select: false
     },
     role: {
         type: String,
@@ -20,6 +21,9 @@ const userSchema = new mongoose.Schema({
         enum: ['Never Submitted', 'Pending', 'Approved', 'Rejected'],
         default: 'Never Submitted'
     }
-}, {timestamps: true});
+}, {
+    timestamps: true,
+    collection: 'User'  // Specify exact collection name
+});
 
-export default User;
+export default mongoose.model('User', userSchema);
