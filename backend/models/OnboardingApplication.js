@@ -156,7 +156,7 @@ const onboardingApplicationSchema = new mongoose.Schema({
 
     // HR review time
     reviewedAt: {
-        type: Data
+        type: Date
     },
 
     // HR review person
