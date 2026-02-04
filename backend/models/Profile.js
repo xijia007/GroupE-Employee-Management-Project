@@ -35,7 +35,6 @@ const profileSchema = new mongoose.Schema(
     ssn: {
       type: String,
       required: true,
-      select: false,
     },
     dateOfBirth: {
       type: Date,
@@ -92,44 +91,34 @@ const profileSchema = new mongoose.Schema(
         required: true,
       },
     },
-    emergencyContacts: [
-      {
-        firstName: {
-          type: String,
-          required: true,
-        },
-        lastName: {
-          type: String,
-          required: true,
-        },
-        middleName: {
-          type: String,
-          default: "",
-        },
-        phone: {
-          type: String,
-          required: true,
-        },
-        email: {
-          type: String,
-          required: true,
-        },
-        relationship: {
-          type: String,
-          required: true,
-        },
+    EmergencyContact: {
+      firstName: {
+        type: String,
+        required: true,
       },
-    ],
-    documents: {
-      driverLicense: {
+      lastName: {
+        type: String,
+        required: true,
+      },
+      relationship: {
+        type: String,
+        required: true,
+      },
+      phone: {
+        type: String,
+        required: true,
+      },
+      email: {
+        type: String,
+        required: true,
+      },
+    },
+    Douments: {
+      driveLicense: {
         type: String,
         default: "",
       },
-      workAuthorization: {
-        type: String,
-        default: "",
-      },
-      other: {
+      work_authorization: {
         type: String,
         default: "",
       },
