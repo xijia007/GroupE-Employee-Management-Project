@@ -63,3 +63,16 @@ export const requireRole = (roles) => {
         }
     };
 };
+
+// ============================================
+// Checks if the user has the HR role
+// Usage: router.post('/path', verifyToken, requireHR, controller)
+// ============================================
+export const requireHR = (req, res, next) => {
+    if (req.userRole !== 'HR') {
+        return res.status(403).json({
+            message: 'Access denied. HR role required'
+        });
+    }
+    next();
+}
