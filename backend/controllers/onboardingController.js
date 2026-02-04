@@ -1,6 +1,5 @@
-import OnboardingApplication from "../models/OnboardingApplication";
+import OnboardingApplication from "../models/OnboardingApplication.js";
 import User from "../models/User.js";
-import app from "../server.js";
 
 // ============================================
 // Submit or Update Onboarding Application
