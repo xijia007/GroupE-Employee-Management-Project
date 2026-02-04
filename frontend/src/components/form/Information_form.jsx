@@ -1,6 +1,7 @@
 import React from "react";
 import { Steps } from "antd";
 import { useState } from "react";
+import { UploadOutlined } from "@ant-design/icons";
 import {
   UploadOutlined,
   MinusCircleOutlined,
