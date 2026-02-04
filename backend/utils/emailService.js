@@ -105,7 +105,7 @@ export const sendRegistrationEmail = async (to, name, token) => {
 
         console.log('✅ Registration email sent successfully:', info.messageId);
 
-        return { success: true, messageId: info.messageId};
+        return { success: true, messageId: info.messageId };
 
     } catch (err) {
         console.error('❌ Email sending failed:', err);
@@ -178,7 +178,7 @@ export const sendApplicationStatusEmail = async (to, name, status, feedback) => 
         const info = await transporter.sendMail(mailOptions);
 
         console.log('✅ Status email sent successfully:', info.messageId);
-        return { success: true, message: info.messageId};
+        return { success: true, message: info.messageId };
 
     } catch (err) {
         console.error('❌ Status email sending failed:', err);
