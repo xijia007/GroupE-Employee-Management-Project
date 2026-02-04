@@ -12,8 +12,7 @@ import RegistrationToken from "../models/RegistrationToken.js";
 import OnboardingApplication from "../models/OnboardingApplication.js";
 import User from "../models/User.js";
 import { sendRegistrationEmail, sendApplicationStatusEmail } from "../utils/emailService.js";
-import bcrypt from 'bcryptjs';
-import app from "../server.js";
+import crypto from 'crypto';
 
 // ============================================
 // generateToken:
