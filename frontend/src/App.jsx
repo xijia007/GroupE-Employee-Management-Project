@@ -8,6 +8,7 @@ import OnboardingApplication from "./pages/Onboarding_application.jsx";
 import PersonApplication from "./pages/Person_Application.jsx";
 import PersonInformation from "./pages/Person_information.jsx";
 import VisaStatusManagement from "./pages/Visa_status.jsx";
+import HR_VisaStatus from "./pages/HR_VisaStatus.jsx";
 import { Route, Routes } from "react-router-dom";
 const { Content } = Layout;
 const contentStyle = {
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/personApplication" element={<PersonApplication />} />
           <Route path="/personInformation" element={<PersonInformation />} />
           <Route path="/visaStatus" element={<VisaStatusManagement />} />
+          <Route path="/hrVisaStatus" element={<HR_VisaStatus />} />
         </Routes>
       </Content>
       <FooterComponent />

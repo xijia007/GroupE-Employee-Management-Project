@@ -1,7 +1,11 @@
 import React from "react";
 import { Steps } from "antd";
 import { useState } from "react";
-import { UploadOutlined } from "@ant-design/icons";
+import {
+  UploadOutlined,
+  MinusCircleOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import {
   Row,
   Col,
@@ -175,9 +179,12 @@ function PersonInformation() {
             <Col span={8}>
               <Select
                 options={[
-                  { label: "Female", value: "female" },
-                  { label: "Male", value: "male" },
-                  { label: "Other", value: "other" },
+                  { label: "Female", value: "Female" },
+                  { label: "Male", value: "Male" },
+                  {
+                    label: "I do not wish to answer",
+                    value: "I do not wish to answer",
+                  },
                 ]}
               />
             </Col>
@@ -275,98 +282,170 @@ function PersonInformation() {
           </Row>
         </Form.Item>
         <Form.Item
-          label=" "
-          colon={false}
-          labelCol={{ span: 0 }}
-          wrapperCol={{ span: 24 }}
+          label="Emergency Contacts"
+          labelCol={{ span: 4 }}
+          wrapperCol={{ span: 20 }}
           style={{ marginBottom: 24 }}
-          name="EmergencyContact"
         >
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <div
-              style={{
-                width: "100%",
-                maxWidth: 1000, // ⭐ 控制整体更宽
-                margin: "0 auto",
-                border: "1px solid #d9d9d9",
-                borderRadius: 12,
-                padding: 24,
-                background: "#fafafa",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: 600,
-                  marginBottom: 20,
-                  textAlign: "center",
-                }}
-              >
-                Emergency Contact Person
+          <Form.List name="emergencyContacts">
+            {(fields, { add, remove }) => (
+              <div style={{ width: "100%" }}>
+                {fields.map((field, index) => (
+                  <div
+                    key={field.key}
+                    style={{
+                      marginBottom: 24,
+                      padding: 24,
+                      border: "1px solid #d9d9d9",
+                      borderRadius: 12,
+                      background: "#fafafa",
+                      position: "relative",
+                    }}
+                  >
+                    {/* 标题和删除按钮 */}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 20,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 16,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Emergency Contact {index + 1}
+                      </div>
+                      {fields.length > 1 && (
+                        <Button
+                          type="text"
+                          danger
+                          icon={<MinusCircleOutlined />}
+                          onClick={() => remove(field.name)}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* 第一行: First Name, Middle Name, Last Name */}
+                    <Row gutter={20}>
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "firstName"]}
+                          rules={[
+                            {
+                              required: true,
+                              message: "Please enter first name",
+                            },
+                          ]}
+                          style={{ marginBottom: 16 }}
+                        >
+                          <Input size="large" placeholder="First Name" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "middleName"]}
+                          style={{ marginBottom: 16 }}
+                        >
+                          <Input size="large" placeholder="Middle Name" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "lastName"]}
+                          rules={[
+                            {
+                              required: true,
+                              message: "Please enter last name",
+                            },
+                          ]}
+                          style={{ marginBottom: 16 }}
+                        >
+                          <Input size="large" placeholder="Last Name" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    {/* 第二行: Relationship, Phone, Email */}
+                    <Row gutter={20}>
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "relationship"]}
+                          rules={[
+                            {
+                              required: true,
+                              message: "Please enter relationship",
+                            },
+                          ]}
+                          style={{ marginBottom: 0 }}
+                        >
+                          <Input size="large" placeholder="Relationship" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "phone"]}
+                          rules={[
+                            {
+                              required: true,
+                              message: "Please enter phone number",
+                            },
+                          ]}
+                          style={{ marginBottom: 0 }}
+                        >
+                          <Input size="large" placeholder="Phone Number" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "email"]}
+                          rules={[
+                            {
+                              required: true,
+                              message: "Please enter email",
+                            },
+                            { type: "email", message: "Invalid email format" },
+                          ]}
+                          style={{ marginBottom: 0 }}
+                        >
+                          <Input size="large" placeholder="Email" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </div>
+                ))}
+
+                {/* Add Contact 按钮 */}
+                <Button
+                  type="dashed"
+                  onClick={() => add()}
+                  block
+                  icon={<PlusOutlined />}
+                  style={{
+                    height: 48,
+                    fontSize: 16,
+                  }}
+                >
+                  Add Emergency Contact
+                </Button>
               </div>
-
-              {/* 第一行 */}
-              <Row gutter={20}>
-                <Col span={8}>
-                  <Form.Item
-                    name={["EmergencyContact", "firstName"]}
-                    style={{ marginBottom: 16 }}
-                  >
-                    <Input size="large" placeholder="First Name" />
-                  </Form.Item>
-                </Col>
-
-                <Col span={8}>
-                  <Form.Item
-                    name={["EmergencyContact", "middleName"]}
-                    style={{ marginBottom: 16 }}
-                  >
-                    <Input size="large" placeholder="Middle Name" />
-                  </Form.Item>
-                </Col>
-
-                <Col span={8}>
-                  <Form.Item
-                    name={["EmergencyContact", "lastName"]}
-                    style={{ marginBottom: 16 }}
-                  >
-                    <Input size="large" placeholder="Last Name" />
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              {/* 第二行 */}
-              <Row gutter={20}>
-                <Col span={8}>
-                  <Form.Item
-                    name={["EmergencyContact", "relationship"]}
-                    style={{ marginBottom: 0 }}
-                  >
-                    <Input size="large" placeholder="Relationship" />
-                  </Form.Item>
-                </Col>
-
-                <Col span={8}>
-                  <Form.Item
-                    name={["EmergencyContact", "phone"]}
-                    style={{ marginBottom: 0 }}
-                  >
-                    <Input size="large" placeholder="Phone Number" />
-                  </Form.Item>
-                </Col>
-
-                <Col span={8}>
-                  <Form.Item
-                    name={["EmergencyContact", "email"]}
-                    rules={[{ type: "email", message: "Invalid email" }]}
-                    style={{ marginBottom: 0 }}
-                  >
-                    <Input size="large" placeholder="Email" />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </div>
-          </div>
+            )}
+          </Form.List>
         </Form.Item>
         <Form.Item label="Documents">
           <div style={{ width: "100%" }}>

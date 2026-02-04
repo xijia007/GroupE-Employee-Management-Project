@@ -57,6 +57,11 @@ function Sider_component() {
       icon: <FileTextOutlined />,
       label: "Visa Status Management",
     },
+    {
+      key: "/hrVisaStatus",
+      icon: <FileTextOutlined />,
+      label: "HR Visa Status Management",
+    },
   ];
 
   return (
