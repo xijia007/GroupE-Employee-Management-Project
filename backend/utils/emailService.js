@@ -1,3 +1,8 @@
+// ============================================
+// Email Service
+// Function: Sends registration emails and application status notification emails.
+// ============================================
+
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 
