@@ -1,4 +1,6 @@
+import VisaStatusManagementPage from "../components/form/Visa_StatusForm_.jsx";
+
 function visaStatusManagement() {
-  return <h1>Visa Status Management Page</h1>;
+  return <VisaStatusManagementPage />;
 }
 export default visaStatusManagement;
