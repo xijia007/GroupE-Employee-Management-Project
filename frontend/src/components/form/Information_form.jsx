@@ -1,6 +1,7 @@
 import React from "react";
 import { Steps } from "antd";
 import { useState } from "react";
+import { UploadOutlined } from "@ant-design/icons";
 import {
   Row,
   Col,
@@ -12,7 +13,9 @@ import {
   InputNumber,
   Radio,
   Select,
+  Space,
   Switch,
+  Table,
   TreeSelect,
   Upload,
 } from "antd";
@@ -20,28 +23,78 @@ import {
 const config = {
   rules: [{ type: "object", required: true, message: "Please select time!" }],
 };
+const StartDate_config = {
+  rules: [
+    { type: "object", required: true, message: "Please select start date!" },
+  ],
+};
+const EndDate_config = {
+  rules: [
+    { type: "object", required: true, message: "Please select end date!" },
+  ],
+};
 
 function PersonInformation() {
+  const [documents, setDocuments] = useState([]);
+  const handleUpload = ({ fileList }) => {
+    setDocuments(fileList);
+  };
+  const columns = [
+    {
+      title: "File Name",
+      dataIndex: "name",
+    },
+    {
+      title: "Action",
+      render: (_, file) => (
+        <Space>
+          {/* Preview */}
+          <Button
+            size="small"
+            onClick={() =>
+              window.open(
+                file.thumbUrl || URL.createObjectURL(file.originFileObj),
+              )
+            }
+          >
+            Preview
+          </Button>
+
+          {/* Download */}
+          <a
+            href={file.thumbUrl || URL.createObjectURL(file.originFileObj)}
+            download={file.name}
+          >
+            <Button size="small">Download</Button>
+          </a>
+        </Space>
+      ),
+    },
+  ];
   const [componentSize, setComponentSize] = useState("default");
   const onFormLayoutChange = ({ size }) => {
     setComponentSize(size);
   };
   const [form] = Form.useForm();
-
-  const usResident = Form.useWatch("usResident", form); // yes/no
-  const workAuth = Form.useWatch("workAuth", form); // h1b/l2/f1/h4/other
-  const IsReference = Form.useWatch("IsReference", form); // yes/no
   return (
-    <div style={{ position: "relative" }}>
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
+        padding: "24px 16px",
+      }}
+    >
       <Form.Item
         label="Form Size"
         name="size"
         style={{
           position: "absolute",
-          top: 0,
-          right: 0,
+          top: 12,
+          right: 16,
           marginBottom: 0,
-          zIndex: 1,
+          zIndex: 10,
         }}
       >
         <Radio.Group
@@ -86,249 +139,264 @@ function PersonInformation() {
           </Row>
         </Form.Item>
 
-        <Form.Item label="Preferred Name">
-          <Input />
+        <Form.Item name="preferredName" label="Preferred Name">
+          <Row gutter={16}>
+            <Col span={8}>
+              <Input placeholder="Preferred Name" />
+            </Col>
+          </Row>
         </Form.Item>
 
-        <Form.Item label="Profile picture">
+        <Form.Item name="profile_picture" label="Profile picture">
           <Input placeholder="http://" />
         </Form.Item>
 
-        <Form.Item label="Email">
+        <Form.Item name="email" label="Email">
           <Input />
         </Form.Item>
 
-        <Form.Item label="Social Security Number(SSN)">
-          <Input />
+        <Form.Item name="ssn" label="Social Security Number">
+          <Row gutter={16}>
+            <Col span={16}>
+              <Input placeholder="SSN" />
+            </Col>
+          </Row>
+        </Form.Item>
+        <Form.Item name="dateOfBirth" label="Date of Birth" {...config}>
+          <Row gutter={16}>
+            <Col span={8}>
+              <DatePicker style={{ width: "100%" }} />
+            </Col>
+          </Row>
         </Form.Item>
 
-        <Form.Item label="Gender">
-          <Select
-            options={[
-              { label: "Female", value: "female" },
-              { label: "Male", value: "male" },
-              { label: "Other", value: "other" },
-            ]}
-          />
-        </Form.Item>
-        <Form.Item name="date-picker" label="DatePicker" {...config}>
-          <DatePicker style={{ width: "100%" }} />
-        </Form.Item>
-        {/* vii. Permanent resident or citizen of the U.S.? */}
-        <Form.Item
-          name="usResident"
-          label="Permanent resident or citizen of U.S.?"
-          rules={[{ required: true, message: "Please select yes/no" }]}
-        >
-          <Select
-            placeholder="Select"
-            options={[
-              { label: "Yes", value: "yes" },
-              { label: "No", value: "no" },
-            ]}
-          />
-        </Form.Item>
-
-        {/* If YES: choose Green Card or Citizen */}
-        {usResident === "yes" && (
-          <Form.Item
-            name="usYesType"
-            label="If yes, choose"
-            rules={[
-              {
-                required: true,
-                message: "Please choose Green Card or Citizen",
-              },
-            ]}
-          >
-            <Select
-              placeholder="Select"
-              options={[
-                { label: "Green Card", value: "greenCard" },
-                { label: "Citizen", value: "citizen" },
-              ]}
-            />
-          </Form.Item>
-        )}
-
-        {/* If NO: work authorization */}
-        {usResident === "no" && (
-          <>
-            <Form.Item
-              name="workAuth"
-              label="Work authorization"
-              rules={[
-                {
-                  required: true,
-                  message: "Please select your work authorization",
-                },
-              ]}
-            >
+        <Form.Item name="gender" label="Gender">
+          <Row gutter={16}>
+            <Col span={8}>
               <Select
-                placeholder="Select"
                 options={[
-                  { label: "H1-B", value: "h1b" },
-                  { label: "L2", value: "l2" },
-                  { label: "F1 (CPT/OPT)", value: "f1" },
-                  { label: "H4", value: "h4" },
+                  { label: "Female", value: "female" },
+                  { label: "Male", value: "male" },
                   { label: "Other", value: "other" },
                 ]}
               />
-            </Form.Item>
-
-            {/* If F1: upload OPT receipt */}
-            {workAuth === "f1" && (
-              <Form.Item
-                name="optReceipt"
-                label="OPT receipt (PDF)"
-                valuePropName="fileList"
-                getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
-                rules={[
-                  { required: true, message: "Please upload your OPT receipt" },
-                ]}
-              >
-                <Upload beforeUpload={() => false} accept=".pdf" maxCount={1}>
-                  <Button>Upload PDF</Button>
-                </Upload>
-              </Form.Item>
-            )}
-
-            {/* If Other: specify visa title */}
-            {workAuth === "other" && (
-              <Form.Item
-                name="visaTitle"
-                label="Visa title"
-                rules={[
-                  { required: true, message: "Please specify your visa title" },
-                ]}
-              >
-                <Input placeholder="e.g., O-1, TN, J-2..." />
-              </Form.Item>
-            )}
-
-            {/* Start and end date */}
-            <Form.Item
-              name="workAuthRange"
-              label="Start and end date"
-              rules={[
-                {
-                  type: "array",
-                  required: true,
-                  message: "Please select date range",
-                },
-              ]}
-            >
-              <DatePicker.RangePicker style={{ width: "100%" }} />
-            </Form.Item>
-          </>
-        )}
-        <Form.Item
-          name="IsReference"
-          label="Reference"
-          rules={[{ required: true, message: "Please select yes/no" }]}
-        >
-          <Select
-            placeholder="Select"
-            options={[
-              { label: "Yes", value: "yes" },
-              { label: "No", value: "no" },
-            ]}
-          />
+            </Col>
+          </Row>
         </Form.Item>
-        {IsReference === "yes" && (
-          // 用一个空 label 的 Form.Item 保持和其他行对齐（container 从输入框起点开始）
-          <Form.Item label=" " colon={false}>
+        <Form.Item label="Address" style={{ marginBottom: 24 }}>
+          <Form.Item name={["address", "street"]} style={{ marginBottom: 0 }}>
+            <Input placeholder="Street Address" />
+          </Form.Item>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item
+                name={["address", "building"]}
+                style={{ marginBottom: 0 }}
+              >
+                <Input placeholder="Building" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name={["address", "city"]} style={{ marginBottom: 0 }}>
+                <Input placeholder="City" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                name={["address", "state"]}
+                style={{ marginBottom: 0 }}
+              >
+                <Input placeholder="State" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name={["address", "zip"]} style={{ marginBottom: 0 }}>
+                <Input placeholder="Zip Code" />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form.Item>
+        <Form.Item label="Contact Information">
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name={["contactInfo", "cellPhone"]}
+                style={{ marginBottom: 0 }}
+              >
+                <Input placeholder="Cell Phone" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name={["contactInfo", "workPhone"]}
+                style={{ marginBottom: 0 }}
+              >
+                <Input placeholder="Work Phone" />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form.Item>
+        <Form.Item name="visaInformation" label="Visa information">
+          <Row gutter={16} align="middle">
+            <Col xs={24} md={8}>
+              <Form.Item
+                name={["visaInformation", "visaType"]}
+                style={{ marginBottom: 0 }}
+                rules={[{ required: true, message: "Please enter visa title" }]}
+              >
+                <Input placeholder="Visa Title" style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} md={8}>
+              <Form.Item
+                name={["visaInformation", "StartDate"]}
+                style={{ marginBottom: 0 }}
+                rules={[
+                  { required: true, message: "Please select start date" },
+                ]}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  placeholder="Start Date"
+                />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} md={8}>
+              <Form.Item
+                name={["visaInformation", "EndDate"]}
+                style={{ marginBottom: 0 }}
+                rules={[{ required: true, message: "Please select end date" }]}
+              >
+                <DatePicker style={{ width: "100%" }} placeholder="End Date" />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form.Item>
+        <Form.Item
+          label=" "
+          colon={false}
+          labelCol={{ span: 0 }}
+          wrapperCol={{ span: 24 }}
+          style={{ marginBottom: 24 }}
+          name="EmergencyContact"
+        >
+          <div style={{ display: "flex", justifyContent: "center" }}>
             <div
               style={{
+                width: "100%",
+                maxWidth: 1000, // ⭐ 控制整体更宽
+                margin: "0 auto",
                 border: "1px solid #d9d9d9",
-                borderRadius: 10,
-                padding: 16,
+                borderRadius: 12,
+                padding: 24,
                 background: "#fafafa",
               }}
             >
-              <div style={{ fontWeight: 600, marginBottom: 12 }}>
-                Reference Person
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 600,
+                  marginBottom: 20,
+                  textAlign: "center",
+                }}
+              >
+                Emergency Contact Person
               </div>
 
-              {/* 第一行：First / Middle / Last */}
-              <Row gutter={16}>
+              {/* 第一行 */}
+              <Row gutter={20}>
                 <Col span={8}>
                   <Form.Item
-                    name={["reference", "firstName"]}
-                    rules={[{ required: true, message: "First name required" }]}
-                    style={{ marginBottom: 12 }}
+                    name={["EmergencyContact", "firstName"]}
+                    style={{ marginBottom: 16 }}
                   >
-                    <Input placeholder="First Name" />
+                    <Input size="large" placeholder="First Name" />
                   </Form.Item>
                 </Col>
 
                 <Col span={8}>
                   <Form.Item
-                    name={["reference", "middleName"]}
-                    style={{ marginBottom: 12 }}
+                    name={["EmergencyContact", "middleName"]}
+                    style={{ marginBottom: 16 }}
                   >
-                    <Input placeholder="Middle Name" />
+                    <Input size="large" placeholder="Middle Name" />
                   </Form.Item>
                 </Col>
 
                 <Col span={8}>
                   <Form.Item
-                    name={["reference", "lastName"]}
-                    rules={[{ required: true, message: "Last name required" }]}
-                    style={{ marginBottom: 12 }}
+                    name={["EmergencyContact", "lastName"]}
+                    style={{ marginBottom: 16 }}
                   >
-                    <Input placeholder="Last Name" />
+                    <Input size="large" placeholder="Last Name" />
                   </Form.Item>
                 </Col>
               </Row>
 
-              {/* 第二行：Relationship / Phone / Email（你截图里 Relationship 掉到下面且不齐，就是缺这个 Row/Col） */}
-              <Row gutter={16}>
+              {/* 第二行 */}
+              <Row gutter={20}>
                 <Col span={8}>
                   <Form.Item
-                    name={["reference", "relationship"]}
-                    rules={[
-                      { required: true, message: "Relationship required" },
-                    ]}
+                    name={["EmergencyContact", "relationship"]}
                     style={{ marginBottom: 0 }}
                   >
-                    <Input placeholder="Relationship" />
+                    <Input size="large" placeholder="Relationship" />
                   </Form.Item>
                 </Col>
 
                 <Col span={8}>
                   <Form.Item
-                    name={["reference", "phone"]}
-                    rules={[{ required: true, message: "Phone required" }]}
+                    name={["EmergencyContact", "phone"]}
                     style={{ marginBottom: 0 }}
                   >
-                    <Input placeholder="Phone Number" />
+                    <Input size="large" placeholder="Phone Number" />
                   </Form.Item>
                 </Col>
 
                 <Col span={8}>
                   <Form.Item
-                    name={["reference", "email"]}
-                    rules={[
-                      { required: true, message: "Email required" },
-                      { type: "email", message: "Invalid email" },
-                    ]}
+                    name={["EmergencyContact", "email"]}
+                    rules={[{ type: "email", message: "Invalid email" }]}
                     style={{ marginBottom: 0 }}
                   >
-                    <Input placeholder="Email" />
+                    <Input size="large" placeholder="Email" />
                   </Form.Item>
                 </Col>
               </Row>
             </div>
-          </Form.Item>
-        )}
+          </div>
+        </Form.Item>
+        <Form.Item label="Documents">
+          <div style={{ width: "100%" }}>
+            <Upload
+              multiple
+              beforeUpload={() => false} // ⭐ 不自动上传，只保存在前端
+              onChange={handleUpload}
+              fileList={documents}
+            >
+              <Button icon={<UploadOutlined />}>Upload Documents</Button>
+            </Upload>
 
-        <Form.Item label="Button">
-          <Button>Cancel</Button>
+            <Table
+              style={{ marginTop: 16 }}
+              columns={columns}
+              dataSource={documents}
+              rowKey="uid"
+              pagination={false}
+            />
+          </div>
         </Form.Item>
-        <Form.Item label="Button">
-          <Button>Save</Button>
-        </Form.Item>
+        <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
+          <Form.Item>
+            <Button danger>Cancel</Button>
+          </Form.Item>
+
+          <Form.Item>
+            <Button type="primary">Save</Button>
+          </Form.Item>
+        </div>
       </Form>
     </div>
   );
