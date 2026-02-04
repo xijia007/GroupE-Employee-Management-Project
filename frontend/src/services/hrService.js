@@ -32,7 +32,7 @@ export const getAllApplications = async (status='All') => {
 
         return response.data;
 
-    } catch {
+    } catch (err) {
         console.error('Get applications error');
         throw err;
     }
@@ -40,7 +40,7 @@ export const getAllApplications = async (status='All') => {
 
 export const getApplicationById = async (id) => {
     try {
-        const respon = await api.get(`/hr/applications/${id}`);
+        const response = await api.get(`/hr/applications/${id}`);
         return response.data;
 
     } catch (err) {
