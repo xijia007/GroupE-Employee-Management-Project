@@ -154,93 +154,50 @@ export const getAllTokens = async (req, res) => {
 
 export const getAllApplications = async (req, res) => {
   try {
-    const {
-      // filters
-      status = "All", // Pending|Approved|Rejected|Never Submitted|All
-      role = "All", // Employee|HR|All
-      visaTitle = "All", // H1-B|L2|F1(CPT/OPT)|H4|Other|All
-      q = "", // search keyword
-      dateFrom, // YYYY-MM-DD
-      dateTo, // YYYY-MM-DD
+    // Retrieve the status filter condition from the query parameters.
+    // Example: GET /api/hr/applications?status=Pending
+    // req.query.status = 'Pending'
+    const { status } = req.query;
 
-      sortBy = "createdAt", // createdAt|visaEndDate|visaStartDate
-      sortOrder = "desc", // asc|desc
-
-      // pagination
-      page = "1",
-      pageSize = "10",
-    } = req.query;
-
-    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
-    const limitNum = Math.min(Math.max(parseInt(pageSize, 10) || 10, 1), 100);
-    const skipNum = (pageNum - 1) * limitNum;
-
-    // -------- match for OnboardingApplication --------
-    const match = {};
-
-    if (status !== "All") match.status = status;
-    if (visaTitle !== "All") match.visaTitle = visaTitle;
-
-    // ✅ date range based on createdAt (your requirement)
-    if (dateFrom || dateTo) {
-      match.createdAt = {};
-      if (dateFrom)
-        match.createdAt.$gte = new Date(`${dateFrom}T00:00:00.000Z`);
-      if (dateTo) match.createdAt.$lte = new Date(`${dateTo}T23:59:59.999Z`);
+    // Building the query conditions
+    // If status exists and is not 'All', filter by status
+    // Otherwise, return all applications
+    const query = {};
+    if (status && status !== "All") {
+      query.status = status;
     }
 
-    // search on onboarding fields
-    if (q.trim()) {
-      const kw = q.trim();
-      match.$or = [
-        { firstName: { $regex: kw, $options: "i" } },
-        { lastName: { $regex: kw, $options: "i" } },
-        { email: { $regex: kw, $options: "i" } },
-      ];
-    }
+    // Querying the application list
+    // .select('-ssn -documents'): Do not return sensitive information
+    // .sort({ submittedAt: -1 }): Sort in descending order by submission time
+    const applications = await OnboardingApplication.find(query)
+      .select("-ssn -documents")
+      .sort({ submittedAt: -1 });
 
-    // sort
-    const sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
+    // Add user information to each application
+    // Note: OnboardingApplication only contains userId
+    // The username and email need to be retrieved from the User table.
+    const applicationWithUser = await Promise.all(
+      applications.map(async (app) => {
+        const user = await User.findById(app.userId).select("username email");
 
-    // -------- query + populate user --------
-    // IMPORTANT: role filter is on User, easiest is populate then filter.
-    // If you want perfect total+filter in one query, I can give you aggregate version.
-    const baseQuery = OnboardingApplication.find(match)
-      .select("-ssn -documents") // keep safe :contentReference[oaicite:5]{index=5}
-      .populate("userId", "username email role") // join user role/email :contentReference[oaicite:6]{index=6}
-      .sort(sort);
-
-    const [itemsRaw, totalRaw] = await Promise.all([
-      baseQuery.skip(skipNum).limit(limitNum),
-      OnboardingApplication.countDocuments(match),
-    ]);
-
-    let items = itemsRaw;
-
-    // role filter (post-populate)
-    if (role !== "All") {
-      items = items.filter((a) => a.userId?.role === role);
-    }
-
-    // total correction when role filter is active
-    // (for correctness; can be optimized with aggregate if dataset large)
-    let total = totalRaw;
-    if (role !== "All") {
-      const allIds = await OnboardingApplication.find(match)
-        .select("userId")
-        .populate("userId", "role");
-      total = allIds.filter((a) => a.userId?.role === role).length;
-    }
+        return {
+          ...app.toObject(), // Convert Mongoose document to a plain object
+          user, // Add user information
+        };
+      }),
+    );
 
     res.status(200).json({
-      page: pageNum,
-      pageSize: limitNum,
-      total,
-      items,
+      count: applicationWithUser.length,
+      applications: applicationWithUser,
     });
   } catch (err) {
     console.error("Get applications error:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({
+      message: "Server error",
+      error: err.message,
+    });
   }
 };
 
