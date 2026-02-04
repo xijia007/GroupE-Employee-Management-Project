@@ -2,6 +2,10 @@
 import bcrypt from 'bcryptjs';
 
 const password = 'HRAdmin123!';  // The plain text password to be encrypted
+// already create: 
+// username: hr_admin_1, email: hr.admin1@company.com, password: HRAdmin123!
+// username: hr_admin_2, email: hr.admin2@company.com, password: HRAdmin456!
+
 
 bcrypt.hash(password, 10)
     .then(hash => {
