@@ -17,7 +17,7 @@ const router = express.Router();
 // Request Body: { email: string, name: string }
 // Response: { message: string, token: object }
 // ============================================
-router.post('./generate-token', verifyToken, generateToken);
+router.post('/generate-token', verifyToken, generateToken);
 
 // ============================================
 // Route 2: GET /api/hr/tokens
@@ -53,6 +53,6 @@ router.get('/applications/:id', verifyToken, getApplicationById);
 // Request Body: { status: "Approved"|"Rejected", feedback: string }
 // Response: { message: string, application: object }
 // ============================================
-router.patch('./applications/:id/review', verifyToken, reviewApplication);
+router.patch('/applications/:id/review', verifyToken, reviewApplication);
 
 export default router;

@@ -170,7 +170,7 @@ const onboardingApplicationSchema = new mongoose.Schema({
     collection: 'OnboardingApplication'
 });
 
-onboardingApplicationSchema.index({ userId: 1 });
+// Note: userId index is automatically created by unique:true (line 8)
 onboardingApplicationSchema.index({ status: 1 });
 
 export default mongoose.model('OnboardingApplication', onboardingApplicationSchema);
