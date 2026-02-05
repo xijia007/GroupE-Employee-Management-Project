@@ -5,13 +5,13 @@ import {
   IdcardOutlined,
   UserOutlined,
   KeyOutlined,
-  HomeOutlined,        
-  TeamOutlined, 
+  HomeOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import { Layout, Menu } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useSelector } from 'react-redux';
-import { selectUser } from '../../features/auth/authSlice';
+import { useSelector } from "react-redux";
+import { selectUser } from "../../features/auth/authSlice";
 
 const { Sider } = Layout;
 
@@ -35,16 +35,16 @@ const titleStyle = {
 function Sider_component() {
   const navigate = useNavigate();
   const location = useLocation();
-  // user: Current logged-in user 
+  // user: Current logged-in user
   const user = useSelector(selectUser);
 
-  // Common Menu Items 
+  // Common Menu Items
   const commonItems = [
-    {    
-      key: '/home',
+    {
+      key: "/home",
       icon: <HomeOutlined />,
-      label: 'Home',
-    }
+      label: "Home",
+    },
   ];
 
   // Employee Menu Items
@@ -76,7 +76,7 @@ function Sider_component() {
     },
   ];
 
-  // HR Menu Items 
+  // HR Menu Items
   const hrItems = [
     {
       key: "/hr/hiring_management",
@@ -88,34 +88,35 @@ function Sider_component() {
       icon: <KeyOutlined />,
       label: "Generate Registration Token",
     },
+    {
+      key: "/hr/hiring_visa_status",
+      icon: <FileTextOutlined />,
+      label: "Visa Status Management",
+    },
   ];
 
   // Dynamic Menu Items Based on Role
   const getMenuItems = () => {
     let items = [...commonItems];
 
-    if (user?.role === 'HR') {
-        items = [...items, ...hrItems];
+    if (user?.role === "HR") {
+      items = [...items, ...hrItems];
     } else {
       items = [...items, ...employeeItems];
     }
     return items;
-  }
+  };
 
   const getSidebarTitle = () => {
-    if (user?.role === 'HR') {
-      return 'HR Management';
-    } 
-    return 'Employee Management';
-  }
-
-
+    if (user?.role === "HR") {
+      return "HR Management";
+    }
+    return "Employee Management";
+  };
 
   return (
     <Sider width={250} style={siderStyle}>
-      <div style={titleStyle}>
-        {getSidebarTitle()}
-      </div>
+      <div style={titleStyle}>{getSidebarTitle()}</div>
 
       <Menu
         mode="inline"

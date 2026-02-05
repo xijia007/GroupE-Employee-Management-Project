@@ -9,11 +9,12 @@ import PersonApplication from "./pages/Person_Application.jsx";
 import PersonInformation from "./pages/Person_information.jsx";
 import VisaStatusManagement from "./pages/Visa_status.jsx";
 import { Route, Routes, Navigate } from "react-router-dom";
-import { useSelector } from 'react-redux';
-import { selectIsAuthenticated, selectUser } from './features/auth/authSlice';
+import { useSelector } from "react-redux";
+import { selectIsAuthenticated, selectUser } from "./features/auth/authSlice";
 import Login from "./pages/auth/Login.jsx";
-import Register from './pages/auth/Register.jsx';
+import Register from "./pages/auth/Register.jsx";
 import HiringManagement from "./pages/hr/HiringManagement.jsx";
+import HR_VisaStatus from "./pages/hr/HR_VisaStatus.jsx";
 
 const { Content } = Layout;
 
@@ -35,15 +36,15 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   const user = useSelector(selectUser);
 
   if (!isAuthenticated) {
-    return <Navigate to='/login' replace />
+    return <Navigate to="/login" replace />;
   }
 
   if (requiredRole && user?.role !== requiredRole) {
-    return <Navigate to='/dashboard' replace />
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
-}
+};
 
 const AppLayout = ({ children }) => {
   return (
@@ -51,24 +52,22 @@ const AppLayout = ({ children }) => {
       <Sider_component />
       <Layout>
         <HeaderComponent />
-        <Content style={contentStyle}>
-          {children}
-        </Content>
+        <Content style={contentStyle}>{children}</Content>
         <FooterComponent />
       </Layout>
     </Layout>
-  )
-}
+  );
+};
 const App = () => (
   <Routes>
-    <Route path='/login' element={<Login />} />
-    <Route path='/register' element={<Register />} />
+    <Route path="/login" element={<Login />} />
+    <Route path="/register" element={<Register />} />
     <Route
       path="/"
       element={
-      <ProtectedRoute>
-        <Navigate to="/dashboard" replace />
-      </ProtectedRoute>
+        <ProtectedRoute>
+          <Navigate to="/dashboard" replace />
+        </ProtectedRoute>
       }
     />
     <Route
@@ -127,6 +126,16 @@ const App = () => (
         <ProtectedRoute requiredRole="HR">
           <AppLayout>
             <HiringManagement />
+          </AppLayout>
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/hr/hiring_visa_status"
+      element={
+        <ProtectedRoute requiredRole="HR">
+          <AppLayout>
+            <HR_VisaStatus />
           </AppLayout>
         </ProtectedRoute>
       }
