@@ -12,6 +12,7 @@ import { Route, Routes, Navigate } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import { selectIsAuthenticated, selectUser } from './features/auth/authSlice';
 import Login from "./pages/auth/Login.jsx";
+import Register from './pages/auth/Register.jsx';
 import HiringManagement from "./pages/hr/HiringManagement.jsx";
 
 const { Content } = Layout;
@@ -59,24 +60,9 @@ const AppLayout = ({ children }) => {
   )
 }
 const App = () => (
-  // <Layout style={layoutStyle}>
-  //   <Sider_component />
-  //   <Layout>
-  //     <HeaderComponent />
-  //     <Content style={contentStyle}>
-  //       <Routes>
-  //         <Route path="/" element={<DashboardPage />} />
-  //         <Route path="/onboarding" element={<OnboardingApplication />} />
-  //         <Route path="/personApplication" element={<PersonApplication />} />
-  //         <Route path="/personInformation" element={<PersonInformation />} />
-  //         <Route path="/visaStatus" element={<VisaStatusManagement />} />
-  //       </Routes>
-  //     </Content>
-  //     <FooterComponent />
-  //   </Layout>
-  // </Layout>
   <Routes>
     <Route path='/login' element={<Login />} />
+    <Route path='/register' element={<Register />} />
     <Route
       path="/"
       element={
