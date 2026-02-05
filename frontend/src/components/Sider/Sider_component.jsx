@@ -4,9 +4,14 @@ import {
   FileTextOutlined,
   IdcardOutlined,
   UserOutlined,
+  KeyOutlined,
+  HomeOutlined,        
+  TeamOutlined, 
 } from "@ant-design/icons";
 import { Layout, Menu } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../features/auth/authSlice';
 
 const { Sider } = Layout;
 
@@ -30,10 +35,22 @@ const titleStyle = {
 function Sider_component() {
   const navigate = useNavigate();
   const location = useLocation();
+  // user: Current logged-in user 
+  const user = useSelector(selectUser);
 
-  const items = [
+  // Common Menu Items 
+  const commonItems = [
+    {    
+      key: '/home',
+      icon: <HomeOutlined />,
+      label: 'Home',
+    }
+  ];
+
+  // Employee Menu Items
+  const employeeItems = [
     {
-      key: "/",
+      key: "/dashboard",
       icon: <AppstoreOutlined />,
       label: "Employee Dashboard",
     },
@@ -59,15 +76,53 @@ function Sider_component() {
     },
   ];
 
+  // HR Menu Items 
+  const hrItems = [
+    {
+      key: "/hr/hiring_management",
+      icon: <TeamOutlined />,
+      label: "Hiring Management",
+    },
+    {
+      key: "/hr/generate-token",
+      icon: <KeyOutlined />,
+      label: "Generate Registration Token",
+    },
+  ];
+
+  // Dynamic Menu Items Based on Role
+  const getMenuItems = () => {
+    let items = [...commonItems];
+
+    if (user?.role === 'HR') {
+        items = [...items, ...hrItems];
+    } else {
+      items = [...items, ...employeeItems];
+    }
+    return items;
+  }
+
+  const getSidebarTitle = () => {
+    if (user?.role === 'HR') {
+      return 'HR Management';
+    } 
+    return 'Employee Management';
+  }
+
+
+
   return (
     <Sider width={250} style={siderStyle}>
-      <div style={titleStyle}>Employee Management</div>
+      <div style={titleStyle}>
+        {getSidebarTitle()}
+      </div>
+
       <Menu
         mode="inline"
         selectedKeys={[location.pathname]}
         onClick={({ key }) => navigate(key)}
         style={{ flex: 1, borderInlineEnd: 0 }}
-        items={items}
+        items={getMenuItems()}
       />
     </Sider>
   );
