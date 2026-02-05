@@ -129,7 +129,7 @@ export const getAllTokens = async (req, res) => {
     // .sort({ createdAt: -1 }): Sort in descending order by creation time
     const tokens = await RegistrationToken.find()
       .select("-token")
-      .sort({ createAt: -1 });
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       count: tokens.length,

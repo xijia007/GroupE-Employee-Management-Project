@@ -29,7 +29,7 @@ export const validateToken = async (req, res) => {
 
         // Check if the token has expired (3 days = 259200 seconds)
         const now = new Date();
-        const tokenAge = (now - regToken.createAt) / 1000;
+        const tokenAge = (now - regToken.createdAt) / 1000;
         if (tokenAge > 259200) {
             return res.status(400).json({
                 message: 'Registration token has expired.'
