@@ -28,17 +28,36 @@ const Login = () => {
 
     const error = useSelector(selectAuthError);
 
-     // useEffect: Navigate after successful login
+    // ════════════════════════════════════════════════════════
+    // useEffect: Navigate after successful login
+    // useEffect: 登录成功后导航
+    //
+    // IMPORTANT: Only redirect when on login page to avoid loop
+    // 重要：仅在登录页面时重定向以避免循环
+    // ════════════════════════════════════════════════════════
     useEffect(() => {
-        if (user) {
+        // ────────────────────────────────────────────────────
+        // Check: user exists AND currently on login page
+        // 检查：用户存在且当前在登录页面
+        // ────────────────────────────────────────────────────
+        if (user && window.location.pathname === '/login') {
+            // Show welcome message / 显示欢迎消息
             message.success(`Welcome back, ${user.username}!`);
-
+            
+            // Navigate based on user role / 根据用户角色导航
             if (user.role === 'HR') {
-                navigate('/hr/hiring-management');
+                // HR user → HR management page
+                // HR 用户 → HR 管理页面
+                navigate('/hr/hiring_management');  // ← 下划线匹配路由
             } else {
+                // Employee user / 员工用户
                 if (user.onboardingStatus === 'Approved') {
+                    // Approved → Dashboard
+                    // 已批准 → 仪表板
                     navigate('/dashboard');
                 } else {
+                    // Not approved → Onboarding page
+                    // 未批准 → 入职页面
                     navigate('/onboarding');
                 }
             }
@@ -69,7 +88,7 @@ const Login = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'liner-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             padding: '20px'
         }}>
             {/* Login Card */}
@@ -156,7 +175,7 @@ const Login = () => {
                                 height: '48px',
                                 fontSize: '16px',
                                 fontWeight: '600',
-                                background: 'liner-gardient(135deg, #667eea 0%, #764ba2 100%',
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                 border: 'none',
                                 borderRadius: '8px'
                             }}

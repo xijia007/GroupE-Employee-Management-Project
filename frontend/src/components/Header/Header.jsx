@@ -1,13 +1,20 @@
 import React from "react";
-import { Avatar, Badge, Input, Layout, Space } from "antd";
+import { Avatar, Badge, Input, Layout, Space, Dropdown, message } from "antd";
 import {
   SearchOutlined,
   BellOutlined,
   SettingOutlined,
   UserOutlined,
   MailOutlined,
+  LogoutOutlined,
+  DownOutlined  
 } from "@ant-design/icons";
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { logoutUser, selectUser } from '../../features/auth/authSlice';
+
 const { Header } = Layout;
+
 const headerStyle = {
   display: "flex",
   alignItems: "center",
@@ -33,7 +40,67 @@ const actionIconStyle = {
 };
 
 function HeaderComponent() {
-  return (
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector(selectUser);
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    message.success('Logged out successfully');
+
+    navigate('/login');
+  };
+
+  const menuItems = [
+    {
+      key: 'user-info',
+      label: (
+        <div style={{ 
+          padding: '8px 12px', 
+          borderBottom: '1px solid #f0f0f0' 
+        }}>
+          <div style={{ 
+            fontWeight: 600, 
+            color: '#000',
+            fontSize: '14px'
+          }}>
+            {user?.username || 'User'}
+          </div>
+
+          <div style={{ 
+            fontSize: '12px', 
+            color: '#999', 
+            marginTop: '4px' 
+          }}>
+            {user?.role || 'Employee'}
+          </div>
+        </div>
+      ),
+      disabled: true
+    },
+    {
+      key: 'logout',
+      // Logout option identifier
+      label: (
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          color: '#ff4d4f', 
+          padding: '4px 0'
+        }}>
+          <LogoutOutlined style={{ marginRight: '8px' }} />
+          {/* Logout icon with spacin */}
+          
+          Logout
+          {/* Text: "Logout" */}
+        </div>
+      ),
+      onClick: handleLogout
+    }
+  ];
+
+    return (
     <Header style={headerStyle}>
       <Input
         placeholder="Search in PMS"
@@ -61,13 +128,27 @@ function HeaderComponent() {
           <MailOutlined style={actionIconStyle} />
         </span>
 
-        <span style={actionItemStyle}>
-          <Avatar
-            size={24}
-            src={null}
-            icon={<UserOutlined style={{ fontSize: 14 }} />}
-          />
-        </span>
+        <Dropdown
+          menu={{ items: menuItems }}
+          trigger={['click']}
+          placement="bottomRight"
+        >
+          <span style={{
+            ...actionItemStyle,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <Avatar
+              size={24}
+              src={null}
+              icon={<UserOutlined style={{ fontSize: 14 }} />}
+              style={{ backgroundColor: '#667eea' }}
+            />
+            <DownOutlined style={{ fontSize: 10, color: '#999' }} />
+          </span>
+        </Dropdown>
       </Space>
     </Header>
   );
