@@ -42,7 +42,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   }
 
   if (requiredRole && user?.role !== requiredRole) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return children;
@@ -68,7 +68,7 @@ const App = () => (
       path="/"
       element={
         <ProtectedRoute>
-          <Navigate to="/dashboard" replace />
+          <Navigate to="/home" replace />
         </ProtectedRoute>
       }
     />

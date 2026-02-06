@@ -319,10 +319,26 @@ export const reviewApplication = async (req, res) => {
   }
 };
 
+// ============================================
+// getAllEmployees:
+// Function: Get all registered employees with their onboarding status
+// Route: GET /api/hr/employees?status=All|Pending|Approved|Rejected|NotStarted
+// Query Parameters: status (optional)
+// Response: { count: number, employees: array }
+// ============================================
+export const getAllEmployees = async (req, res) => {
+  try {
+
+  } catch (err) {
+
+  }
+};
+
 export default {
   generateToken,
   getAllTokens,
   getAllApplications,
   getApplicationById,
   reviewApplication,
+  getAllEmployees,
 };
