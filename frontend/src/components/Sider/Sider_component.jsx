@@ -5,13 +5,14 @@ import {
   IdcardOutlined,
   UserOutlined,
   KeyOutlined,
-  HomeOutlined,
+  HomeOutlined,        
   TeamOutlined,
+  LogoutOutlined, 
 } from "@ant-design/icons";
-import { Layout, Menu } from "antd";
+import { Layout, Menu, message } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { selectUser } from "../../features/auth/authSlice";
+import { useSelector, useDispatch } from 'react-redux';
+import { logoutUser, selectUser } from '../../features/auth/authSlice';
 
 const { Sider } = Layout;
 
@@ -37,33 +38,34 @@ function Sider_component() {
   const location = useLocation();
   // user: Current logged-in user
   const user = useSelector(selectUser);
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    message.success('Logged out successfully');
+
+    navigate('/login');
+  }
+
+  const handleMenuClick = ({ key }) => {
+    if (key === 'logout') {
+      handleLogout();
+      return;
+    }
+    navigate(key);
+  }
 
   // Common Menu Items
   const commonItems = [
     {
       key: "/home",
       icon: <HomeOutlined />,
-      label: "Home",
+      label: 'Home',
     },
   ];
 
   // Employee Menu Items
   const employeeItems = [
-    {
-      key: "/dashboard",
-      icon: <AppstoreOutlined />,
-      label: "Employee Dashboard",
-    },
-    {
-      key: "/onboarding",
-      icon: <FileTextOutlined />,
-      label: "Onboarding Application",
-    },
-    {
-      key: "/personApplication",
-      icon: <UserOutlined />,
-      label: "Personal Application",
-    },
     {
       key: "/personInformation",
       icon: <IdcardOutlined />,
@@ -79,14 +81,29 @@ function Sider_component() {
   // HR Menu Items
   const hrItems = [
     {
+      key: "/hr/employeeProfiles",
+      icon: <UserOutlined />,
+      label: "Employee Profiles",
+    },
+    {
+      key: "/visaStatus",
+      icon: <FileTextOutlined />,
+      label: "Visa Status Management",
+    },
+    {
       key: "/hr/hiring_management",
       icon: <TeamOutlined />,
       label: "Hiring Management",
     },
+  ];
+
+  // Logout Menu Items
+  const logoutItems = [
     {
-      key: "/hr/generate-token",
-      icon: <KeyOutlined />,
-      label: "Generate Registration Token",
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      // onClick: handleLogout
     },
     {
       key: "/hr/hiring_visa_status",
@@ -99,20 +116,20 @@ function Sider_component() {
   const getMenuItems = () => {
     let items = [...commonItems];
 
-    if (user?.role === "HR") {
-      items = [...items, ...hrItems];
+    if (user?.role === 'HR') {
+        items = [...items, ...hrItems, ...logoutItems];
     } else {
-      items = [...items, ...employeeItems];
+      items = [...items, ...employeeItems, ...logoutItems];
     }
     return items;
   };
 
   const getSidebarTitle = () => {
-    if (user?.role === "HR") {
-      return "HR Management";
-    }
-    return "Employee Management";
-  };
+    if (user?.role === 'HR') {
+      return 'HR Management';
+    } 
+    return 'Employee Management';
+  }
 
   return (
     <Sider width={250} style={siderStyle}>
@@ -121,7 +138,7 @@ function Sider_component() {
       <Menu
         mode="inline"
         selectedKeys={[location.pathname]}
-        onClick={({ key }) => navigate(key)}
+        onClick={handleMenuClick}
         style={{ flex: 1, borderInlineEnd: 0 }}
         items={getMenuItems()}
       />

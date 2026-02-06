@@ -7,7 +7,16 @@ import User from "../models/User.js";
 export const submitApplication = async (req, res) => {
     try {
         const userId = req.userId; // from verifyToken middleware
-        const applicationData = req.body;
+        const applicationData = { ...req.body};
+
+
+        // Parse JSON strings back to objects
+        if (typeof applicationData.currentAddress === 'string') {
+            applicationData.currentAddress = JSON.parse(applicationData.currentAddress);
+        }
+        if (typeof applicationData.emergencyContacts === 'string') {
+            applicationData.emergencyContacts = JSON.parse(applicationData.emergencyContacts);
+        }
 
         // handle the path for uploaded files
         if (req.files) {
@@ -30,12 +39,12 @@ export const submitApplication = async (req, res) => {
         let application = await OnboardingApplication.findOne({ userId });
 
         if (application) {
-            // update current application
+            console.log('📝 Updating existing application');
             Object.assign(application, applicationData);
             application.status = 'Pending';
             application.submittedAt = new Date();
         } else {
-            // create new application
+            console.log('📝 Creating new application');
             application = new OnboardingApplication({
                 userId,
                 ...applicationData,
@@ -45,11 +54,13 @@ export const submitApplication = async (req, res) => {
         }
 
         await application.save();
+        console.log('✅ Application saved successfully');
 
         // update user onboarding Status
         await User.findByIdAndUpdate(userId, {
             onboardingStatus: 'Pending'
         });
+        console.log('✅ User status updated');
 
         res.status(200).json({
             message: 'Onboarding application submitted successfully',
@@ -57,10 +68,12 @@ export const submitApplication = async (req, res) => {
         });
 
     } catch (err) {
-        console.error('Submite application error:', err);
+        console.error('❌ Submit application error:', err);
+        console.error('Error stack:', err.stack);
         res.status(500).json({
             message: 'Server Error',
-            error: err.message
+            error: err.message,
+            details: process.env.NODE_ENV === 'development' ? err.stack : undefined
         });
     }
 };

@@ -1,12 +1,10 @@
 // ═══════════════════════════════════════════════════════════
 // Register.jsx - Employee Registration Page
-// 员工注册页面
 //
-// Purpose 目的:
+// Purpose:
 //   Allow new employees to register with a valid token
-//   允许新员工使用有效的令牌进行注册
 //
-// Flow 流程:
+// Flow:
 //   1. Get token from URL query parameter
 //   2. Verify token validity
 //   3. Show registration form
@@ -26,54 +24,53 @@ import {
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 
-// ════════════════════════════════════════════════════════════
-// Register Component / 注册组件
-// ════════════════════════════════════════════════════════════
-const Register = () => {
-  // ────────────────────────────────────────────────────────
-  // State / 状态
-  // ────────────────────────────────────────────────────────
-  const [form] = Form.useForm();
-  // form: Ant Design form instance / 表单实例
-  
-  const [loading, setLoading] = useState(false);
-  // loading: Registration submission loading state
-  // loading: 注册提交加载状态
-  
-  const [verifyingToken, setVerifyingToken] = useState(true);
-  // verifyingToken: Token verification loading state
-  // verifyingToken: 令牌验证加载状态
-  
-  const [tokenValid, setTokenValid] = useState(false);
-  // tokenValid: Whether the token is valid
-  // tokenValid: 令牌是否有效
-  
-  const [tokenError, setTokenError] = useState('');
-  // tokenError: Error message if token is invalid
-  // tokenError: 令牌无效时的错误消息
 
-  // ────────────────────────────────────────────────────────
-  // Hooks / 钩子
-  // ────────────────────────────────────────────────────────
-  const navigate = useNavigate();
-  // navigate: Navigate to different pages / 导航到不同页面
+// Styles 
+const containerStyle = {
+  minHeight: '100vh',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  padding: '20px',
+};
+
+const cardStyle = {
+  width: '100%',
+  maxWidth: '500px',
+  borderRadius: '12px',
+  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
+};
+
+const headerStyle = {
+  textAlign: 'center',
+  paddingTop: '20px',
+}; 
+
+// Register Component 
+const Register = () => {
+  // State 
+  const [form] = Form.useForm(); // Ant Design form instance 
   
-  const [searchParams] = useSearchParams();
-  // searchParams: Get URL query parameters / 获取 URL 查询参数
+  const [loading, setLoading] = useState(false); // Registration submission loading state
+  
+  const [verifyingToken, setVerifyingToken] = useState(true); // Token verification loading state
+  
+  const [tokenValid, setTokenValid] = useState(false); // Whether the token is valid
+  
+  const [tokenError, setTokenError] = useState(''); // Error message if token is invalid
+
+  // Hooks 
+  const navigate = useNavigate(); // Navigate to different pages 
+  
+  const [searchParams] = useSearchParams(); // Get URL query parameters
   // Example: /register?token=abc123 → searchParams.get('token') = 'abc123'
   
-  const token = searchParams.get('token');
-  // token: Registration token from URL / URL 中的注册令牌
+  const token = searchParams.get('token'); // Registration token from URL 
 
-  // ────────────────────────────────────────────────────────
   // useEffect: Verify token when component mounts
-  // useEffect: 组件挂载时验证令牌
-  // ────────────────────────────────────────────────────────
   useEffect(() => {
-    // ──────────────────────────────────────────────────────
     // Check 1: Token must exist in URL
-    // 检查 1: URL 中必须有令牌
-    // ──────────────────────────────────────────────────────
     if (!token) {
       setTokenError('No registration token provided. Please use the link from your invitation email.');
       // 未提供令牌
@@ -82,10 +79,7 @@ const Register = () => {
       return;
     }
 
-    // ──────────────────────────────────────────────────────
     // Check 2: Verify token with backend
-    // 检查 2: 向后端验证令牌
-    // ──────────────────────────────────────────────────────
     const verifyToken = async () => {
       try {
         setVerifyingToken(true);
@@ -95,16 +89,12 @@ const Register = () => {
         // Backend returns: { email: "user@example.com", name: "John Doe" }
         // 后端返回: { email: "user@example.com", name: "John Doe" }
         
-        // ──────────────────────────────────────────────────────
         // Check: If response has email, token is valid
-        // 检查：如果响应有 email，则令牌有效
-        // ──────────────────────────────────────────────────────
         if (response.data && response.data.email) {
           setTokenValid(true);
-          // Token is valid / 令牌有效
+          // Token is valid
           
           // Pre-fill email and name if provided
-          // 如果提供了邮箱和姓名则预填充
           form.setFieldsValue({ 
             email: response.data.email,
             firstName: response.data.name ? response.data.name.split(' ')[0] : '',
@@ -131,18 +121,12 @@ const Register = () => {
     verifyToken();
   }, [token, form]);
 
-  // ────────────────────────────────────────────────────────
   // Handle Registration Form Submission
-  // 处理注册表单提交
-  // ────────────────────────────────────────────────────────
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
       
-      // ──────────────────────────────────────────────────────
       // Step 1: Prepare registration data
-      // 步骤 1: 准备注册数据
-      // ──────────────────────────────────────────────────────
       const registrationData = {
         username: values.username,
         password: values.password,
@@ -150,13 +134,9 @@ const Register = () => {
         firstName: values.firstName,
         lastName: values.lastName,
         token: token,  // Include token for verification
-        // 包含令牌用于验证
       };
 
-      // ──────────────────────────────────────────────────────
       // Step 2: Call registration API
-      // 步骤 2: 调用注册 API
-      // ──────────────────────────────────────────────────────
       const response = await api.post('/auth/register', registrationData);
       // Backend will:
       // 后端将：
@@ -204,10 +184,7 @@ const Register = () => {
     }
   };
 
-  // ════════════════════════════════════════════════════════
   // Render: Token Verification Loading
-  // 渲染: 令牌验证加载中
-  // ════════════════════════════════════════════════════════
   if (verifyingToken) {
     return (
       <div style={containerStyle}>
@@ -223,10 +200,7 @@ const Register = () => {
     );
   }
 
-  // ════════════════════════════════════════════════════════
   // Render: Invalid Token Error
-  // 渲染: 令牌无效错误
-  // ════════════════════════════════════════════════════════
   if (!tokenValid) {
     return (
       <div style={containerStyle}>
@@ -250,16 +224,11 @@ const Register = () => {
     );
   }
 
-  // ════════════════════════════════════════════════════════
   // Render: Registration Form
-  // 渲染: 注册表单
-  // ════════════════════════════════════════════════════════
   return (
     <div style={containerStyle}>
       <Card style={cardStyle}>
-        {/* ══════════════════════════════════════════════════ */}
         {/* Header / 标题 */}
-        {/* ══════════════════════════════════════════════════ */}
         <div style={headerStyle}>
           <SafetyOutlined style={{ fontSize: '48px', color: '#667eea' }} />
           <h1 style={{ margin: '16px 0 8px', fontSize: '28px' }}>
@@ -270,9 +239,7 @@ const Register = () => {
           </p>
         </div>
 
-        {/* ══════════════════════════════════════════════════ */}
         {/* Registration Form / 注册表单 */}
-        {/* ══════════════════════════════════════════════════ */}
         <Form
           form={form}
           name="register"
@@ -281,9 +248,8 @@ const Register = () => {
           size="large"
           style={{ marginTop: '32px' }}
         >
-          {/* ────────────────────────────────────────────── */}
+
           {/* Username / 用户名 */}
-          {/* ────────────────────────────────────────────── */}
           <Form.Item
             label="Username"
             name="username"
@@ -311,9 +277,7 @@ const Register = () => {
             />
           </Form.Item>
 
-          {/* ────────────────────────────────────────────── */}
           {/* Email / 邮箱 */}
-          {/* ────────────────────────────────────────────── */}
           <Form.Item
             label="Email"
             name="email"
@@ -336,9 +300,7 @@ const Register = () => {
             />
           </Form.Item>
 
-          {/* ────────────────────────────────────────────── */}
           {/* First Name / 名字 */}
-          {/* ────────────────────────────────────────────── */}
           <Form.Item
             label="First Name"
             name="firstName"
@@ -356,9 +318,7 @@ const Register = () => {
             />
           </Form.Item>
 
-          {/* ────────────────────────────────────────────── */}
           {/* Last Name / 姓氏 */}
-          {/* ────────────────────────────────────────────── */}
           <Form.Item
             label="Last Name"
             name="lastName"
@@ -376,9 +336,7 @@ const Register = () => {
             />
           </Form.Item>
 
-          {/* ────────────────────────────────────────────── */}
           {/* Password / 密码 */}
-          {/* ────────────────────────────────────────────── */}
           <Form.Item
             label="Password"
             name="password"
@@ -406,9 +364,7 @@ const Register = () => {
             />
           </Form.Item>
 
-          {/* ────────────────────────────────────────────── */}
           {/* Confirm Password / 确认密码 */}
-          {/* ────────────────────────────────────────────── */}
           <Form.Item
             label="Confirm Password"
             name="confirmPassword"
@@ -441,9 +397,7 @@ const Register = () => {
             />
           </Form.Item>
 
-          {/* ────────────────────────────────────────────── */}
           {/* Submit Button / 提交按钮 */}
-          {/* ────────────────────────────────────────────── */}
           <Form.Item style={{ marginBottom: 0 }}>
             <Space direction="vertical" style={{ width: '100%' }} size="middle">
               <Button
@@ -477,30 +431,6 @@ const Register = () => {
       </Card>
     </div>
   );
-};
-
-// ════════════════════════════════════════════════════════════
-// Styles / 样式
-// ════════════════════════════════════════════════════════════
-const containerStyle = {
-  minHeight: '100vh',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  padding: '20px',
-};
-
-const cardStyle = {
-  width: '100%',
-  maxWidth: '500px',
-  borderRadius: '12px',
-  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
-};
-
-const headerStyle = {
-  textAlign: 'center',
-  paddingTop: '20px',
 };
 
 export default Register;

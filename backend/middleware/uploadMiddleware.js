@@ -57,7 +57,7 @@ const fileTypeFilter = (req, file, callback) => {
     const isExtensionValid = allowedPattern.test(path.extname(file.originalname).toLowerCase());
 
      // Validate MIME type for security (eg: image/jpeg, application/pdf)
-    const isMimeTypeValid = allowedPattern.text(file.mimetype);
+    const isMimeTypeValid = allowedPattern.test(file.mimetype);
 
     if (isExtensionValid && isMimeTypeValid) {
         return callback(null, true);
@@ -91,7 +91,7 @@ export const uploadSingleFile = upload.single('file');
 export const uploadRequiredDocuments = upload.fields([
     { name: 'driverLicense', maxCount: 1 },
     { name: 'workAuthorization', maxCount: 1},
-    { name: 'otherDocuments', maxCount: 1 }
+    { name: 'other', maxCount: 1 }
 ]);
 
 export default upload;

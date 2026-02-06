@@ -73,22 +73,34 @@ const onboardingApplicationSchema = new mongoose.Schema({
         default: ''
     },
 
-    // Employment
+    // US Resident Status (determines if visa information is required)
+    usResident: {
+        type: String,
+        enum: ['usCitizen', 'greenCard', 'workAuth'],
+        required: true
+    },
+
+    // Employment / Visa Information (Required only if usResident is 'workAuth')
     visaTitle: {
         type: String,
         enum: ['H1-B', 'L2', 'F1(CPT/OPT)', 'H4', 'Other'],
-        required: true
+        required: function() {
+            // Only required if user needs work authorization
+            return this.usResident === 'workAuth';
+        }
     },
     visaStartDate: {
         type: Date,
         required: function() {
-            return this.visaTitle !== 'Other';
+            // Only required if user needs work authorization
+            return this.usResident === 'workAuth';
         }
     },
     visaEndDate: {
         type: Date,
         required: function() {
-            return this.visaTitle !== 'Other';
+            // Only required if user needs work authorization
+            return this.usResident === 'workAuth';
         }
     },
 

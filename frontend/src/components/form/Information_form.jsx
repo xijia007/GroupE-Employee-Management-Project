@@ -185,7 +185,7 @@ function PersonInformation() {
           </Row>
         </Form.Item>
         <Form.Item label="Address" style={{ marginBottom: 24 }}>
-          <Form.Item name={["address", "street"]} style={{ marginBottom: 0 }}>
+          <Form.Item name={["address", "street"]} style={{ marginBottom: 12 }}>
             <Input placeholder="Street Address" />
           </Form.Item>
           <Row gutter={16}>
@@ -217,7 +217,7 @@ function PersonInformation() {
             </Col>
           </Row>
         </Form.Item>
-        <Form.Item label="Contact Information">
+        <Form.Item label="Contact Information" style={{ marginBottom: 24 }}>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
