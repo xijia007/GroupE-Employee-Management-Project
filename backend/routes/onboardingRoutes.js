@@ -8,7 +8,7 @@ const router = express.Router();
 // POST /api/onboarding/submit
 // - Submit or update onboarding application (with file uploads)
 // - Protected: requires authentication
-router.post('/submit', verifyToken, uploadSingleFile, uploadRequiredDocuments, submitApplication);
+router.post('/submit', verifyToken, uploadRequiredDocuments, submitApplication);
 
 // GET /api/onboarding/my-application
 // - Get current user's application details
