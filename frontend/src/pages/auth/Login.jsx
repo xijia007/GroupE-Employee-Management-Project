@@ -48,18 +48,11 @@ const Login = () => {
             if (user.role === 'HR') {
                 // HR user → HR management page
                 // HR 用户 → HR 管理页面
-                navigate('/hr/hiring_management');  // ← 下划线匹配路由
+                navigate('/hr/hiring_management');
             } else {
-                // Employee user / 员工用户
-                if (user.onboardingStatus === 'Approved') {
-                    // Approved → Dashboard
-                    // 已批准 → 仪表板
-                    navigate('/dashboard');
-                } else {
-                    // Not approved → Onboarding page
-                    // 未批准 → 入职页面
-                    navigate('/onboarding');
-                }
+                // Employee user → Home page
+                // 员工用户 → 首页
+                navigate('/home');
             }
         }
     }, [user, navigate]);
