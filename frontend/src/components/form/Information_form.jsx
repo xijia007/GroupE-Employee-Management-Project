@@ -2,6 +2,7 @@ import React from "react";
 import { Steps } from "antd";
 import { useState } from "react";
 import { UploadOutlined } from "@ant-design/icons";
+import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   Row,
   Col,

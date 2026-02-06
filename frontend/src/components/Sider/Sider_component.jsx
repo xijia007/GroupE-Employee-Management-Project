@@ -36,7 +36,7 @@ const titleStyle = {
 function Sider_component() {
   const navigate = useNavigate();
   const location = useLocation();
-  // user: Current logged-in user 
+  // user: Current logged-in user
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
 
@@ -55,10 +55,10 @@ function Sider_component() {
     navigate(key);
   }
 
-  // Common Menu Items 
+  // Common Menu Items
   const commonItems = [
-    {    
-      key: '/home',
+    {
+      key: "/home",
       icon: <HomeOutlined />,
       label: 'Home',
     },
@@ -78,7 +78,7 @@ function Sider_component() {
     },
   ];
 
-  // HR Menu Items 
+  // HR Menu Items
   const hrItems = [
     {
       key: "/hr/employeeProfiles",
@@ -105,6 +105,11 @@ function Sider_component() {
       label: 'Logout',
       // onClick: handleLogout
     },
+    {
+      key: "/hr/hiring_visa_status",
+      icon: <FileTextOutlined />,
+      label: "Visa Status Management",
+    },
   ];
 
   // Dynamic Menu Items Based on Role
@@ -117,7 +122,7 @@ function Sider_component() {
       items = [...items, ...employeeItems, ...logoutItems];
     }
     return items;
-  }
+  };
 
   const getSidebarTitle = () => {
     if (user?.role === 'HR') {
@@ -128,9 +133,7 @@ function Sider_component() {
 
   return (
     <Sider width={250} style={siderStyle}>
-      <div style={titleStyle}>
-        {getSidebarTitle()}
-      </div>
+      <div style={titleStyle}>{getSidebarTitle()}</div>
 
       <Menu
         mode="inline"
