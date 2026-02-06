@@ -55,4 +55,12 @@ router.get('/applications/:id', verifyToken, getApplicationById);
 // ============================================
 router.patch('/applications/:id/review', verifyToken, reviewApplication);
 
+router.get('/onboarding-applications', verifyToken, getAllApplications);  
+
+router.get('/onboarding-applications/:id', verifyToken, getApplicationById);       
+
+router.patch('/onboarding-applications/:id/review', verifyToken, reviewApplication);
+
+
+
 export default router;

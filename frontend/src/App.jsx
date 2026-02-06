@@ -16,6 +16,7 @@ import Register from "./pages/auth/Register.jsx";
 import HiringManagement from "./pages/hr/HiringManagement.jsx";
 import EmployeeProfiles from './pages/hr/EmployeeProfiles.jsx';
 import Home from './pages/Home.jsx';
+import ApplicationReview from './pages/hr/ApplicationReview.jsx';
 
 const { Content } = Layout;
 
@@ -101,6 +102,16 @@ const App = () => (
         </ProtectedRoute>
       }
     />
+    <Route
+      path="/hr/application-review/:id"
+      element={
+        <ProtectedRoute requiredRole='HR'>
+          <AppLayout>
+            <ApplicationReview />
+          </AppLayout>
+        </ProtectedRoute>
+      }
+    />   
     <Route
       path="/personApplication"
       element={
