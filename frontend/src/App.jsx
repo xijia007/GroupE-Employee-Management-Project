@@ -83,16 +83,6 @@ const App = () => (
       }
     />
     <Route
-      path="/dashboard"
-      element={
-        <ProtectedRoute>
-          <AppLayout>
-            <DashboardPage />
-          </AppLayout>
-        </ProtectedRoute>
-      }
-    />
-    <Route
       path="/onboarding"
       element={
         <ProtectedRoute>

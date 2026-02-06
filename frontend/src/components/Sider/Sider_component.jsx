@@ -105,11 +105,6 @@ function Sider_component() {
       label: 'Logout',
       // onClick: handleLogout
     },
-    {
-      key: "/hr/hiring_visa_status",
-      icon: <FileTextOutlined />,
-      label: "Visa Status Management",
-    },
   ];
 
   // Dynamic Menu Items Based on Role
