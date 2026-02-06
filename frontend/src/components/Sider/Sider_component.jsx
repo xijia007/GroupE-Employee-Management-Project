@@ -5,14 +5,14 @@ import {
   IdcardOutlined,
   UserOutlined,
   KeyOutlined,
-  HomeOutlined,        
+  HomeOutlined,
   TeamOutlined,
-  LogoutOutlined, 
+  LogoutOutlined,
 } from "@ant-design/icons";
 import { Layout, Menu, message } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from 'react-redux';
-import { logoutUser, selectUser } from '../../features/auth/authSlice';
+import { useSelector, useDispatch } from "react-redux";
+import { logoutUser, selectUser } from "../../features/auth/authSlice";
 
 const { Sider } = Layout;
 
@@ -42,25 +42,25 @@ function Sider_component() {
 
   const handleLogout = () => {
     dispatch(logoutUser());
-    message.success('Logged out successfully');
+    message.success("Logged out successfully");
 
-    navigate('/login');
-  }
+    navigate("/login");
+  };
 
   const handleMenuClick = ({ key }) => {
-    if (key === 'logout') {
+    if (key === "logout") {
       handleLogout();
       return;
     }
     navigate(key);
-  }
+  };
 
   // Common Menu Items
   const commonItems = [
     {
       key: "/home",
       icon: <HomeOutlined />,
-      label: 'Home',
+      label: "Home",
     },
   ];
 
@@ -86,7 +86,7 @@ function Sider_component() {
       label: "Employee Profiles",
     },
     {
-      key: "/visaStatus",
+      key: "/hr/visaStatus",
       icon: <FileTextOutlined />,
       label: "Visa Status Management",
     },
@@ -100,9 +100,9 @@ function Sider_component() {
   // Logout Menu Items
   const logoutItems = [
     {
-      key: 'logout',
+      key: "logout",
       icon: <LogoutOutlined />,
-      label: 'Logout',
+      label: "Logout",
       // onClick: handleLogout
     },
   ];
@@ -111,8 +111,8 @@ function Sider_component() {
   const getMenuItems = () => {
     let items = [...commonItems];
 
-    if (user?.role === 'HR') {
-        items = [...items, ...hrItems, ...logoutItems];
+    if (user?.role === "HR") {
+      items = [...items, ...hrItems, ...logoutItems];
     } else {
       items = [...items, ...employeeItems, ...logoutItems];
     }
@@ -120,11 +120,11 @@ function Sider_component() {
   };
 
   const getSidebarTitle = () => {
-    if (user?.role === 'HR') {
-      return 'HR Management';
-    } 
-    return 'Employee Management';
-  }
+    if (user?.role === "HR") {
+      return "HR Management";
+    }
+    return "Employee Management";
+  };
 
   return (
     <Sider width={250} style={siderStyle}>

@@ -14,9 +14,10 @@ import { selectIsAuthenticated, selectUser } from "./features/auth/authSlice";
 import Login from "./pages/auth/Login.jsx";
 import Register from "./pages/auth/Register.jsx";
 import HiringManagement from "./pages/hr/HiringManagement.jsx";
-import EmployeeProfiles from './pages/hr/EmployeeProfiles.jsx';
-import Home from './pages/Home.jsx';
-import ApplicationReview from './pages/hr/ApplicationReview.jsx';
+import EmployeeProfiles from "./pages/hr/EmployeeProfiles.jsx";
+import Home from "./pages/Home.jsx";
+import ApplicationReview from "./pages/hr/ApplicationReview.jsx";
+import HR_VisaStatus from "./pages/hr/HR_VisaStatus.jsx";
 
 const { Content } = Layout;
 
@@ -75,11 +76,11 @@ const App = () => (
     <Route
       path="/home"
       element={
-      <ProtectedRoute>
-        <AppLayout>
-          <Home />
-        </AppLayout>
-      </ProtectedRoute>
+        <ProtectedRoute>
+          <AppLayout>
+            <Home />
+          </AppLayout>
+        </ProtectedRoute>
       }
     />
     <Route
@@ -95,13 +96,13 @@ const App = () => (
     <Route
       path="/hr/application-review/:id"
       element={
-        <ProtectedRoute requiredRole='HR'>
+        <ProtectedRoute requiredRole="HR">
           <AppLayout>
             <ApplicationReview />
           </AppLayout>
         </ProtectedRoute>
       }
-    />   
+    />
     <Route
       path="/personApplication"
       element={
@@ -148,6 +149,16 @@ const App = () => (
         <ProtectedRoute requiredRole="HR">
           <AppLayout>
             <EmployeeProfiles />
+          </AppLayout>
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/hr/visaStatus"
+      element={
+        <ProtectedRoute requiredRole="HR">
+          <AppLayout>
+            <HR_VisaStatus />
           </AppLayout>
         </ProtectedRoute>
       }
