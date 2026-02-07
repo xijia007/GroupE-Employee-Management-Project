@@ -1,0 +1,124 @@
+import {
+  Row,
+  Col,
+  Button,
+  Cascader,
+  DatePicker,
+  Form,
+  Input,
+  Card,
+  InputNumber,
+  Radio,
+  Select,
+  Space,
+  Switch,
+  Table,
+  TreeSelect,
+  Upload,
+} from "antd";
+import React from "react";
+
+export default function EmergencySection() {
+  return (
+    <Card
+      title="Emergency Contact Information"
+      bordered={false}
+      style={{ marginBottom: 24 }}
+    >
+      <Form.Item
+        label=" "
+        colon={false}
+        labelCol={{ span: 0 }}
+        wrapperCol={{ span: 24 }}
+        style={{ marginBottom: 24 }}
+        name="EmergencyContact"
+      >
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 1000, // ⭐ 控制整体更宽
+              margin: "0 auto",
+              border: "1px solid #d9d9d9",
+              borderRadius: 12,
+              padding: 24,
+              background: "#fafafa",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 18,
+                fontWeight: 600,
+                marginBottom: 20,
+                textAlign: "center",
+              }}
+            >
+              Emergency Contact Person
+            </div>
+
+            {/* 第一行 */}
+            <Row gutter={20}>
+              <Col span={8}>
+                <Form.Item
+                  name={["EmergencyContact", "firstName"]}
+                  style={{ marginBottom: 16 }}
+                >
+                  <Input size="large" placeholder="First Name" />
+                </Form.Item>
+              </Col>
+
+              <Col span={8}>
+                <Form.Item
+                  name={["EmergencyContact", "middleName"]}
+                  style={{ marginBottom: 16 }}
+                >
+                  <Input size="large" placeholder="Middle Name" />
+                </Form.Item>
+              </Col>
+
+              <Col span={8}>
+                <Form.Item
+                  name={["EmergencyContact", "lastName"]}
+                  style={{ marginBottom: 16 }}
+                >
+                  <Input size="large" placeholder="Last Name" />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            {/* 第二行 */}
+            <Row gutter={20}>
+              <Col span={8}>
+                <Form.Item
+                  name={["EmergencyContact", "relationship"]}
+                  style={{ marginBottom: 0 }}
+                >
+                  <Input size="large" placeholder="Relationship" />
+                </Form.Item>
+              </Col>
+
+              <Col span={8}>
+                <Form.Item
+                  name={["EmergencyContact", "phone"]}
+                  style={{ marginBottom: 0 }}
+                >
+                  <Input size="large" placeholder="Phone Number" />
+                </Form.Item>
+              </Col>
+
+              <Col span={8}>
+                <Form.Item
+                  name={["EmergencyContact", "email"]}
+                  rules={[{ type: "email", message: "Invalid email" }]}
+                  style={{ marginBottom: 0 }}
+                >
+                  <Input size="large" placeholder="Email" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+        </div>
+      </Form.Item>
+    </Card>
+  );
+}
