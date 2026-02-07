@@ -15,7 +15,7 @@ import {
   sendRegistrationEmail,
   sendApplicationStatusEmail,
 } from "../utils/emailService.js";
-import crypto from "crypto";
+import crypto, { subtle } from "crypto";
 
 // ============================================
 // generateToken:
@@ -328,9 +328,60 @@ export const reviewApplication = async (req, res) => {
 // ============================================
 export const getAllEmployees = async (req, res) => {
   try {
+    const { status } = req.query;
+
+    let users = await User.find({ role: 'Employee' })
+      .select('username email onboardingStatus createdAt')
+      .sort({ createdAt: -1});
+    
+    const employeesWithDetails = await Promise.all(
+      users.map(async (user) => {
+        const application = await OnboardingApplication.findOne({
+          userId: user._id
+        }).select('firstName lastName status submittedAt reviewedAt');
+
+        return {
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          onboardingStatus: user.onboardingStatus || 'Not Started',
+          createdAt: user.createdAt,
+          application: application ? {
+            firstName: application.firstName,
+            lastName: application.lastName,
+            status: application.status,
+            submittedAt: application.submittedAt,
+            reviewedAt: application.reviewedAt
+          } : null
+        };
+      })
+    );
+
+    let filteredEmployees = employeesWithDetails;
+
+    if (status && status !== 'All') {
+      if (status === 'NotStarted') {
+        filteredEmployees = employeesWithDetails.filter(
+          emp => !emp.application || emp.onboardingStatus === 'Not Started'
+        );
+      } else {
+        filteredEmployees = employeesWithDetails.filter(
+          emp => emp.onboardingStatus === status
+        );
+      }
+    }
+
+    res.status(200).json({
+      count: filteredEmployees.length,
+      employees: filteredEmployees
+    });
 
   } catch (err) {
-
+    console.error('Get employees error:', err);
+    res.status(500).json({
+      message: 'Server error',
+      error: err.message
+    });
   }
 };
 

@@ -64,10 +64,21 @@ export const reviewApplication = async (id, status, feedback='') => {
     }
 }
 
+export const getAllEmployees = async (status = 'All')  => {
+    try {
+        const response = await api.get(`/hr/employees?status=${status}`);
+        return response.data;
+    } catch (err) {
+        console.error('Get employees error:', err);
+        throw err;
+    }
+};
+
 export default {
     generateRegistrationToken,
     getAllTokens,
     getAllApplications,
     getApplicationById,
-    reviewApplication
+    reviewApplication,
+    getAllEmployees
 };

@@ -48,7 +48,7 @@ const Login = () => {
             if (user.role === 'HR') {
                 // HR user → HR management page
                 // HR 用户 → HR 管理页面
-                navigate('/hr/hiring_management');
+                navigate('/home');
             } else {
                 // Employee user → Home page
                 // 员工用户 → 首页
