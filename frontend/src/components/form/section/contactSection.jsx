@@ -22,7 +22,7 @@ export default function ContactSection() {
   return (
     <Card
       title="Contact Information"
-      bordered={false}
+      variant="borderless"
       style={{ marginBottom: 24 }}
     >
       <Form.Item label="Contact Information" style={{ marginBottom: 24 }}>

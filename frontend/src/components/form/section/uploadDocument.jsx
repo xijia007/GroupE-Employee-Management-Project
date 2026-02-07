@@ -52,32 +52,32 @@ export default function UploadDocument() {
       ),
     },
   ];
-  const [documents, setDocuments] = useState([]);
-  const handleUpload = ({ fileList }) => {
-    setDocuments(fileList);
-  };
-  return (
-    <Card title="Documents" bordered={false} style={{ marginBottom: 24 }}>
-      <Form.Item label="Documents">
-        <div style={{ width: "100%" }}>
-          <Upload
-            multiple
-            beforeUpload={() => false} // ⭐ 不自动上传，只保存在前端
-            onChange={handleUpload}
-            fileList={documents}
-          >
-            <Button icon={<UploadOutlined />}>Upload Documents</Button>
-          </Upload>
 
-          <Table
-            style={{ marginTop: 16 }}
-            columns={columns}
-            dataSource={documents}
-            rowKey="uid"
-            pagination={false}
-          />
-        </div>
-      </Form.Item>
+  return (
+    <Card title="Documents" variant="borderless" style={{ marginBottom: 24 }}>
+      <Row gutter={16}>
+        <Col span={8}>
+          <Form.Item
+            name={["documents", "driverLicense"]}
+            label="Driver License"
+          >
+            <Input placeholder="Driver License URL" />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item
+            name={["documents", "workAuthorization"]}
+            label="Work Authorization"
+          >
+            <Input placeholder="Work Authorization URL" />
+          </Form.Item>
+        </Col>
+        <Col span={8}>
+          <Form.Item name={["documents", "other"]} label="Other Documents">
+            <Input placeholder="Other Documents URL" />
+          </Form.Item>
+        </Col>
+      </Row>
     </Card>
   );
 }

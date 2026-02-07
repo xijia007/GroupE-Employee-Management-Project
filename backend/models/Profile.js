@@ -91,34 +91,44 @@ const profileSchema = new mongoose.Schema(
         required: true,
       },
     },
-    EmergencyContact: {
-      firstName: {
-        type: String,
-        required: true,
+    emergencyContacts: [
+      {
+        firstName: {
+          type: String,
+          required: true,
+        },
+        lastName: {
+          type: String,
+          required: true,
+        },
+        middleName: {
+          type: String,
+          default: "",
+        },
+        phone: {
+          type: String,
+          required: true,
+        },
+        email: {
+          type: String,
+          required: true,
+        },
+        relationship: {
+          type: String,
+          required: true,
+        },
       },
-      lastName: {
-        type: String,
-        required: true,
-      },
-      relationship: {
-        type: String,
-        required: true,
-      },
-      phone: {
-        type: String,
-        required: true,
-      },
-      email: {
-        type: String,
-        required: true,
-      },
-    },
-    Douments: {
-      driveLicense: {
+    ],
+    documents: {
+      driverLicense: {
         type: String,
         default: "",
       },
-      work_authorization: {
+      workAuthorization: {
+        type: String,
+        default: "",
+      },
+      other: {
         type: String,
         default: "",
       },

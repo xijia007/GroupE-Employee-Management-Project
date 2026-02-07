@@ -34,7 +34,11 @@ const EndDate_config = {
 
 export default function NameSection() {
   return (
-    <Card title="Name Section" bordered={false} style={{ marginBottom: 24 }}>
+    <Card
+      title="Name Section"
+      variant="borderless"
+      style={{ marginBottom: 24 }}
+    >
       <Form.Item label="Name" style={{ marginBottom: 24 }}>
         <Row gutter={16}>
           <Col span={8}>
@@ -73,34 +77,40 @@ export default function NameSection() {
         <Input />
       </Form.Item>
 
-      <Form.Item name="ssn" label="Social Security Number">
+      <Form.Item label="Social Security Number">
         <Row gutter={16}>
           <Col span={16}>
-            <Input placeholder="SSN" />
+            <Form.Item name="ssn" noStyle>
+              <Input placeholder="SSN" />
+            </Form.Item>
           </Col>
         </Row>
       </Form.Item>
-      <Form.Item name="dateOfBirth" label="Date of Birth" {...config}>
+      <Form.Item label="Date of Birth" {...config}>
         <Row gutter={16}>
           <Col span={8}>
-            <DatePicker style={{ width: "100%" }} />
+            <Form.Item name="dateOfBirth" noStyle rules={config.rules}>
+              <DatePicker style={{ width: "100%" }} />
+            </Form.Item>
           </Col>
         </Row>
       </Form.Item>
 
-      <Form.Item name="gender" label="Gender">
+      <Form.Item label="Gender">
         <Row gutter={16}>
           <Col span={8}>
-            <Select
-              options={[
-                { label: "Female", value: "Female" },
-                { label: "Male", value: "Male" },
-                {
-                  label: "I do not wish to answer",
-                  value: "I do not wish to answer",
-                },
-              ]}
-            />
+            <Form.Item name="gender" noStyle>
+              <Select
+                options={[
+                  { label: "Female", value: "Female" },
+                  { label: "Male", value: "Male" },
+                  {
+                    label: "I do not wish to answer",
+                    value: "I do not wish to answer",
+                  },
+                ]}
+              />
+            </Form.Item>
           </Col>
         </Row>
       </Form.Item>

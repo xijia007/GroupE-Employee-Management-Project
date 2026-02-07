@@ -21,7 +21,11 @@ import React from "react";
 
 export default function AddressSection() {
   return (
-    <Card title="Address Section" bordered={false} style={{ marginBottom: 24 }}>
+    <Card
+      title="Address Section"
+      variant="borderless"
+      style={{ marginBottom: 24 }}
+    >
       <Form.Item label="Address" style={{ marginBottom: 24 }}>
         <Form.Item name={["address", "street"]} style={{ marginBottom: 12 }}>
           <Input placeholder="Street Address" />

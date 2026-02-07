@@ -3,13 +3,18 @@ import mongoose from "mongoose";
 
 const getUserProfile = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.userId; // From verifyToken middleware
+    console.log("Getting profile for userId:", userId);
+
     const profile = await Profile.findOne({
       user: new mongoose.Types.ObjectId(userId),
-    });
+    }).select("+ssn"); // Include SSN for user viewing their own profile
+
     if (!profile) {
+      console.log("Profile not found for userId:", userId);
       return res.status(404).json({ message: "Profile not found" });
     }
+
     res.status(200).json(profile);
   } catch (err) {
     console.error("Get Profile Error:", err);
@@ -19,7 +24,7 @@ const getUserProfile = async (req, res) => {
 
 const UpdateUserProfile = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.userId; // From verifyToken middleware
     const updateData = req.body;
     const profile = await Profile.findOneAndUpdate(
       { user: new mongoose.Types.ObjectId(userId) },

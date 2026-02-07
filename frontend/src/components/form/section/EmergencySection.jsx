@@ -22,7 +22,7 @@ export default function EmergencySection() {
   return (
     <Card
       title="Emergency Contact Information"
-      bordered={false}
+      variant="borderless"
       style={{ marginBottom: 24 }}
     >
       <Form.Item
@@ -60,7 +60,7 @@ export default function EmergencySection() {
             <Row gutter={20}>
               <Col span={8}>
                 <Form.Item
-                  name={["EmergencyContact", "firstName"]}
+                  name={["emergencyContacts", 0, "firstName"]}
                   style={{ marginBottom: 16 }}
                 >
                   <Input size="large" placeholder="First Name" />
@@ -69,7 +69,7 @@ export default function EmergencySection() {
 
               <Col span={8}>
                 <Form.Item
-                  name={["EmergencyContact", "middleName"]}
+                  name={["emergencyContacts", 0, "middleName"]}
                   style={{ marginBottom: 16 }}
                 >
                   <Input size="large" placeholder="Middle Name" />
@@ -78,7 +78,7 @@ export default function EmergencySection() {
 
               <Col span={8}>
                 <Form.Item
-                  name={["EmergencyContact", "lastName"]}
+                  name={["emergencyContacts", 0, "lastName"]}
                   style={{ marginBottom: 16 }}
                 >
                   <Input size="large" placeholder="Last Name" />
@@ -90,7 +90,7 @@ export default function EmergencySection() {
             <Row gutter={20}>
               <Col span={8}>
                 <Form.Item
-                  name={["EmergencyContact", "relationship"]}
+                  name={["emergencyContacts", 0, "relationship"]}
                   style={{ marginBottom: 0 }}
                 >
                   <Input size="large" placeholder="Relationship" />
@@ -99,7 +99,7 @@ export default function EmergencySection() {
 
               <Col span={8}>
                 <Form.Item
-                  name={["EmergencyContact", "phone"]}
+                  name={["emergencyContacts", 0, "phone"]}
                   style={{ marginBottom: 0 }}
                 >
                   <Input size="large" placeholder="Phone Number" />
@@ -108,7 +108,7 @@ export default function EmergencySection() {
 
               <Col span={8}>
                 <Form.Item
-                  name={["EmergencyContact", "email"]}
+                  name={["emergencyContacts", 0, "email"]}
                   rules={[{ type: "email", message: "Invalid email" }]}
                   style={{ marginBottom: 0 }}
                 >

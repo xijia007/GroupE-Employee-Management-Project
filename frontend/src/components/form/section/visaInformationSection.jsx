@@ -21,7 +21,7 @@ export default function VisaInformationSection() {
   return (
     <Card
       title="Visa Information"
-      bordered={false}
+      variant="borderless"
       style={{ marginBottom: 24 }}
     >
       <Form.Item name="visaInformation" label="Visa information">
