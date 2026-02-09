@@ -1,4 +1,4 @@
-import express from 'express';
+import express from "express";
 import {
     generateToken,
     getAllTokens,
@@ -19,7 +19,7 @@ const router = express.Router();
 // Request Body: { email: string, name: string }
 // Response: { message: string, token: object }
 // ============================================
-router.post('/generate-token', verifyToken, generateToken);
+router.post("/generate-token", verifyToken, generateToken);
 
 // ============================================
 // Route 2: GET /api/hr/tokens
@@ -27,7 +27,7 @@ router.post('/generate-token', verifyToken, generateToken);
 // Permissions: Login required (HR Only)
 // Response: { count: number, tokens: array }
 // ============================================
-router.get('/tokens', verifyToken, getAllTokens);
+router.get("/tokens", verifyToken, getAllTokens);
 
 // ============================================
 // Route 3: GET /api/hr/applications
@@ -36,7 +36,7 @@ router.get('/tokens', verifyToken, getAllTokens);
 // Query parameters: ?status=Pending|Approved|Rejected|All
 // Response: { count: number, applications: array }
 // ============================================
-router.get('/applications', verifyToken, getAllApplications);
+router.get("/applications", verifyToken, getAllApplications);
 
 // ============================================
 // Route 4: GET /api/hr/applications/:id
@@ -45,7 +45,7 @@ router.get('/applications', verifyToken, getAllApplications);
 // Path parameter: id - MongoDB ObjectId of the application
 // Response: { application: object, user: object }
 // ============================================
-router.get('/applications/:id', verifyToken, getApplicationById);
+router.get("/applications/:id", verifyToken, getApplicationById);
 
 // ============================================
 // Route 5: PATCH /api/hr/applications/:id/review
@@ -55,13 +55,17 @@ router.get('/applications/:id', verifyToken, getApplicationById);
 // Request Body: { status: "Approved"|"Rejected", feedback: string }
 // Response: { message: string, application: object }
 // ============================================
-router.patch('/applications/:id/review', verifyToken, reviewApplication);
+router.patch("/applications/:id/review", verifyToken, reviewApplication);
 
-router.get('/onboarding-applications', verifyToken, getAllApplications);  
+router.get("/onboarding-applications", verifyToken, getAllApplications);
 
-router.get('/onboarding-applications/:id', verifyToken, getApplicationById);       
+router.get("/onboarding-applications/:id", verifyToken, getApplicationById);
 
-router.patch('/onboarding-applications/:id/review', verifyToken, reviewApplication);
+router.patch(
+  "/onboarding-applications/:id/review",
+  verifyToken,
+  reviewApplication,
+);
 
 router.get('/employees', verifyToken, getAllEmployees);
 router.get('/employees/:id', verifyToken, getEmployeeById);

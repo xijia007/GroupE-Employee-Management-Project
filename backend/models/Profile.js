@@ -91,36 +91,125 @@ const profileSchema = new mongoose.Schema(
         required: true,
       },
     },
-    EmergencyContact: {
-      firstName: {
-        type: String,
-        required: true,
+    emergencyContacts: [
+      {
+        firstName: {
+          type: String,
+          required: true,
+        },
+        lastName: {
+          type: String,
+          required: true,
+        },
+        middleName: {
+          type: String,
+          default: "",
+        },
+        phone: {
+          type: String,
+          required: true,
+        },
+        email: {
+          type: String,
+          required: true,
+        },
+        relationship: {
+          type: String,
+          required: true,
+        },
       },
-      lastName: {
+    ],
+    documents: {
+      driverLicense: {
         type: String,
-        required: true,
+        default: "",
       },
-      relationship: {
+      workAuthorization: {
         type: String,
-        required: true,
+        default: "",
       },
-      phone: {
+      other: {
         type: String,
-        required: true,
+        default: "",
       },
-      email: {
+      optReceipt: {
         type: String,
-        required: true,
+        default: "",
+      },
+      optEad: {
+        type: String,
+        default: "",
+      },
+      i983: {
+        type: String,
+        default: "",
+      },
+      i20: {
+        type: String,
+        default: "",
       },
     },
-    Douments: {
-      driveLicense: {
-        type: String,
-        default: "",
+
+    visaDocuments: {
+      optReceipt: {
+        status: {
+          type: String,
+          enum: ["locked", "Not Uploaded", "pending", "approved", "rejected"],
+          default: "Not Uploaded",
+        },
+        feedback: {
+          type: String,
+          default: "",
+        },
+        reviewedAt: {
+          type: Date,
+          default: null,
+        },
       },
-      work_authorization: {
-        type: String,
-        default: "",
+      optEad: {
+        status: {
+          type: String,
+          enum: ["locked", "Not Uploaded", "pending", "approved", "rejected"],
+          default: "locked",
+        },
+        feedback: {
+          type: String,
+          default: "",
+        },
+        reviewedAt: {
+          type: Date,
+          default: null,
+        },
+      },
+      i983: {
+        status: {
+          type: String,
+          enum: ["locked", "Not Uploaded", "pending", "approved", "rejected"],
+          default: "locked",
+        },
+        feedback: {
+          type: String,
+          default: "",
+        },
+        reviewedAt: {
+          type: Date,
+          default: null,
+        },
+      },
+      i20: {
+        status: {
+          type: String,
+          enum: ["locked", "Not Uploaded", "pending", "approved", "rejected"],
+          default: "locked",
+        },
+        feedback: {
+          type: String,
+          default: "",
+        },
+        reviewedAt: {
+          type: Date,
+          default: null,
+        },
       },
     },
 

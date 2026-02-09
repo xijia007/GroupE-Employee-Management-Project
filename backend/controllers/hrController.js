@@ -298,8 +298,8 @@ export const reviewApplication = async (req, res) => {
       });
     }
 
-    // Search for applications
-    const application = await OnboardingApplication.findById(id);
+    // Search for applications (include SSN for profile creation)
+    const application = await OnboardingApplication.findById(id).select("+ssn");
 
     if (!application) {
       return res.status(404).json({
@@ -320,6 +320,73 @@ export const reviewApplication = async (req, res) => {
     await User.findByIdAndUpdate(application.userId, {
       onboardingStatus: status,
     });
+
+    // If approved, create/update Profile with application data
+    if (status === "Approved") {
+      try {
+        // Map OnboardingApplication data to Profile structure
+        const profileData = {
+          user: application.userId,
+          firstName: application.firstName,
+          lastName: application.lastName,
+          middleName: application.middleName || "",
+          preferredName: application.preferredName || "",
+          email: application.email,
+          ssn: application.ssn,
+          dateOfBirth: application.dateOfBirth,
+          gender: application.gender,
+          profile_picture: application.profile_picture || "",
+
+          // Address mapping: currentAddress -> address
+          address: {
+            building: application.currentAddress.building,
+            street: application.currentAddress.street,
+            city: application.currentAddress.city,
+            state: application.currentAddress.state,
+            zip: application.currentAddress.zip,
+          },
+
+          // Contact info mapping
+          contactInfo: {
+            cellPhone: application.cellPhone,
+            workPhone: application.workPhone || "",
+          },
+
+          // Visa information
+          visaInformation: {
+            visaType: application.visaTitle || "",
+            StartDate: application.visaStartDate || null,
+            EndDate: application.visaEndDate || null,
+          },
+
+          // Emergency contacts
+          emergencyContacts: application.emergencyContacts || [],
+
+          // Documents
+          documents: {
+            driverLicense: application.documents?.driverLicense || "",
+            workAuthorization: application.documents?.workAuthorization || "",
+            other: application.documents?.other || "",
+          },
+        };
+
+        // Upsert Profile: update if exists, create if not
+        const updatedProfile = await Profile.findOneAndUpdate(
+          { user: application.userId },
+          profileData,
+          {
+            upsert: true, // Create if doesn't exist
+            new: true, // Return updated document
+            runValidators: true, // Run schema validation
+          },
+        );
+        console.log("Profile upserted successfully:");
+      } catch (profileError) {
+        console.error("Error creating/updating profile:", profileError);
+        // Don't fail the approval if profile creation fails
+        // HR can manually create profile later
+      }
+    }
 
     // Sending status notification email
     // Note: The review is considered complete even if the email fails to send.
@@ -359,10 +426,10 @@ export const getAllEmployees = async (req, res) => {
   try {
     const { status, search } = req.query;
 
-    let users = await User.find({ role: 'Employee' })
-      .select('username email onboardingStatus createdAt')
-      .sort({ createdAt: -1});
-    
+    let users = await User.find({ role: "Employee" })
+      .select("username email onboardingStatus createdAt")
+      .sort({ createdAt: -1 });
+
     const employeesWithDetails = await Promise.all(
       users.map(async (user) => {
         const application = await OnboardingApplication.findOne({
@@ -399,7 +466,7 @@ export const getAllEmployees = async (req, res) => {
             reviewedAt: application.reviewedAt
           } : null
         };
-      })
+      }),
     );
 
     // Filter by status if provided
@@ -440,14 +507,13 @@ export const getAllEmployees = async (req, res) => {
 
     res.status(200).json({
       count: filteredEmployees.length,
-      employees: filteredEmployees
+      employees: filteredEmployees,
     });
-
   } catch (err) {
-    console.error('Get employees error:', err);
+    console.error("Get employees error:", err);
     res.status(500).json({
-      message: 'Server error',
-      error: err.message
+      message: "Server error",
+      error: err.message,
     });
   }
 };
@@ -498,4 +564,6 @@ export default {
   getApplicationById,
   reviewApplication,
   getAllEmployees,
+  getVisaStatusList,
+  reviewVisaDocument,
 };

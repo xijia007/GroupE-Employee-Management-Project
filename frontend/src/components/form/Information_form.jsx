@@ -1,8 +1,14 @@
 import React from "react";
 import { Steps } from "antd";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UploadOutlined } from "@ant-design/icons";
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import NameSection from "./section/nameSection";
+import AddressSection from "./section/addressSection";
+import ContactSection from "./section/contactSection";
+import VisaInformationSection from "./section/visaInformationSection";
+import EmergencySection from "./section/EmergencySection";
+import UploadDocument from "./section/uploadDocument";
 import {
   Row,
   Col,
@@ -19,64 +25,183 @@ import {
   Table,
   TreeSelect,
   Upload,
+  Spin,
+  message,
 } from "antd";
+import dayjs from "dayjs";
 
-const config = {
-  rules: [{ type: "object", required: true, message: "Please select time!" }],
-};
-const StartDate_config = {
-  rules: [
-    { type: "object", required: true, message: "Please select start date!" },
-  ],
-};
-const EndDate_config = {
-  rules: [
-    { type: "object", required: true, message: "Please select end date!" },
-  ],
-};
+// Backend API base URL
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
-function PersonInformation() {
-  const [documents, setDocuments] = useState([]);
-  const handleUpload = ({ fileList }) => {
-    setDocuments(fileList);
-  };
-  const columns = [
-    {
-      title: "File Name",
-      dataIndex: "name",
-    },
-    {
-      title: "Action",
-      render: (_, file) => (
-        <Space>
-          {/* Preview */}
-          <Button
-            size="small"
-            onClick={() =>
-              window.open(
-                file.thumbUrl || URL.createObjectURL(file.originFileObj),
-              )
-            }
-          >
-            Preview
-          </Button>
-
-          {/* Download */}
-          <a
-            href={file.thumbUrl || URL.createObjectURL(file.originFileObj)}
-            download={file.name}
-          >
-            <Button size="small">Download</Button>
-          </a>
-        </Space>
-      ),
-    },
-  ];
+/**
+ * PersonInformation Component
+ * Displays and allows editing of employee profile information from Profile database
+ *
+ * @param {string} userId - Current user's ID (for employees viewing their own profile)
+ * @param {string} onboardingApplicationId - Application ID (for HR viewing specific employee - currently not used, reads from Profile)
+ */
+function PersonInformation({ userId, onboardingApplicationId }) {
   const [componentSize, setComponentSize] = useState("default");
+  const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
+
   const onFormLayoutChange = ({ size }) => {
     setComponentSize(size);
   };
-  const [form] = Form.useForm();
+
+  // Transform profile data to form values
+  const transformProfileData = (data) => {
+    if (!data) return {};
+
+    const transformed = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      middleName: data.middleName,
+      preferredName: data.preferredName || "",
+      email: data.email,
+      ssn: data.ssn,
+      dateOfBirth: data.dateOfBirth ? dayjs(data.dateOfBirth) : null,
+      gender: data.gender,
+      profile_picture: data.profile_picture || "",
+
+      // Address (Profile uses 'address' directly, same as form)
+      address: {
+        building: data.address?.building,
+        street: data.address?.street,
+        city: data.address?.city,
+        state: data.address?.state,
+        zip: data.address?.zip,
+      },
+
+      // Contact info (Profile uses 'contactInfo', same as form)
+      contactInfo: {
+        cellPhone: data.contactInfo?.cellPhone,
+        workPhone: data.contactInfo?.workPhone,
+      },
+
+      // Visa information (Profile uses 'visaInformation', same as form)
+      visaInformation: {
+        visaType: data.visaInformation?.visaType,
+        StartDate: data.visaInformation?.StartDate
+          ? dayjs(data.visaInformation.StartDate)
+          : null,
+        EndDate: data.visaInformation?.EndDate
+          ? dayjs(data.visaInformation.EndDate)
+          : null,
+      },
+
+      // Emergency contacts (ensure array has at least empty object for form)
+      emergencyContacts:
+        data.emergencyContacts && data.emergencyContacts.length > 0
+          ? data.emergencyContacts
+          : [{}],
+
+      // Documents (database stores URLs as strings)
+      documents: data.documents || {
+        driverLicense: "",
+        workAuthorization: "",
+        other: "",
+      },
+    };
+
+    return transformed;
+  };
+
+  // Fetch profile data
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      console.log("PersonInformation props:", {
+        userId,
+        onboardingApplicationId,
+      });
+
+      if (!userId && !onboardingApplicationId) {
+        console.log(
+          "No userId or onboardingApplicationId provided, skipping data fetch",
+        );
+        return;
+      }
+
+      setLoading(true);
+      try {
+        let response;
+        let url;
+
+        // Fetch by user/profile ID (for both employee and HR viewing specific profile)
+        if (userId || onboardingApplicationId) {
+          url = `${API_URL}/info/profile`;
+          console.log("Fetching user's profile:", url);
+          response = await fetch(url, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          });
+        }
+
+        console.log("Response status:", response.status);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Received profile data:", data);
+
+          const formattedData = transformProfileData(data);
+          console.log("Formatted data for form:", formattedData);
+          form.setFieldsValue(formattedData);
+          message.success("Personal information loaded successfully");
+        } else {
+          const errorText = await response.text();
+          console.error("Response error:", errorText);
+          message.warning("No profile found");
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+        message.error("Failed to load personal information");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [userId, onboardingApplicationId, form]);
+
+  const handleSubmit = async (values) => {
+    try {
+      console.log("Submitting form values:", values);
+
+      const response = await fetch(`${API_URL}/info/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (response.ok) {
+        const updatedProfile = await response.json();
+        console.log("Profile updated:", updatedProfile);
+        message.success("Information saved successfully");
+      } else {
+        const errorData = await response.json();
+        console.error("Update error:", errorData);
+        message.error(errorData.message || "Failed to save information");
+      }
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      message.error("Failed to save information");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: "50px" }}>
+        <Spin size="large">
+          <div style={{ marginTop: 8 }}>Loading personal information...</div>
+        </Spin>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -87,9 +212,7 @@ function PersonInformation() {
         padding: "24px 16px",
       }}
     >
-      <Form.Item
-        label="Form Size"
-        name="size"
+      <div
         style={{
           position: "absolute",
           top: 12,
@@ -106,7 +229,7 @@ function PersonInformation() {
           <Radio.Button value="default">Default</Radio.Button>
           <Radio.Button value="large">Large</Radio.Button>
         </Radio.Group>
-      </Form.Item>
+      </div>
       <Form
         form={form}
         labelWrap
@@ -115,287 +238,28 @@ function PersonInformation() {
         layout="horizontal"
         initialValues={{ size: componentSize }}
         onValuesChange={onFormLayoutChange}
+        onFinish={handleSubmit}
         size={componentSize}
         style={{ maxWidth: 1200, paddingTop: 50 }}
       >
-        <Form.Item label="Name" style={{ marginBottom: 24 }}>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item name="firstName" style={{ marginBottom: 0 }}>
-                <Input placeholder="First Name" />
-              </Form.Item>
-            </Col>
+        <NameSection />
+        <AddressSection />
+        <ContactSection />
+        <VisaInformationSection />
+        <EmergencySection />
+        <UploadDocument />
 
-            <Col span={8}>
-              <Form.Item name="middleName" style={{ marginBottom: 0 }}>
-                <Input placeholder="Middle Name" />
-              </Form.Item>
-            </Col>
-
-            <Col span={8}>
-              <Form.Item name="lastName" style={{ marginBottom: 0 }}>
-                <Input placeholder="Last Name" />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form.Item>
-
-        <Form.Item name="preferredName" label="Preferred Name">
-          <Row gutter={16}>
-            <Col span={8}>
-              <Input placeholder="Preferred Name" />
-            </Col>
-          </Row>
-        </Form.Item>
-
-        <Form.Item name="profile_picture" label="Profile picture">
-          <Input placeholder="http://" />
-        </Form.Item>
-
-        <Form.Item name="email" label="Email">
-          <Input />
-        </Form.Item>
-
-        <Form.Item name="ssn" label="Social Security Number">
-          <Row gutter={16}>
-            <Col span={16}>
-              <Input placeholder="SSN" />
-            </Col>
-          </Row>
-        </Form.Item>
-        <Form.Item name="dateOfBirth" label="Date of Birth" {...config}>
-          <Row gutter={16}>
-            <Col span={8}>
-              <DatePicker style={{ width: "100%" }} />
-            </Col>
-          </Row>
-        </Form.Item>
-
-        <Form.Item name="gender" label="Gender">
-          <Row gutter={16}>
-            <Col span={8}>
-              <Select
-                options={[
-                  { label: "Female", value: "female" },
-                  { label: "Male", value: "male" },
-                  { label: "Other", value: "other" },
-                ]}
-              />
-            </Col>
-          </Row>
-        </Form.Item>
-        <Form.Item label="Address" style={{ marginBottom: 24 }}>
-          <Form.Item name={["address", "street"]} style={{ marginBottom: 12 }}>
-            <Input placeholder="Street Address" />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                name={["address", "building"]}
-                style={{ marginBottom: 0 }}
-              >
-                <Input placeholder="Building" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name={["address", "city"]} style={{ marginBottom: 0 }}>
-                <Input placeholder="City" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                name={["address", "state"]}
-                style={{ marginBottom: 0 }}
-              >
-                <Input placeholder="State" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name={["address", "zip"]} style={{ marginBottom: 0 }}>
-                <Input placeholder="Zip Code" />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form.Item>
-        <Form.Item label="Contact Information" style={{ marginBottom: 24 }}>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name={["contactInfo", "cellPhone"]}
-                style={{ marginBottom: 0 }}
-              >
-                <Input placeholder="Cell Phone" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name={["contactInfo", "workPhone"]}
-                style={{ marginBottom: 0 }}
-              >
-                <Input placeholder="Work Phone" />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form.Item>
-        <Form.Item name="visaInformation" label="Visa information">
-          <Row gutter={16} align="middle">
-            <Col xs={24} md={8}>
-              <Form.Item
-                name={["visaInformation", "visaType"]}
-                style={{ marginBottom: 0 }}
-                rules={[{ required: true, message: "Please enter visa title" }]}
-              >
-                <Input placeholder="Visa Title" style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} md={8}>
-              <Form.Item
-                name={["visaInformation", "StartDate"]}
-                style={{ marginBottom: 0 }}
-                rules={[
-                  { required: true, message: "Please select start date" },
-                ]}
-              >
-                <DatePicker
-                  style={{ width: "100%" }}
-                  placeholder="Start Date"
-                />
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} md={8}>
-              <Form.Item
-                name={["visaInformation", "EndDate"]}
-                style={{ marginBottom: 0 }}
-                rules={[{ required: true, message: "Please select end date" }]}
-              >
-                <DatePicker style={{ width: "100%" }} placeholder="End Date" />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form.Item>
-        <Form.Item
-          label=" "
-          colon={false}
-          labelCol={{ span: 0 }}
-          wrapperCol={{ span: 24 }}
-          style={{ marginBottom: 24 }}
-          name="EmergencyContact"
-        >
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <div
-              style={{
-                width: "100%",
-                maxWidth: 1000, // ⭐ 控制整体更宽
-                margin: "0 auto",
-                border: "1px solid #d9d9d9",
-                borderRadius: 12,
-                padding: 24,
-                background: "#fafafa",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: 600,
-                  marginBottom: 20,
-                  textAlign: "center",
-                }}
-              >
-                Emergency Contact Person
-              </div>
-
-              {/* 第一行 */}
-              <Row gutter={20}>
-                <Col span={8}>
-                  <Form.Item
-                    name={["EmergencyContact", "firstName"]}
-                    style={{ marginBottom: 16 }}
-                  >
-                    <Input size="large" placeholder="First Name" />
-                  </Form.Item>
-                </Col>
-
-                <Col span={8}>
-                  <Form.Item
-                    name={["EmergencyContact", "middleName"]}
-                    style={{ marginBottom: 16 }}
-                  >
-                    <Input size="large" placeholder="Middle Name" />
-                  </Form.Item>
-                </Col>
-
-                <Col span={8}>
-                  <Form.Item
-                    name={["EmergencyContact", "lastName"]}
-                    style={{ marginBottom: 16 }}
-                  >
-                    <Input size="large" placeholder="Last Name" />
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              {/* 第二行 */}
-              <Row gutter={20}>
-                <Col span={8}>
-                  <Form.Item
-                    name={["EmergencyContact", "relationship"]}
-                    style={{ marginBottom: 0 }}
-                  >
-                    <Input size="large" placeholder="Relationship" />
-                  </Form.Item>
-                </Col>
-
-                <Col span={8}>
-                  <Form.Item
-                    name={["EmergencyContact", "phone"]}
-                    style={{ marginBottom: 0 }}
-                  >
-                    <Input size="large" placeholder="Phone Number" />
-                  </Form.Item>
-                </Col>
-
-                <Col span={8}>
-                  <Form.Item
-                    name={["EmergencyContact", "email"]}
-                    rules={[{ type: "email", message: "Invalid email" }]}
-                    style={{ marginBottom: 0 }}
-                  >
-                    <Input size="large" placeholder="Email" />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </div>
-          </div>
-        </Form.Item>
-        <Form.Item label="Documents">
-          <div style={{ width: "100%" }}>
-            <Upload
-              multiple
-              beforeUpload={() => false} // ⭐ 不自动上传，只保存在前端
-              onChange={handleUpload}
-              fileList={documents}
-            >
-              <Button icon={<UploadOutlined />}>Upload Documents</Button>
-            </Upload>
-
-            <Table
-              style={{ marginTop: 16 }}
-              columns={columns}
-              dataSource={documents}
-              rowKey="uid"
-              pagination={false}
-            />
-          </div>
-        </Form.Item>
         <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
           <Form.Item>
-            <Button danger>Cancel</Button>
+            <Button danger onClick={() => form.resetFields()}>
+              Cancel
+            </Button>
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary">Save</Button>
+            <Button type="primary" htmlType="submit">
+              Save
+            </Button>
           </Form.Item>
         </div>
       </Form>
