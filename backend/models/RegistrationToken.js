@@ -19,13 +19,15 @@ const registrationTokenSchema = new mongoose.Schema({
         enum: ['Sent', 'Submitted'],
         default: 'Sent'
     }, // Sent is the invitation is sent, and Submitted is the onboard application is submitted 
-    createAt: {
+    expiresAt: {
         type: Date,
-        default: Date.now,
-        expires: 259200 // expired in 3 days
+        required: true
     }
 }, {
+    timestamps: true,
     collection: 'RegistrationToken'  // Specify exact collection name
 });
+
+registrationTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export default mongoose.model('RegistrationToken', registrationTokenSchema);

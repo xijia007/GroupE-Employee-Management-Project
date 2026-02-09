@@ -33,7 +33,7 @@ const titleStyle = {
   borderBottom: "1px solid #f0f0f0",
 };
 
-function Sider_component() {
+function Sider_component({ collapsed = false, onCollapse, isMobile = false }) {
   const navigate = useNavigate();
   const location = useLocation();
   // user: Current logged-in user
@@ -120,6 +120,9 @@ function Sider_component() {
   };
 
   const getSidebarTitle = () => {
+    if (collapsed) {
+      return user?.role === "HR" ? "HR" : "EMP";
+    }
     if (user?.role === "HR") {
       return "HR Management";
     }
@@ -127,8 +130,18 @@ function Sider_component() {
   };
 
   return (
-    <Sider width={250} style={siderStyle}>
-      <div style={titleStyle}>{getSidebarTitle()}</div>
+    <Sider
+      width={250}
+      collapsible
+      collapsed={collapsed}
+      collapsedWidth={isMobile ? 64 : 80}
+      trigger={null}
+      onCollapse={onCollapse}
+      style={siderStyle}
+    >
+      <div style={{ ...titleStyle, textAlign: collapsed ? "center" : "left" }}>
+        {getSidebarTitle()}
+      </div>
 
       <Menu
         mode="inline"

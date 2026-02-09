@@ -1,5 +1,5 @@
 import express from 'express';
-import { validateToken, register, login, refreshToken } from '../controllers/authController.js';
+import { validateToken, register, login, refreshToken, logout } from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -18,5 +18,6 @@ router.post('/login', login);
 // POST /api/auth/refresh 
 // - Refresh Access Token
 router.post('/refresh', refreshToken);
+router.post('/logout', logout);
 
 export default router;

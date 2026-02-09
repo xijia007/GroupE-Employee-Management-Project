@@ -41,7 +41,8 @@ export const sendRegistrationEmail = async (to, name, token) => {
 
         // Constructing the registration link
         // Example: http://localhost:5173/register?token=abc123...
-        const registrationLink = `${process.env.FRONTEND_URL}/register?token=${token}`;
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        const registrationLink = `${frontendUrl}/register?token=${token}`;
 
         // Define the email content.
         const mailOptions = {
@@ -80,7 +81,7 @@ export const sendRegistrationEmail = async (to, name, token) => {
                     
                     <!-- 过期提示 -->
                     <p style="color: #999; font-size: 12px; margin-top: 30px;">
-                        This link will expire in 3 days. If you did not expect this email, please ignore it.
+                        This link will expire in 3 hours. If you did not expect this email, please ignore it.
                     </p>
                     
                     <!-- 分隔线 -->

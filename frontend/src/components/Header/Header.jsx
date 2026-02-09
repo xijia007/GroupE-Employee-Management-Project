@@ -1,5 +1,5 @@
 import React from "react";
-import { Avatar, Badge, Input, Layout, Space, Dropdown, message } from "antd";
+import { Avatar, Badge, Input, Layout, Space, Dropdown, message, Button } from "antd";
 import {
   SearchOutlined,
   BellOutlined,
@@ -7,7 +7,8 @@ import {
   UserOutlined,
   MailOutlined,
   LogoutOutlined,
-  DownOutlined  
+  DownOutlined,
+  MenuOutlined  
 } from "@ant-design/icons";
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -21,7 +22,6 @@ const headerStyle = {
   justifyContent: "space-between",
   color: "#000",
   height: 64,
-  paddingInline: 48,
   backgroundColor: "#fff",
   borderRadius: "8px",
 };
@@ -39,7 +39,7 @@ const actionIconStyle = {
   display: "block",
 };
 
-function HeaderComponent() {
+function HeaderComponent({ isMobile = false, onMenuClick }) {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -101,13 +101,23 @@ function HeaderComponent() {
   ];
 
     return (
-    <Header style={headerStyle}>
-      <Input
-        placeholder="Search in PMS"
-        prefix={<SearchOutlined />}
-        style={{ width: 320 }}
-        allowClear
-      />
+    <Header style={{ ...headerStyle, paddingInline: isMobile ? 16 : 48 }}>
+      <Space align="center" size="middle">
+        {isMobile && (
+          <Button
+            type="text"
+            icon={<MenuOutlined />}
+            onClick={onMenuClick}
+            aria-label="Toggle sidebar"
+          />
+        )}
+        <Input
+          placeholder="Search in PMS"
+          prefix={<SearchOutlined />}
+          style={{ width: isMobile ? 180 : 320 }}
+          allowClear
+        />
+      </Space>
 
       <Space
         size="middle"

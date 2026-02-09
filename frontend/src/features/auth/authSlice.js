@@ -10,7 +10,6 @@ const API_URL = 'http://localhost:3001/api';
 const initialState = {
     user: JSON.parse(localStorage.getItem('user')) || null,
     accessToken: localStorage.getItem('accessToken') || null,
-    refreshToken: localStorage.getItem('refreshToken') || null,
     isAuthenticated: !!localStorage.getItem('accessToken'), // Boolean: true if logged in 
     loading: false,
     error: null
@@ -26,7 +25,6 @@ export const loginUser = createAsyncThunk(
             });
 
             localStorage.setItem('accessToken', response.data.accessToken);
-            localStorage.setItem('refreshToken', response.data.refreshToken);
             localStorage.setItem('user', JSON.stringify(response.data.user));
 
             return response.data;
@@ -42,8 +40,8 @@ export const logoutUser = createAsyncThunk(
     'auth/logout',
     async(_, { rejectWithValue }) => {
         try {
+            await axios.post(`${API_URL}/auth/logout`);
             localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
             localStorage.removeItem('user');
 
             return null;
@@ -78,7 +76,6 @@ const authSlice = createSlice({
                 state.isAuthenticated = true;
                 state.user = action.payload.user;
                 state.accessToken = action.payload.accessToken;
-                state.refreshToken = action.payload.refreshToken;
                 state.error = null;
             })
             .addCase(loginUser.rejected, (state, action) => {
@@ -86,7 +83,6 @@ const authSlice = createSlice({
                 state.isAuthenticated = false;
                 state.user = null;
                 state.accessToken = null;
-                state.refreshToken = null;
                 state.error = action.payload;
             });
         builder
@@ -94,7 +90,6 @@ const authSlice = createSlice({
                 state.loading = false;
                 state.user = null;
                 state.accessToken = null;
-                state.refreshToken = null;
                 state.error = null;
             });
     }

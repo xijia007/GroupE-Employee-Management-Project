@@ -1,69 +1,67 @@
-# 📋 Employee Management System - 完整系统流程文档
+# 📋 Employee Management System - Complete System Workflow Documentation
 
-> **文档版本**: v1.0  
-> **最后更新**: 2026-02-03  
-> **项目**: Employee Management System  
-> **团队**: Group E - Phase 2
+> **Project**: Employee Management System  
+> **Team**: Group E
 
 ---
 
-## 📑 目录
+## 📑 Table of Contents
 
-- [系统架构概述](#系统架构概述)
-- [Phase 1: 用户注册与认证流程](#phase-1-用户注册与认证流程)
-- [Phase 2: 员工入职申请流程](#phase-2-员工入职申请流程)
-- [Phase 3: HR 审核流程](#phase-3-hr-审核流程)
-- [Phase 4: 个人信息管理流程](#phase-4-个人信息管理流程)
-- [Phase 5: 签证状态管理流程](#phase-5-签证状态管理流程)
-- [完整数据流架构](#完整数据流架构)
-- [技术栈总览](#技术栈总览)
-- [API 端点总结](#API-端点总结)
+- [System Architecture Overview](#system-architecture-overview)
+- [Phase 1: User Registration & Authentication Flow](#phase-1-user-registration--authentication-flow)
+- [Phase 2: Employee Onboarding Application Flow](#phase-2-employee-onboarding-application-flow)
+- [Phase 3: HR Review Process](#phase-3-hr-review-process)
+- [Phase 4: Personal Information Management Flow](#phase-4-personal-information-management-flow)
+- [Phase 5: Visa Status Management Flow](#phase-5-visa-status-management-flow)
+- [Complete Data Flow Architecture](#complete-data-flow-architecture)
+- [Technology Stack Overview](#technology-stack-overview)
+- [API Endpoints Summary](#api-endpoints-summary)
 
 ---
 
-## 🏗️ 系统架构概述
+## 🏗️ System Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    EMPLOYEE MANAGEMENT SYSTEM                    │
 │                                                                  │
 │  ┌─────────────┐        ┌──────────┐        ┌──────────────┐   │
-│  │  HR 管理端  │  ←→    │  Backend │   ←→   │   员工端     │   │
-│  │             │        │  Server  │        │              │   │
-│  │ • 生成令牌  │        │  Express │        │ • 注册账号   │   │
-│  │ • 审核申请  │        │  MongoDB │        │ • 提交申请   │   │
-│  │ • 管理签证  │        │  JWT     │        │ • 管理信息   │   │
+│  │  HR Portal  │  ←→    │  Backend │   ←→   │ Employee     │   │
+│  │             │        │  Server  │        │ Portal       │   │
+│  │ • Gen Token │        │  Express │        │ • Register   │   │
+│  │ • Review    │        │  MongoDB │        │ • Apply      │   │
+│  │ • Manage    │        │  JWT     │        │ • Manage     │   │
 │  └─────────────┘        └──────────┘        └──────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 核心功能模块
+### Core Functional Modules
 
-| 模块 | 功能 | 用户角色 |
-|------|------|----------|
-| **Authentication** | 注册、登录、Token 管理 | All |
-| **Onboarding** | 员工入职申请提交与审核 | Employee + HR |
-| **Profile Management** | 个人信息编辑与管理 | Employee |
-| **Visa Management** | 签证文件上传与审核（4阶段） | Employee + HR |
-| **HR Dashboard** | 员工管理、申请审核、签证跟踪 | HR Only |
+| Module | Feature | User Role |
+|--------|---------|-----------|
+| **Authentication** | Register, Login, Token Management | All |
+| **Onboarding** | Employee Application Submit & Review | Employee + HR |
+| **Profile Management** | Edit & Manage Personal Information | Employee |
+| **Visa Management** | Upload & Review Visa Docs (4 Stages) | Employee + HR |
+| **HR Dashboard** | Employee Management, Application Review, Visa Tracking | HR Only |
 
 ---
 
-## 🎯 Phase 1: 用户注册与认证流程
+## 🎯 Phase 1: User Registration & Authentication Flow
 
-### 流程概述
+### Process Overview
 
-HR 生成注册令牌 → 发送邮件 → 员工注册 → 员工登录
+HR generates token → Send email → Employee registers → Employee logs in
 
-### 详细流程图
+### Detailed Flowchart
 
 ```
-HR Side (招聘方)                    Backend                    Employee Side (员工)
-────────────────                    ───────                    ─────────────────
+HR Side                         Backend                    Employee Side
+────────────                    ───────                    ─────────────
 
-1. HR 登录系统
+1. HR logs in
    ↓
-2. 生成注册令牌
+2. Generate registration token
    POST /api/hr/generate-token
    {
      email: "john@example.com",
@@ -82,27 +80,27 @@ HR Side (招聘方)                    Backend                    Employee Side 
    │ └─────────────────────┘ │
    └──────────────────────────┘
    ↓
-3. 发送邮件
+3. Send email
    📧 Email Service
    Subject: "Welcome to Company"
    Link: http://localhost:5173/register?token=abc123
                                                            ↓
-                                                    4. 员工收到邮件
-                                                       点击注册链接
+                                                    4. Employee receives email
+                                                       Clicks registration link
                                                            ↓
-                                                    5. 前端验证令牌
+                                                    5. Frontend validates token
                                                        GET /api/auth/registration-token/abc123
                                                        ← { email: "john@...", name: "John Doe" }
                                                            ↓
-                                                    6. 填写注册表单
+                                                    6. Fill registration form
                                                        ┌─────────────────┐
-                                                       │ Email: (预填充)  │
-                                                       │ Name: (预填充)   │
+                                                       │ Email: (pre-filled)|
+                                                       │ Name: (pre-filled) |
                                                        │ Username: ___    │
                                                        │ Password: ___    │
                                                        └─────────────────┘
                                                            ↓
-                                                    7. 提交注册
+                                                    7. Submit registration
                                                        POST /api/auth/register
                                                        {
                                                          token: "abc123",
@@ -110,34 +108,34 @@ HR Side (招聘方)                    Backend                    Employee Side 
                                                          password: "SecurePass123"
                                                        }
    ┌──────────────────────────┐ ← ──────────────── ↓
-   │ Database Updates:        │                    Backend 处理:
-   │                          │                    - 验证令牌
-   │ User (新建)              │                    - 密码加密
-   │ ┌─────────────────────┐ │                    - 创建用户
-   │ │ username: "johndoe" │ │                    - 标记令牌为 "Submitted"
+   │ Database Updates:        │                    Backend processes:
+   │                          │                    - Validate token
+   │ User (create new)        │                    - Hash password
+   │ ┌─────────────────────┐ │                    - Create user
+   │ │ username: "johndoe" │ │                    - Mark token as "Submitted"
    │ │ password: (hashed)  │ │
    │ │ role: "Employee"    │ │
    │ │ onboardingStatus:   │ │
    │ │   "Never Submitted" │ │
    │ └─────────────────────┘ │
    │                          │
-   │ RegistrationToken (更新) │
+   │ RegistrationToken (update)|
    │ ┌─────────────────────┐ │
    │ │ status: "Submitted" │ │
    │ └─────────────────────┘ │
    └──────────────────────────┘
                                                            ↓
-                                                    8. 注册成功
-                                                       自动跳转到登录页
+                                                    8. Registration successful
+                                                       Auto redirect to login
                                                            ↓
-                                                    9. 用户登录
+                                                    9. User logs in
                                                        POST /api/auth/login
                                                        {
                                                          username: "johndoe",
                                                          password: "SecurePass123"
                                                        }
                                                            ↓
-                                                    10. 获取 JWT Token
+                                                    10. Receive JWT Token
                                                         {
                                                           accessToken: "eyJhbG...",
                                                           refreshToken: "eyJhbG...",
@@ -149,30 +147,30 @@ HR Side (招聘方)                    Backend                    Employee Side 
                                                           }
                                                         }
                                                            ↓
-                                                    11. 保存到 localStorage
+                                                    11. Save to localStorage
                                                         - accessToken
                                                         - refreshToken
                                                         - user
                                                            ↓
-                                                    12. 跳转到 Dashboard
+                                                    12. Navigate to Dashboard
 ```
 
-### 关键 API 端点
+### Key API Endpoints
 
-| 方法 | 端点 | 描述 | 权限 |
-|------|------|------|------|
-| POST | `/api/hr/generate-token` | 生成注册令牌 | HR Only |
-| GET | `/api/auth/registration-token/:token` | 验证令牌有效性 | Public |
-| POST | `/api/auth/register` | 用户注册 | Public |
-| POST | `/api/auth/login` | 用户登录 | Public |
-| POST | `/api/auth/refresh` | 刷新 Access Token | Authenticated |
+| Method | Endpoint | Description | Permission |
+|--------|----------|-------------|------------|
+| POST | `/api/hr/generate-token` | Generate registration token | HR Only |
+| GET | `/api/auth/registration-token/:token` | Validate token | Public |
+| POST | `/api/auth/register` | User registration | Public |
+| POST | `/api/auth/login` | User login | Public |
+| POST | `/api/auth/refresh` | Refresh Access Token | Authenticated |
 
-### 数据库变化
+### Database Changes
 
 **RegistrationToken Collection:**
 - `status`: `"Sent"` → `"Submitted"`
 
-**User Collection (新建):**
+**User Collection (new):**
 ```json
 {
   "username": "johndoe",
@@ -186,40 +184,40 @@ HR Side (招聘方)                    Backend                    Employee Side 
 
 ---
 
-## 🎯 Phase 2: 员工入职申请流程
+## 🎯 Phase 2: Employee Onboarding Application Flow
 
-### 流程概述
+### Process Overview
 
-员工登录 → 查看状态 → 填写表单 → 上传文件 → 提交申请 → 状态变为 Pending
+Employee logs in → View status → Fill form → Upload files → Submit application → Status becomes Pending
 
-### 详细流程图
+### Detailed Flowchart
 
 ```
-Employee Side (员工)                Backend                    Database
-────────────────                    ───────                    ────────
+Employee Side                   Backend                    Database
+─────────────                   ───────                    ────────
 
-1. 员工登录后看到
+1. Employee logs in and sees
    onboardingStatus: "Never Submitted"
    ↓
-2. 点击 "Complete Onboarding"
-   进入 /onboarding 页面
+2. Clicks "Complete Onboarding"
+   Navigate to /onboarding page
    ↓
-3. 页面加载，检查状态
+3. Page loads, check status
    GET /api/onboarding/status
    ↓                                  Authorization: Bearer <token>
                                       ↓
-                                   验证 JWT
-                                   提取 userId
+                                   Verify JWT
+                                   Extract userId
                                       ↓
-                                   查询数据库
+                                   Query database
                                    OnboardingApplication.findOne({ userId })
                                       ↓                           ↓
-                                   未找到记录              找到记录
+                                   Not found               Found record
                                       ↓                           ↓
    ← 200 OK                        { status:             { status: "Pending",
    { status: "Never Submitted" }     "Never Submitted" }   feedback: "..." }
    ↓
-4. 显示空表单
+4. Display empty form
    ┌──────────────────────────────────────┐
    │ Onboarding Application Form          │
    ├──────────────────────────────────────┤
@@ -257,9 +255,9 @@ Employee Side (员工)                Backend                    Database
    │ [Submit Application]                  │
    └──────────────────────────────────────┘
    ↓
-5. 员工填写表单并上传文件
+5. Employee fills form and uploads files
    ↓
-6. 点击 "Submit"
+6. Clicks "Submit"
    POST /api/onboarding/submit
    Content-Type: multipart/form-data
    ↓
@@ -281,19 +279,19 @@ Employee Side (员工)                Backend                    Database
    }
    ↓                                  Authorization: Bearer <token>
                                       ↓
-                                   验证 JWT
-                                   提取 userId
+                                   Verify JWT
+                                   Extract userId
                                       ↓
-                                   Multer 处理文件上传
+                                   Multer processes file upload
                                       ↓
-                                   保存文件到 /uploads/documents/
-                                   生成文件路径: "userId_timestamp_filename.pdf"
+                                   Save files to /uploads/documents/
+                                   Generate file path: "userId_timestamp_filename.pdf"
                                       ↓
-                                   查询现有申请
+                                   Query existing application
                                    OnboardingApplication.findOne({ userId })
                                       ↓                           ↓
-                                   未找到                      找到记录
-                                   创建新申请                  更新现有申请
+                                   Not found                   Found record
+                                   Create new                  Update existing
                                       ↓                           ↓
                                    new OnboardingApplication({    Object.assign(application, data)
                                      userId,                       application.status = 'Pending'
@@ -308,44 +306,44 @@ Employee Side (员工)                Backend                    Database
                                       ↓
                                    await application.save()
                                       ↓
-                                   更新 User 表
+                                   Update User table
                                    User.findByIdAndUpdate(userId, {
                                      onboardingStatus: 'Pending'
                                    })
                                       ↓
-   ← 200 OK                        返回成功响应
+   ← 200 OK                        Return success response
    {
      message: "Application submitted successfully",
      application: { ... }
    }
    ↓
-7. 显示成功消息
+7. Display success message
    ✅ "Application submitted successfully!"
    ↓
-8. 状态更新为 "Pending"
+8. Status updated to "Pending"
    Alert: "Application Status: Pending"
    ↓
-9. 表单变为只读模式
-   (等待 HR 审核)
+9. Form becomes read-only
+   (Waiting for HR review)
 ```
 
-### 关键 API 端点
+### Key API Endpoints
 
-| 方法 | 端点 | 描述 | 权限 |
-|------|------|------|------|
-| GET | `/api/onboarding/status` | 获取申请状态 | Employee |
-| GET | `/api/onboarding/my-application` | 获取完整申请数据 | Employee |
-| POST | `/api/onboarding/submit` | 提交/更新申请 | Employee |
+| Method | Endpoint | Description | Permission |
+|--------|----------|-------------|------------|
+| GET | `/api/onboarding/status` | Get application status | Employee |
+| GET | `/api/onboarding/my-application` | Get complete application data | Employee |
+| POST | `/api/onboarding/submit` | Submit/Update application | Employee |
 
-### 文件上传处理
+### File Upload Handling
 
-**Multer 配置:**
-- 存储路径: `/uploads/documents/`
-- 文件命名: `{userId}_{timestamp}_{originalname}`
-- 文件限制: 5MB
-- 允许类型: `.pdf`, `.jpg`, `.jpeg`, `.png`, `.doc`, `.docx`
+**Multer Configuration:**
+- Storage path: `/uploads/documents/`
+- File naming: `{userId}_{timestamp}_{originalname}`
+- File limit: 5MB
+- Allowed types: `.pdf`, `.jpg`, `.jpeg`, `.png`, `.doc`, `.docx`
 
-**上传字段:**
+**Upload fields:**
 ```javascript
 {
   name: 'driverLicense', maxCount: 1,
@@ -354,9 +352,9 @@ Employee Side (员工)                Backend                    Database
 }
 ```
 
-### 数据库变化
+### Database Changes
 
-**OnboardingApplication Collection (新建):**
+**OnboardingApplication Collection (new):**
 ```json
 {
   "userId": "user_id_123",
@@ -395,7 +393,7 @@ Employee Side (员工)                Backend                    Database
 }
 ```
 
-**User Collection 更新:**
+**User Collection update:**
 ```json
 {
   "onboardingStatus": "Never Submitted" → "Pending"
@@ -404,25 +402,25 @@ Employee Side (员工)                Backend                    Database
 
 ---
 
-## 🎯 Phase 3: HR 审核流程
+## 🎯 Phase 3: HR Review Process
 
-### 流程概述
+### Process Overview
 
-HR 查看申请列表 → 查看详情 → 审核文件 → 批准/拒绝 → 发送通知
+HR views application list → View details → Review files → Approve/Reject → Send notification
 
-### 详细流程图
+### Detailed Flowchart
 
 ```
-HR Side (HR)                       Backend                    Employee Side
-────────────                       ───────                    ─────────────
+HR Side                        Backend                    Employee Side
+────────                       ───────                    ─────────────
 
-1. HR 登录系统
+1. HR logs in
    (role: "HR")
    ↓
-2. 进入 "Hiring Management" 页面
+2. Navigate to "Hiring Management" page
    GET /api/hr/applications?status=Pending
    ↓
-   Backend 返回待审核列表
+   Backend returns pending list
    ← [
        {
          id: "...",
@@ -436,7 +434,7 @@ HR Side (HR)                       Backend                    Employee Side
        ...
      ]
    ↓
-3. HR 查看申请列表
+3. HR views application list
    ┌────────────────────────────────────────┐
    │ Pending Applications                    │
    ├────────────────────────────────────────┤
@@ -445,15 +443,15 @@ HR Side (HR)                       Backend                    Employee Side
    │ Jane Smith   jane@...     2024-01-16   │ [View]
    └────────────────────────────────────────┘
    ↓
-4. 点击 [View] 查看详情
+4. Click [View] to see details
    GET /api/hr/applications/:id
    ↓
-   Backend 返回完整申请
+   Backend returns complete application
    ← {
        firstName: "John",
        lastName: "Doe",
        email: "john@example.com",
-       ssn: "XXX-XX-XXXX",  // 部分隐藏
+       ssn: "XXX-XX-XXXX",  // partially hidden
        dateOfBirth: "1990-01-01",
        currentAddress: { ... },
        visaTitle: "H1-B",
@@ -466,18 +464,18 @@ HR Side (HR)                       Backend                    Employee Side
        submittedAt: "2024-01-15"
      }
    ↓
-5. HR 审核申请细节
-   - 查看个人信息
-   - 下载查看文件
+5. HR reviews application details
+   - View personal information
+   - Download and view files
      GET /uploads/documents/xxx.pdf
-   - 验证信息正确性
+   - Verify information accuracy
    ↓
-6. HR 做出决定
+6. HR makes decision
    ┌────────┬────────┐
    │ Approve│ Reject │
    └────────┴────────┘
    ↓                    ↓
-   批准                拒绝
+   Approve              Reject
    ↓                    ↓
    PATCH /api/hr/applications/:id
    {                    {
@@ -485,24 +483,24 @@ HR Side (HR)                       Backend                    Employee Side
      feedback: "Welcome!" feedback: "Please resubmit SSN"
    }                    }
    ↓                    ↓
-   Backend 处理:        Backend 处理:
-   - 更新 OnboardingApplication
+   Backend processes:   Backend processes:
+   - Update OnboardingApplication
    - application.status = "Approved"
    - application.feedback = "Welcome!"
    - application.reviewedAt = new Date()
    - application.reviewedBy = hrUserId
    ↓                    ↓
-   - 更新 User 表
+   - Update User table
    - user.onboardingStatus = "Approved"
    ↓                    ↓
-   - 发送通知邮件     - 发送通知邮件
+   - Send notification email
    📧 "Congratulations!" 📧 "Please review feedback"
    ↓                    ↓
-   返回成功            返回成功
+   Return success       Return success
                                                     ↓
-                                                员工收到邮件通知
+                                                Employee receives email
                                                     ↓
-                                                登录系统查看状态
+                                                Logs in to check status
                                                 GET /api/onboarding/status
                                                     ↓
                                                 { 
@@ -511,22 +509,22 @@ HR Side (HR)                       Backend                    Employee Side
                                                   reviewedAt: "2024-01-16"
                                                 }
                                                     ↓
-                                                显示批准状态
+                                                Display approval status
                                                 ✅ Alert: "Application Approved"
 ```
 
-### 关键 API 端点
+### Key API Endpoints
 
-| 方法 | 端点 | 描述 | 权限 |
-|------|------|------|------|
-| GET | `/api/hr/applications` | 获取申请列表（支持过滤） | HR Only |
-| GET | `/api/hr/applications/:id` | 获取申请详情 | HR Only |
-| PATCH | `/api/hr/applications/:id` | 更新申请状态（批准/拒绝） | HR Only |
-| GET | `/uploads/documents/:filename` | 下载文件 | Authenticated |
+| Method | Endpoint | Description | Permission |
+|--------|----------|-------------|------------|
+| GET | `/api/hr/applications` | Get application list (with filter) | HR Only |
+| GET | `/api/hr/applications/:id` | Get application details | HR Only |
+| PATCH | `/api/hr/applications/:id` | Update application status (approve/reject) | HR Only |
+| GET | `/uploads/documents/:filename` | Download file | Authenticated |
 
-### 数据库变化
+### Database Changes
 
-**OnboardingApplication 更新:**
+**OnboardingApplication update:**
 ```json
 {
   "status": "Pending" → "Approved" / "Rejected",
@@ -536,7 +534,7 @@ HR Side (HR)                       Backend                    Employee Side
 }
 ```
 
-**User 更新:**
+**User update:**
 ```json
 {
   "onboardingStatus": "Pending" → "Approved" / "Rejected"
@@ -545,25 +543,25 @@ HR Side (HR)                       Backend                    Employee Side
 
 ---
 
-## 🎯 Phase 4: 个人信息管理流程
+## 🎯 Phase 4: Personal Information Management Flow
 
-### 流程概述
+### Process Overview
 
-员工查看个人信息 → 编辑某个部分 → 保存更改 → 查看更新
+Employee views personal info → Edit a section → Save changes → View updates
 
-### 详细流程图
+### Detailed Flowchart
 
 ```
-Employee (已批准员工)              Backend                    Database
-────────────────────              ───────                    ────────
+Employee (Approved)            Backend                    Database
+───────────────────            ───────                    ────────
 
-1. 员工登录
+1. Employee logs in
    onboardingStatus: "Approved"
    ↓
-2. 进入 "Personal Information" 页面
+2. Navigate to "Personal Information" page
    GET /api/profile/:userId
    ↓
-   Backend 返回个人信息
+   Backend returns personal info
    ← {
        personalInfo: { firstName, lastName, ... },
        address: { ... },
@@ -573,7 +571,7 @@ Employee (已批准员工)              Backend                    Database
        documents: [ ... ]
      }
    ↓
-3. 查看个人信息
+3. View personal information
    ┌──────────────────────────────────┐
    │ Personal Information              │
    ├──────────────────────────────────┤
@@ -591,10 +589,10 @@ Employee (已批准员工)              Backend                    Database
    │ • OPT Receipt         [Download] │
    └──────────────────────────────────┘
    ↓
-4. 点击 [Edit] 编辑某个部分
-   (例如：Address Section)
+4. Click [Edit] to edit a section
+   (e.g.: Address Section)
    ↓
-   Section 变为编辑模式
+   Section becomes editable
    ┌──────────────────────────────────┐
    │ Address Section    [Save][Cancel] │
    │ Building: [123        ]            │
@@ -604,7 +602,7 @@ Employee (已批准员工)              Backend                    Database
    │ Zip:      [10001      ]            │
    └──────────────────────────────────┘
    ↓
-5. 修改信息后点击 [Save]
+5. After modifying, click [Save]
    PATCH /api/profile/:userId/address
    {
      building: "456",
@@ -614,7 +612,7 @@ Employee (已批准员工)              Backend                    Database
      zip: "02101"
    }
    ↓
-   Backend 更新数据
+   Backend updates data
    OnboardingApplication.findOneAndUpdate(
      { userId },
      { $set: { "currentAddress": newAddress } }
@@ -623,37 +621,37 @@ Employee (已批准员工)              Backend                    Database
    ← 200 OK
    { message: "Address updated successfully" }
    ↓
-6. Section 恢复查看模式
-   显示更新后的地址
+6. Section returns to view mode
+   Display updated address
 ```
 
-### 可编辑的部分（Sections）
+### Editable Sections
 
-| Section | 字段 | API 端点 |
-|---------|------|----------|
+| Section | Fields | API Endpoint |
+|---------|--------|--------------|
 | **Personal Info** | firstName, lastName, preferredName, DOB | `PATCH /api/profile/:userId/personal` |
 | **Address** | building, street, city, state, zip | `PATCH /api/profile/:userId/address` |
 | **Contact** | cellPhone, workPhone, email | `PATCH /api/profile/:userId/contact` |
 | **Emergency Contact** | emergencyContacts array | `PATCH /api/profile/:userId/emergency` |
 
-### 关键 API 端点
+### Key API Endpoints
 
-| 方法 | 端点 | 描述 | 权限 |
-|------|------|------|------|
-| GET | `/api/profile/:userId` | 获取完整个人信息 | Employee (Own) |
-| PATCH | `/api/profile/:userId/:section` | 更新某个部分 | Employee (Own) |
-| GET | `/api/profile/:userId/documents` | 获取文档列表 | Employee (Own) |
-| GET | `/api/profile/documents/:fileId/download` | 下载文件 | Employee (Own) |
+| Method | Endpoint | Description | Permission |
+|--------|----------|-------------|------------|
+| GET | `/api/profile/:userId` | Get complete personal info | Employee (Own) |
+| PATCH | `/api/profile/:userId/:section` | Update a section | Employee (Own) |
+| GET | `/api/profile/:userId/documents` | Get document list | Employee (Own) |
+| GET | `/api/profile/documents/:fileId/download` | Download file | Employee (Own) |
 
 ---
 
-## 🎯 Phase 5: 签证状态管理流程
+## 🎯 Phase 5: Visa Status Management Flow
 
-### 流程概述
+### Process Overview
 
-员工查看签证阶段 → 上传文件 → HR 审核 → 解锁下一阶段 → 循环直到完成
+Employee views visa stage → Upload files → HR reviews → Unlock next stage → Loop until complete
 
-### 签证管理 4 个阶段
+### Visa Management 4 Stages
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -675,16 +673,16 @@ Employee (已批准员工)              Backend                    Database
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 详细流程图
+### Detailed Flowchart
 
 ```
-Employee (F1 签证员工)             Backend                    HR Side
-───────────────────              ───────                    ────────
+Employee (F1 Visa)             Backend                    HR Side
+──────────────────             ───────                    ────────
 
-1. 员工进入 "Visa Status" 页面
+1. Employee navigates to "Visa Status" page
    GET /api/visa/my-status
    ↓
-   Backend 返回签证流程状态
+   Backend returns visa process status
    ← {
        visaType: "F1(CPT/OPT)",
        stages: [
@@ -695,7 +693,7 @@ Employee (F1 签证员工)             Backend                    HR Side
        ]
      }
    ↓
-2. 查看 4 个阶段
+2. View 4 stages
    ┌──────────────────────────────────────┐
    │ Visa Status Management                │
    ├──────────────────────────────────────┤
@@ -714,66 +712,66 @@ Employee (F1 签证员工)             Backend                    HR Side
    │    Waiting for I-983 approval         │
    └──────────────────────────────────────┘
    ↓
-3. OPT Receipt 已批准
-   可以上传 OPT EAD
+3. OPT Receipt approved
+   Can upload OPT EAD
    ↓
-4. 上传 OPT EAD 文件
+4. Upload OPT EAD file
    POST /api/visa/upload
    {
      stage: "OPT_EAD",
      file: <File>
    }
    ↓
-   Backend 处理上传
-   - 保存文件
-   - 创建 VisaDocument 记录
-   - 发送通知给 HR
+   Backend processes upload
+   - Save file
+   - Create VisaDocument record
+   - Send notification to HR
    ↓
    ← 200 OK
    { message: "Document uploaded, waiting for review" }
                                                          ↓
-                                                    HR 收到通知
-                                                    查看待审核文件
+                                                    HR receives notification
+                                                    View pending documents
                                                          ↓
-                                                    HR 审核 OPT EAD
+                                                    HR reviews OPT EAD
                                                     PATCH /api/visa/review/:id
                                                     { status: "Approved" }
                                                          ↓
-                                                    系统自动解锁下一阶段
+                                                    System auto-unlocks next stage
    ← Notification                                  (I-983)
    📧 "Your OPT EAD has been approved"
    ↓
-5. 员工收到通知
-   刷新页面
+5. Employee receives notification
+   Refresh page
    ↓
-6. I-983 阶段解锁
-   可以继续上传
-   (循环流程直到 4 个阶段全部完成)
+6. I-983 stage unlocked
+   Can continue uploading
+   (Loop process until all 4 stages complete)
 ```
 
-### 签证阶段状态
+### Visa Stage Status
 
-| 状态 | 说明 | 员工操作 | HR 操作 |
-|------|------|----------|---------|
-| **Not Started** | 未开始（锁定） | 无法上传 | 无 |
-| **Pending** | 已上传，等待 HR 审核 | 可查看 | 可审核 |
-| **Approved** | HR 已批准 | 只读 | 只读 |
-| **Rejected** | HR 拒绝，需重新上传 | 可重新上传 | 可再次审核 |
+| Status | Description | Employee Action | HR Action |
+|--------|-------------|-----------------|-----------|
+| **Not Started** | Not started (locked) | Cannot upload | None |
+| **Pending** | Uploaded, waiting for HR review | Can view | Can review |
+| **Approved** | HR approved | Read-only | Read-only |
+| **Rejected** | HR rejected, need reupload | Can reupload | Can re-review |
 
-### 关键 API 端点
+### Key API Endpoints
 
-| 方法 | 端点 | 描述 | 权限 |
-|------|------|------|------|
-| GET | `/api/visa/my-status` | 获取签证状态（4阶段） | Employee |
-| POST | `/api/visa/upload` | 上传签证文件 | Employee |
-| GET | `/api/visa/documents/:stage` | 获取某阶段文件 | Employee |
-| GET | `/api/hr/visa/in-progress` | 获取所有进行中的签证 | HR Only |
-| PATCH | `/api/hr/visa/review/:id` | 审核签证文件 | HR Only |
-| POST | `/api/hr/visa/send-notification/:id` | 发送提醒邮件 | HR Only |
+| Method | Endpoint | Description | Permission |
+|--------|----------|-------------|------------|
+| GET | `/api/visa/my-status` | Get visa status (4 stages) | Employee |
+| POST | `/api/visa/upload` | Upload visa file | Employee |
+| GET | `/api/visa/documents/:stage` | Get stage files | Employee |
+| GET | `/api/hr/visa/in-progress` | Get all in-progress visas | HR Only |
+| PATCH | `/api/hr/visa/review/:id` | Review visa file | HR Only |
+| POST | `/api/hr/visa/send-notification/:id` | Send reminder email | HR Only |
 
-### 数据库变化
+### Database Changes
 
-**VisaDocument Collection (新建):**
+**VisaDocument Collection (new):**
 ```json
 {
   "userId": "user_id_123",
@@ -790,7 +788,7 @@ Employee (F1 签证员工)             Backend                    HR Side
 
 ---
 
-## 📊 完整数据流架构
+## 📊 Complete Data Flow Architecture
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
@@ -823,9 +821,9 @@ Update UI
 Display to User
 ```
 
-### 请求/响应流程示例
+### Request/Response Flow Example
 
-**示例：提交入职申请**
+**Example: Submit Onboarding Application**
 
 ```
 1. Frontend (React)
@@ -843,41 +841,41 @@ Display to User
    router.post('/submit', verifyToken, uploadMultiple, submitApplication)
    ↓
    Middleware Chain:
-   - verifyToken: 验证 JWT, 提取 userId
-   - uploadMultiple: Multer 处理文件上传
-   - submitApplication: 业务逻辑
+   - verifyToken: Verify JWT, extract userId
+   - uploadMultiple: Multer handles file upload
+   - submitApplication: Business logic
    ↓
 3. Backend (Controller)
    ↓
    submitApplication(req, res)
    ↓
-   - 解析 req.body 和 req.files
-   - 验证数据
-   - 保存文件路径
+   - Parse req.body and req.files
+   - Validate data
+   - Save file paths
    ↓
 4. Database (MongoDB)
    ↓
    OnboardingApplication.create({ ... })
    User.findByIdAndUpdate({ ... })
    ↓
-   返回保存的文档
+   Return saved document
    ↓
-5. Response 返回
+5. Response returns
    ↓
    res.status(200).json({ message: "Success", application })
    ↓
-6. Frontend 接收
+6. Frontend receives
    ↓
    .then(data => { message.success(...) })
    ↓
-   更新 UI 状态
+   Update UI state
 ```
 
 ---
 
-## 🛠️ 技术栈总览
+## 🛠️ Technology Stack Overview
 
-### Frontend 技术栈
+### Frontend Tech Stack
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -914,7 +912,7 @@ Display to User
 └──────────────────────────────────────────────────────────┘
 ```
 
-### Backend 技术栈
+### Backend Tech Stack
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -951,7 +949,7 @@ Display to User
 └──────────────────────────────────────────────────────────┘
 ```
 
-### 数据库 Schema
+### Database Schema
 
 ```
 MongoDB Collections:
@@ -979,140 +977,140 @@ MongoDB Collections:
 
 ---
 
-## 📡 API 端点总结
+## 📡 API Endpoints Summary
 
 ### Authentication APIs
 
 ```
-POST   /api/auth/register                    # 用户注册
-POST   /api/auth/login                       # 用户登录
-POST   /api/auth/refresh                     # 刷新 Token
-GET    /api/auth/registration-token/:token   # 验证令牌
+POST   /api/auth/register                    # User registration
+POST   /api/auth/login                       # User login
+POST   /api/auth/refresh                     # Refresh Token
+GET    /api/auth/registration-token/:token   # Validate token
 ```
 
 ### Onboarding APIs
 
 ```
-GET    /api/onboarding/status                # 获取申请状态
-GET    /api/onboarding/my-application        # 获取完整申请
-POST   /api/onboarding/submit                # 提交/更新申请
+GET    /api/onboarding/status                # Get application status
+GET    /api/onboarding/my-application        # Get complete application
+POST   /api/onboarding/submit                # Submit/update application
 ```
 
 ### HR Management APIs
 
 ```
-POST   /api/hr/generate-token                # 生成注册令牌
-GET    /api/hr/applications                  # 获取申请列表
-GET    /api/hr/applications/:id              # 获取申请详情
-PATCH  /api/hr/applications/:id              # 审核申请
+POST   /api/hr/generate-token                # Generate registration token
+GET    /api/hr/applications                  # Get application list
+GET    /api/hr/applications/:id              # Get application details
+PATCH  /api/hr/applications/:id              # Review application
 ```
 
 ### Profile Management APIs
 
 ```
-GET    /api/profile/:userId                  # 获取个人信息
-PATCH  /api/profile/:userId/:section         # 更新某个部分
-GET    /api/profile/:userId/documents        # 获取文档列表
-GET    /api/profile/documents/:id/download   # 下载文件
+GET    /api/profile/:userId                  # Get personal info
+PATCH  /api/profile/:userId/:section         # Update a section
+GET    /api/profile/:userId/documents        # Get document list
+GET    /api/profile/documents/:id/download   # Download file
 ```
 
 ### Visa Management APIs
 
 ```
-GET    /api/visa/my-status                   # 获取签证状态
-POST   /api/visa/upload                      # 上传签证文件
-GET    /api/visa/documents/:stage            # 获取某阶段文件
+GET    /api/visa/my-status                   # Get visa status
+POST   /api/visa/upload                      # Upload visa file
+GET    /api/visa/documents/:stage            # Get stage files
 
-GET    /api/hr/visa/in-progress              # HR: 查看进行中的签证
-PATCH  /api/hr/visa/review/:id               # HR: 审核签证文件
-POST   /api/hr/visa/send-notification/:id    # HR: 发送提醒
+GET    /api/hr/visa/in-progress              # HR: View in-progress visas
+PATCH  /api/hr/visa/review/:id               # HR: Review visa file
+POST   /api/hr/visa/send-notification/:id    # HR: Send reminder
 ```
 
 ---
 
-## 📈 项目当前进度
+## 📈 Current Project Progress
 
-### ✅ 已完成
+### ✅ Completed
 
-- [x] 数据库模型设计
-- [x] Authentication 中间件
-- [x] 注册令牌系统
+- [x] Database model design
+- [x] Authentication middleware
+- [x] Registration token system
 - [x] OnboardingApplication Model
 - [x] Onboarding Controllers & Routes
-- [x] 文件上传中间件（Multer）
+- [x] File upload middleware (Multer)
 - [x] Onboarding Frontend Form
 
-### 🚧 进行中
+### 🚧 In Progress
 
-- [ ] 前端 API 服务集成
-- [ ] 表单数据回显
-- [ ] HR 审核页面
+- [ ] Frontend API service integration
+- [ ] Form data pre-fill
+- [ ] HR review page
 
-### 📋 待完成
+### 📋 To-Do
 
 - [ ] Profile Management APIs
 - [ ] Visa Management System (4 stages)
 - [ ] HR Dashboard
-- [ ] Email 通知功能
-- [ ] 文件预览/下载功能
-- [ ] 单元测试
-- [ ] 部署配置
+- [ ] Email notification functionality
+- [ ] File preview/download functionality
+- [ ] Unit testing
+- [ ] Deployment configuration
 
 ---
 
-## 🔐 安全考虑
+## 🔐 Security Considerations
 
-### JWT Token 管理
+### JWT Token Management
 
 ```javascript
-// Access Token: 15分钟有效期（短期）
-// Refresh Token: 7天有效期（长期）
+// Access Token: 15 minutes validity (short-term)
+// Refresh Token: 7 days validity (long-term)
 
-// 自动刷新机制：
-// 当 API 返回 401 时，axios interceptor 自动：
-// 1. 使用 refreshToken 获取新的 accessToken
-// 2. 更新 localStorage
-// 3. 重新发送原始请求
-// 4. 如果刷新失败，跳转到登录页
+// Auto-refresh mechanism:
+// When API returns 401, axios interceptor automatically:
+// 1. Use refreshToken to get new accessToken
+// 2. Update localStorage
+// 3. Resend original request
+// 4. If refresh fails, redirect to login page
 ```
 
-### 密码安全
+### Password Security
 
 ```javascript
-// 使用 bcrypt 加密
+// Using bcrypt encryption
 // Salt rounds: 10
-// 存储格式: $2b$10$hash...
+// Storage format: $2b$10$hash...
 ```
 
-### 文件上传安全
+### File Upload Security
 
-- 文件类型验证（白名单）
-- 文件大小限制（5MB）
-- 文件名清理（防止路径遍历）
-- 存储路径隔离
+- File type validation (whitelist)
+- File size limit (5MB)
+- Filename sanitization (prevent path traversal)
+- Storage path isolation
 
-### API 权限控制
+### API Permission Control
 
 ```javascript
-// 中间件链：
+// Middleware chain:
 router.get('/endpoint',
-  verifyToken,      // 验证 JWT
-  checkRole('HR'),  // 验证角色
-  controller        // 业务逻辑
+  verifyToken,      // Verify JWT
+  checkRole('HR'),  // Verify role
+  controller        // Business logic
 );
 ```
 
 ---
 
-## 📞 联系方式
+## 📞 Contact Information
 
-**项目团队**: Group E  
-**开发者**:
+**Project Team**: Group E  
+**Developers**:
 - XI JIA - Authentication, Onboarding, HR Management
 - ZHENJIA LI - Profile Management, Visa Management
 
-**最后更新**: 2026-02-03
+**Last Updated**: 2026-02-03
 
 ---
 
-**文档结束** 🎉
+**End of Document** 🎉

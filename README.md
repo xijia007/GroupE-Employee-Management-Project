@@ -20,53 +20,53 @@
 
 ### XI JIA 
 
-**Phase 1: Foundation / 第一阶段：基础**
+**Phase 1: Foundation 
 1. Complete authentication middleware ✅ (partially done)
 2. Auth controllers & routes (login, register)
 3. Test authentication flow
 
-**Phase 2: Employee Onboarding / 第二阶段：员工入职**
-4. Create OnboardingApplication model
-5. Implement onboarding submission API
-6. Build onboarding application page (frontend)
-7. Test full onboarding flow (Never Submitted → Pending)
+**Phase 2: Employee Onboarding
+1. Create OnboardingApplication model
+2. Implement onboarding submission API
+3. Build onboarding application page (frontend)
+4. Test full onboarding flow (Never Submitted → Pending)
 
-**Phase 3: HR Hiring / 第三阶段：HR 招聘**
-8. Implement token generation & email API
-9. Build hiring management page (token generation)
-10. Implement application review APIs
-11. Build application review UI (Pending/Approved/Rejected tabs)
-12. Test approval/rejection flow
+**Phase 3: HR Hiring 
+1. Implement token generation & email API
+2. Build hiring management page (token generation)
+3.  Implement application review APIs
+4.  Build application review UI (Pending/Approved/Rejected tabs)
+5.  Test approval/rejection flow
 
-**Phase 4: HR Employee Profiles / 第四阶段：HR 员工档案**
-13. Implement employee list & search APIs
-14. Build employee profiles page
-15. Build employee detail page
-16. Test search & profile viewing
+**Phase 4: HR Employee Profiles 
+1.  Implement employee list & search APIs
+2.  Build employee profiles page
+3.  Build employee detail page
+4.  Test search & profile viewing
 
 ### ZHENJIA LI
 
-**Phase 1: Personal Information / 第一阶段：个人信息**
+**Phase 1: Personal Information
 1. Design reusable EditableSection component
 2. Implement profile APIs (get, update by section)
 3. Build personal information page with all sections
 4. Implement document list, preview, download
 5. Test edit/save/cancel flow with rollback
 
-**Phase 2: Employee Visa Management / 第二阶段：员工签证管理**
-6. Create VisaDocument model
-7. Implement visa document upload & status APIs
-8. Create VisaStage component
-9. Build visa status management page (4 stages)
-10. Test sequential upload workflow (Receipt → EAD → I-983 → I-20)
+**Phase 2: Employee Visa Management
+1. Create VisaDocument model
+2. Implement visa document upload & status APIs
+3. Create VisaStage component
+4. Build visa status management page (4 stages)
+5.  Test sequential upload workflow (Receipt → EAD → I-983 → I-20)
 
-**Phase 3: HR Visa Management / 第三阶段：HR 签证管理**
-11. Implement in-progress list API (calculate next steps)
-12. Implement document approval/rejection APIs
-13. Build "In Progress" view with preview modal
-14. Implement reminder email functionality
-15. Build "All" view with search & document download
-16. Test full approval workflow from HR perspective
+**Phase 3: HR Visa Management 
+1.  Implement in-progress list API (calculate next steps)
+2.  Implement document approval/rejection APIs
+3.  Build "In Progress" view with preview modal
+4.  Implement reminder email functionality
+5.  Build "All" view with search & document download
+6.  Test full approval workflow from HR perspective
 
 
 ## 🛠️ Technical Stack
@@ -76,7 +76,7 @@
 - React + Redux Toolkit
 - React Router (for navigation & protected routes)
 - Form library: React Hook Form or Formik
-- UI library: MUI, Ant Design, or React Bootstrap
+- UI library: Ant Design
 - File upload: react-dropzone or native input
 - PDF preview: react-pdf or iframe
 

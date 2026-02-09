@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Layout } from "antd";
 import HeaderComponent from "./components/Header/Header.jsx";
 import Sider_component from "./components/Sider/Sider_component.jsx";
@@ -15,6 +15,7 @@ import Login from "./pages/auth/Login.jsx";
 import Register from "./pages/auth/Register.jsx";
 import HiringManagement from "./pages/hr/HiringManagement.jsx";
 import EmployeeProfiles from "./pages/hr/EmployeeProfiles.jsx";
+import EmployeeDetail from "./pages/hr/EmployeeDetail.jsx";
 import Home from "./pages/Home.jsx";
 import ApplicationReview from "./pages/hr/ApplicationReview.jsx";
 import HR_VisaStatus from "./pages/hr/HR_VisaStatus.jsx";
@@ -50,11 +51,50 @@ const ProtectedRoute = ({ children, requiredRole }) => {
 };
 
 const AppLayout = ({ children }) => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [siderCollapsed, setSiderCollapsed] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 992px)");
+
+    const handleChange = (event) => {
+      setIsMobile(event.matches);
+      setSiderCollapsed(event.matches);
+    };
+
+    handleChange(mediaQuery);
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", handleChange);
+    } else {
+      mediaQuery.addListener(handleChange);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener("change", handleChange);
+      } else {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, []);
+
+  const handleToggleSider = () => {
+    setSiderCollapsed((prev) => !prev);
+  };
+
   return (
     <Layout style={layoutStyle}>
-      <Sider_component />
+      <Sider_component
+        collapsed={siderCollapsed}
+        onCollapse={setSiderCollapsed}
+        isMobile={isMobile}
+      />
       <Layout>
-        <HeaderComponent />
+        <HeaderComponent
+          isMobile={isMobile}
+          onMenuClick={handleToggleSider}
+        />
         <Content style={contentStyle}>{children}</Content>
         <FooterComponent />
       </Layout>
@@ -149,6 +189,16 @@ const App = () => (
         <ProtectedRoute requiredRole="HR">
           <AppLayout>
             <EmployeeProfiles />
+          </AppLayout>
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/hr/employee/:id"
+      element={
+        <ProtectedRoute requiredRole="HR">
+          <AppLayout>
+            <EmployeeDetail />
           </AppLayout>
         </ProtectedRoute>
       }

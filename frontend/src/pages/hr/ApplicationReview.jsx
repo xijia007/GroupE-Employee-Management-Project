@@ -98,6 +98,22 @@ function ApplicationReview() {
         )
     }
 
+    const normalizeStatus = (value) =>
+        (value || '').replace(/\s+/g, '').toLowerCase();
+
+    const statusConfig = {
+        pending: { color: 'orange', text: 'Under Review' },
+        approved: { color: 'green', text: 'Approved' },
+        rejected: { color: 'red', text: 'Rejected' },
+        notstarted: { color: 'gray', text: 'Not Started' },
+        neversubmitted: { color: 'gray', text: 'Not Started' },
+    };
+    const approvedFeedback = 'Application approved.';
+
+    const normalizedStatus = normalizeStatus(application.status);
+    const statusDisplay = statusConfig[normalizedStatus]?.text || application.status || 'N/A';
+    const statusColor = statusConfig[normalizedStatus]?.color || 'default';
+
     return (
         <div>
             <Button 
@@ -117,12 +133,9 @@ function ApplicationReview() {
                     }}>
                         <span>Application Details</span>
                         <Tag
-                            color={
-                                application.status === 'Pending' ? 'orange' :
-                                application.status === 'Approved' ? 'green' : 'red'
-                            }
+                            color={statusColor}
                         >
-                            {application.status}
+                            {statusDisplay}
                         </Tag>
                     </div>
                 }
@@ -200,7 +213,7 @@ function ApplicationReview() {
 
 
                 {/* 审批操作区域 */}
-                {application.status === 'Pending' && !actionType && (
+                {normalizedStatus === 'pending' && !actionType && (
                     <div style={{ marginTop: 24, textAlign: 'center' }}>
                         <Space size="large">
                             <Button 
@@ -258,11 +271,11 @@ function ApplicationReview() {
                     </Card>
                 )}
                 {/* 已审批状态显示 */}
-                {application.status !== 'Pending' && (
+                {normalizedStatus !== 'pending' && (
                     <Card style={{ marginTop: 24, backgroundColor: '#f0f0f0' }}>
-                        <p><strong>Status:</strong> {application.status}</p>
-                        {application.feedback && (
-                            <p><strong>Feedback:</strong> {application.feedback}</p>
+                        <p><strong>Status:</strong> {statusDisplay}</p>
+                        {(application.feedback || normalizedStatus === 'approved') && (
+                            <p><strong>Feedback:</strong> {normalizedStatus === 'approved' ? approvedFeedback : application.feedback}</p>
                         )}
                         {application.reviewedAt && (
                             <p><strong>Reviewed At:</strong> {new Date(application.reviewedAt).toLocaleString()}</p>
