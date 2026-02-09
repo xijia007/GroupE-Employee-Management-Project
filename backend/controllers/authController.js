@@ -28,10 +28,9 @@ export const validateToken = async (req, res) => {
             });
         }
 
-        // Check if the token has expired (3 days = 259200 seconds)
+        // Check if the token has expired (3 hours)
         const now = new Date();
-        const tokenAge = (now - regToken.createdAt) / 1000;
-        if (tokenAge > 259200) {
+        if (regToken.expiresAt && regToken.expiresAt < now) {
             return res.status(400).json({
                 message: 'Registration token has expired.'
             });
@@ -81,8 +80,7 @@ export const register = async (req, res) => {
 
         // Check if the token has expired
         const now = new Date();
-        const tokenAge = (now - regToken.createAt) / 1000;
-        if (tokenAge > 259200) {
+        if (regToken.expiresAt && regToken.expiresAt < now) {
             return res.status(400).json({
                 message: 'Registration token has expired.'
             });
@@ -183,11 +181,19 @@ export const login = async (req, res) => {
             { expiresIn: '7d' }
         );
 
+        const isProduction = process.env.NODE_ENV === 'production';
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
         // Return the response
         res.status(200).json({
             message: 'Login Successful.',
             accessToken,
-            refreshToken,
             user: {
                 id: user._id,
                 username: user.username,
@@ -210,7 +216,7 @@ export const login = async (req, res) => {
 // ============================================
 export const refreshToken = async (req, res) => {
     try {
-        const { refreshToken } = req.body;
+        const refreshToken = req.cookies?.refreshToken;
 
         if (!refreshToken) {
             res.status(400).json({
@@ -265,3 +271,26 @@ export const refreshToken = async (req, res) => {
         });
     }
 }
+
+// ============================================
+// Logout
+// ============================================
+export const logout = async (req, res) => {
+    try {
+        const isProduction = process.env.NODE_ENV === 'production';
+
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: 'lax'
+        });
+
+        res.status(200).json({ message: 'Logged out successfully.' });
+    } catch (err) {
+        console.error('Logout Error:', err);
+        res.status(500).json({
+            message: 'Server Error',
+            error: err.message
+        });
+    }
+};

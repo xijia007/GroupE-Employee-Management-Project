@@ -27,6 +27,7 @@ import crypto, { subtle } from "crypto";
 // ============================================
 export const generateToken = async (req, res) => {
   try {
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
     // Extract data from the request body
     const { email, name } = req.body;
 
@@ -62,9 +63,10 @@ export const generateToken = async (req, res) => {
     // Example output: 'a3f7c9d2e8b1...' (64-bit)
     const token = crypto.randomBytes(32).toString("hex");
 
-    // Set the expiration time (3 days from now)
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 3); // Current date + 3 days
+    const registrationLink = `${frontendUrl}/register?token=${token}`;
+
+    // Set the expiration time (3 hours from now)
+    const expiresAt = new Date(Date.now() + 3 * 60 * 60 * 1000);
 
     // Create and save the token record.
     const registrationToken = new RegistrationToken({
@@ -91,6 +93,7 @@ export const generateToken = async (req, res) => {
           email,
           name,
           expiresAt,
+          registrationLink,
         },
       });
     } catch (emailError) {
@@ -102,6 +105,7 @@ export const generateToken = async (req, res) => {
           email,
           name,
           expiresAt,
+          registrationLink,
         },
         emailError: emailError.message, // Returns error information for debugging.
       });
@@ -129,12 +133,32 @@ export const getAllTokens = async (req, res) => {
     // .select('-token'): Exclude the token field (for security reasons)
     // .sort({ createdAt: -1 }): Sort in descending order by creation time
     const tokens = await RegistrationToken.find()
-      .select("-token")
+      .select("email name status expiresAt createdAt token")
       .sort({ createdAt: -1 });
 
+    const tokenEmails = tokens.map((token) => token.email);
+    const submittedApplications = await OnboardingApplication.find({
+      email: { $in: tokenEmails },
+    }).select("email");
+
+    const submittedEmails = new Set(
+      submittedApplications.map((app) => app.email),
+    );
+
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const tokensWithLinks = tokens.map((token) => ({
+      _id: token._id,
+      email: token.email,
+      name: token.name,
+      expiresAt: token.expiresAt,
+      createdAt: token.createdAt,
+      registrationLink: `${frontendUrl}/register?token=${token.token}`,
+      onboardingSubmitted: submittedEmails.has(token.email),
+    }));
+
     res.status(200).json({
-      count: tokens.length,
-      tokens,
+      count: tokensWithLinks.length,
+      tokens: tokensWithLinks,
     });
   } catch (err) {
     console.error("Get tokens error:", err);
@@ -343,7 +367,7 @@ export const getAllEmployees = async (req, res) => {
       users.map(async (user) => {
         const application = await OnboardingApplication.findOne({
           userId: user._id
-        }).select('firstName lastName middleName preferredName ssn cellPhone visaTitle status submittedAt reviewedAt');
+        }).select('firstName lastName middleName preferredName ssn cellPhone visaTitle usResident status submittedAt reviewedAt');
 
         return {
           _id: user._id,
@@ -358,7 +382,13 @@ export const getAllEmployees = async (req, res) => {
             .replace(/\s+/g, ' ').trim() : 'N/A',
           ssn: application?.ssn || 'N/A',
           phone: application?.cellPhone || 'N/A',
-          visaTitle: application?.visaTitle || 'N/A',
+          visaTitle: application
+            ? (application.usResident === 'greenCard'
+              ? 'Green Card'
+              : application.usResident === 'usCitizen'
+                ? 'US Citizen'
+                : application.visaTitle) || 'N/A'
+            : 'N/A',
           onboardingStatus: normalizeStatusValue(user.onboardingStatus),
           createdAt: user.createdAt,
           application: application ? {

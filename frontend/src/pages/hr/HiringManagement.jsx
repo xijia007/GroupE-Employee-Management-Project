@@ -10,7 +10,10 @@ import {
     Tag, 
     Space,
     Typography,
-    Divider 
+    Divider,
+    List,
+    Grid,
+    Tooltip
 } from 'antd';
 import { generateRegistrationToken, getAllTokens, getAllApplications } from '../../services/hrService';
 
@@ -30,6 +33,7 @@ const HiringManagement = () => {
     const [applications, setApplications] = useState([]);
 
     const [fetchingData, setFetchingData] = useState(false);
+    const screens = Grid.useBreakpoint();
     
     useEffect(() => {
         fetchTokensAndApplications();
@@ -41,7 +45,7 @@ const HiringManagement = () => {
         try {
             const [tokensData, applicationsData] = await Promise.all([
                 getAllTokens(),
-                getAllApplications('Pending')
+                getAllApplications('All')
             ]);
 
             setTokens(tokensData.tokens || []);
@@ -98,17 +102,35 @@ const HiringManagement = () => {
             key: 'name',
         },
         {
-            title: 'Status',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => {
-                const colorMap = {
-                    'Sent': 'blue',
-                    'Submitted': 'green',
-                    'Expired': 'red'
-                };
-                return <Tag color={colorMap[status]}>{status}</Tag>;
-            }
+            title: 'Registration Link',
+            dataIndex: 'registrationLink',
+            key: 'registrationLink',
+            render: (link) => (
+                link ? (
+                    <Tooltip title="Copy link">
+                        <Button
+                            type="link"
+                            size="small"
+                            onClick={async () => {
+                                await navigator.clipboard.writeText(link);
+                                message.success('Registration link copied');
+                            }}
+                        >
+                            Copy
+                        </Button>
+                    </Tooltip>
+                ) : '-'
+            )
+        },
+        {
+            title: 'Onboarding Submitted',
+            dataIndex: 'onboardingSubmitted',
+            key: 'onboardingSubmitted',
+            render: (submitted) => (
+                <Tag color={tokenSubmittedColor(submitted)}>
+                    {submitted ? 'Submitted' : 'Not Submitted'}
+                </Tag>
+            )
         },
         {
             title: 'Expires At',
@@ -123,6 +145,8 @@ const HiringManagement = () => {
             render: (date) => new Date(date).toLocaleDateString()
         },
     ];
+
+    const tokenSubmittedColor = (submitted) => (submitted ? 'green' : 'default');
 
     const applicationColumns = [
         {
@@ -139,37 +163,38 @@ const HiringManagement = () => {
             key: 'email',
         },
         {
-            title: 'Username',
-            key: 'username',
-            render: (_, record) => record.user?.username || '-'
-        },
-        {
             title: 'Submitted At',
             dataIndex: 'submittedAt',
             key: 'submittedAt',
             render: (date) => new Date(date).toLocaleDateString()
         },
         {
-            title: 'Action',
+            title: 'View Application',
             key: 'action',
             render: (_, record) => (
                 <Button
-                    type='primary'
+                    type='link'
                     size='small'
-                    onClick={() => navigate(`/hr/application-review/${record._id}`)}
+                    onClick={() => window.open(`/hr/application-review/${record._id}`, '_blank')}
                 >
-                    Review
+                    View
                 </Button>
             )
         }
     ];
 
+    const pendingApplications = applications.filter((app) => app.status === 'Pending');
+    const rejectedApplications = applications.filter((app) => app.status === 'Rejected');
+    const approvedApplications = applications.filter((app) => app.status === 'Approved');
+
     return (
-        <div style={{padding: '24px', maxWidth: '1400px', margin: '0 auto'}}>
-            <Title level={2}>Hiring Management</Title>
-            <Text type='secondary'>
-                Generate registration tokens and manage onboarding applications
-            </Text>
+        <div style={{padding: 'clamp(16px, 2vw, 24px)', maxWidth: '1400px', margin: '0 auto'}}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '8px 16px' }}>
+                <Title level={2} style={{ margin: 0 }}>Hiring Management</Title>
+                <Text type='secondary'>
+                    Generate registration tokens and manage onboarding applications
+                </Text>
+            </div>
 
             <Divider />
 
@@ -180,41 +205,43 @@ const HiringManagement = () => {
                     onFinish={handleGenerateToken}
                     autoComplete='off'
                 >
-                    <Form.Item
-                        label='Employee Email'
-                        name='email'
-                        rules={[
-                            {
-                                required: true,
-                                message: 'Please enter employee email'
-                            },
-                            {
-                                type: 'email',
-                                message: 'Please enter a valid email'
-                            }
-                        ]}
-                    >
-                        <Input 
-                            placeholder='john.doe@example.com'
-                            size='large'
-                        />
-                    </Form.Item>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+                        <Form.Item
+                            label='Employee Email'
+                            name='email'
+                            rules={[
+                                {
+                                    required: true,
+                                    message: 'Please enter employee email'
+                                },
+                                {
+                                    type: 'email',
+                                    message: 'Please enter a valid email'
+                                }
+                            ]}
+                        >
+                            <Input 
+                                placeholder='john.doe@example.com'
+                                size='large'
+                            />
+                        </Form.Item>
 
-                    <Form.Item
-                        label="Employee Name"
-                        name="name"
-                        rules={[
-                            { 
-                                required: true, 
-                                message: 'Please enter employee name' 
-                            }
-                        ]}
-                    >
-                        <Input 
-                            placeholder="John Doe" 
-                            size="large"
-                        />
-                    </Form.Item>
+                        <Form.Item
+                            label="Employee Name"
+                            name="name"
+                            rules={[
+                                { 
+                                    required: true, 
+                                    message: 'Please enter employee name' 
+                                }
+                            ]}
+                        >
+                            <Input 
+                                placeholder="John Doe" 
+                                size="large"
+                            />
+                        </Form.Item>
+                    </div>
 
                     <Form.Item>
                         <Button
@@ -234,34 +261,200 @@ const HiringManagement = () => {
                 title={
                     <Space>
                         <span>Pending Applications</span>
-                        <Tag color='orange'>{applications.length}</Tag>
+                        <Tag color='orange'>{pendingApplications.length}</Tag>
                     </Space>
                 }
                 style={{ marginBottom: '24px'}}
             >
-                <Table 
-                    dataSource={applications}
-                    columns={applicationColumns}
-                    rowKey='_id'
-                    loading={fetchingData}
-                    pagination={{ pageSize: 5}}
-                    locale={{ emptyText: 'No pending applications'}}
-                />
+                {screens.md ? (
+                    <Table 
+                        dataSource={pendingApplications}
+                        columns={applicationColumns}
+                        rowKey='_id'
+                        loading={fetchingData}
+                        scroll={{ x: 'max-content' }}
+                        tableLayout="auto"
+                        pagination={{ pageSize: 5}}
+                        locale={{ emptyText: 'No pending applications'}}
+                    />
+                ) : (
+                    <List
+                        dataSource={pendingApplications}
+                        loading={fetchingData}
+                        locale={{ emptyText: 'No pending applications'}}
+                        pagination={{ pageSize: 5 }}
+                        renderItem={(record) => (
+                            <List.Item>
+                                <Card size="small" style={{ width: '100%' }}>
+                                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                                        <Text strong>{record.firstName} {record.lastName}</Text>
+                                        <Text type="secondary">{record.email}</Text>
+                                        <Text type="secondary">
+                                            Submitted {record.submittedAt ? new Date(record.submittedAt).toLocaleDateString() : 'N/A'}
+                                        </Text>
+                                        <Button
+                                            type='primary'
+                                            size='small'
+                                            onClick={() => window.open(`/hr/application-review/${record._id}`, '_blank')}
+                                        >
+                                            Review
+                                        </Button>
+                                    </Space>
+                                </Card>
+                            </List.Item>
+                        )}
+                    />
+                )}
+            </Card>
+
+            <Card
+                title={
+                    <Space>
+                        <span>Rejected Applications</span>
+                        <Tag color='red'>{rejectedApplications.length}</Tag>
+                    </Space>
+                }
+                style={{ marginBottom: '24px'}}
+            >
+                {screens.md ? (
+                    <Table 
+                        dataSource={rejectedApplications}
+                        columns={applicationColumns}
+                        rowKey='_id'
+                        loading={fetchingData}
+                        scroll={{ x: 'max-content' }}
+                        tableLayout="auto"
+                        pagination={{ pageSize: 5}}
+                        locale={{ emptyText: 'No rejected applications'}}
+                    />
+                ) : (
+                    <List
+                        dataSource={rejectedApplications}
+                        loading={fetchingData}
+                        locale={{ emptyText: 'No rejected applications'}}
+                        pagination={{ pageSize: 5 }}
+                        renderItem={(record) => (
+                            <List.Item>
+                                <Card size="small" style={{ width: '100%' }}>
+                                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                                        <Text strong>{record.firstName} {record.lastName}</Text>
+                                        <Text type="secondary">{record.email}</Text>
+                                        <Text type="secondary">
+                                            Submitted {record.submittedAt ? new Date(record.submittedAt).toLocaleDateString() : 'N/A'}
+                                        </Text>
+                                        <Button
+                                            type='link'
+                                            size='small'
+                                            onClick={() => window.open(`/hr/application-review/${record._id}`, '_blank')}
+                                        >
+                                            View
+                                        </Button>
+                                    </Space>
+                                </Card>
+                            </List.Item>
+                        )}
+                    />
+                )}
+            </Card>
+
+            <Card
+                title={
+                    <Space>
+                        <span>Approved Applications</span>
+                        <Tag color='green'>{approvedApplications.length}</Tag>
+                    </Space>
+                }
+                style={{ marginBottom: '24px'}}
+            >
+                {screens.md ? (
+                    <Table 
+                        dataSource={approvedApplications}
+                        columns={applicationColumns}
+                        rowKey='_id'
+                        loading={fetchingData}
+                        scroll={{ x: 'max-content' }}
+                        tableLayout="auto"
+                        pagination={{ pageSize: 5}}
+                        locale={{ emptyText: 'No approved applications'}}
+                    />
+                ) : (
+                    <List
+                        dataSource={approvedApplications}
+                        loading={fetchingData}
+                        locale={{ emptyText: 'No approved applications'}}
+                        pagination={{ pageSize: 5 }}
+                        renderItem={(record) => (
+                            <List.Item>
+                                <Card size="small" style={{ width: '100%' }}>
+                                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                                        <Text strong>{record.firstName} {record.lastName}</Text>
+                                        <Text type="secondary">{record.email}</Text>
+                                        <Text type="secondary">
+                                            Submitted {record.submittedAt ? new Date(record.submittedAt).toLocaleDateString() : 'N/A'}
+                                        </Text>
+                                        <Button
+                                            type='link'
+                                            size='small'
+                                            onClick={() => window.open(`/hr/application-review/${record._id}`, '_blank')}
+                                        >
+                                            View
+                                        </Button>
+                                    </Space>
+                                </Card>
+                            </List.Item>
+                        )}
+                    />
+                )}
             </Card>
 
             <Card title='Token History'>
-                <Table 
-                    dataSource={tokens}
-                    columns={tokenColumns}
-                    rowKey='_id'
-                    loading={fetchingData}
-                    pagination={{ pageSize: 10 }}
-                    locale={{ emptyText: 'No tokens generated yet'}}
-                />
+                {screens.md ? (
+                    <Table 
+                        dataSource={tokens}
+                        columns={tokenColumns}
+                        rowKey='_id'
+                        loading={fetchingData}
+                        scroll={{ x: 'max-content' }}
+                        tableLayout="auto"
+                        pagination={{ pageSize: 10 }}
+                        locale={{ emptyText: 'No tokens generated yet'}}
+                    />
+                ) : (
+                    <List
+                        dataSource={tokens}
+                        loading={fetchingData}
+                        locale={{ emptyText: 'No tokens generated yet'}}
+                        pagination={{ pageSize: 10 }}
+                        renderItem={(record) => (
+                            <List.Item>
+                                <Card size="small" style={{ width: '100%' }}>
+                                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                                        <Text strong>{record.email}</Text>
+                                        <Text type="secondary">{record.name}</Text>
+                                        {record.registrationLink && (
+                                            <Button
+                                                type="link"
+                                                size="small"
+                                                onClick={async () => {
+                                                    await navigator.clipboard.writeText(record.registrationLink);
+                                                    message.success('Registration link copied');
+                                                }}
+                                            >
+                                                Copy link
+                                            </Button>
+                                        )}
+                                        <Tag color={tokenSubmittedColor(record.onboardingSubmitted)}>
+                                            {record.onboardingSubmitted ? 'Submitted' : 'Not Submitted'}
+                                        </Tag>
+                                    </Space>
+                                </Card>
+                            </List.Item>
+                        )}
+                    />
+                )}
             </Card>
         </div>
     )
 };
 
 export default HiringManagement;
-

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Spin, Typography, Row, Col, Descriptions, Tag, Button, Space, message, Divider, Grid } from 'antd';
+import { Card, Spin, Typography, Row, Col, Descriptions, Tag, Button, Space, message, Divider, Grid, Empty } from 'antd';
 import { ArrowLeftOutlined, UserOutlined, PhoneOutlined, MailOutlined, HomeOutlined, SafetyOutlined } from '@ant-design/icons';
 import api from '../../services/api';
 
@@ -111,6 +111,7 @@ function EmployeeDetail() {
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate('/hr/employeeProfiles')}
           style={{ paddingInline: 8 }}
+          tabIndex={-1}
         >
           Back to Employee Profiles
         </Button>
@@ -211,12 +212,26 @@ function EmployeeDetail() {
             style={{ marginBottom: 16 }}
           >
             <Descriptions column={screens.md ? 2 : 1} bordered size="small">
-              <Descriptions.Item label="Visa Type">{application.visaTitle || 'N/A'}</Descriptions.Item>
+              <Descriptions.Item label="Status">
+                {application.usResident === 'greenCard'
+                  ? 'Green Card'
+                  : application.usResident === 'usCitizen'
+                    ? 'US Citizen'
+                    : application.visaTitle || 'N/A'}
+              </Descriptions.Item>
               <Descriptions.Item label="Start Date">
-                {application.visaStartDate ? new Date(application.visaStartDate).toLocaleDateString() : 'N/A'}
+                {application.usResident === 'workAuth'
+                  ? (application.visaStartDate
+                    ? new Date(application.visaStartDate).toLocaleDateString()
+                    : 'N/A')
+                  : '—'}
               </Descriptions.Item>
               <Descriptions.Item label="End Date">
-                {application.visaEndDate ? new Date(application.visaEndDate).toLocaleDateString() : 'N/A'}
+                {application.usResident === 'workAuth'
+                  ? (application.visaEndDate
+                    ? new Date(application.visaEndDate).toLocaleDateString()
+                    : 'N/A')
+                  : '—'}
               </Descriptions.Item>
             </Descriptions>
           </Card>
@@ -247,7 +262,8 @@ function EmployeeDetail() {
 
           {/* Documents */}
           <Card title="📄 Uploaded Documents">
-            {application.documents && Object.keys(application.documents).length > 0 ? (
+            {application.documents &&
+            Object.values(application.documents).some((value) => !!value) ? (
               <Descriptions column={screens.md ? 2 : 1} bordered size="small">
                 {application.documents.driverLicense && (
                   <Descriptions.Item label="Driver License">
@@ -272,7 +288,7 @@ function EmployeeDetail() {
                 )}
               </Descriptions>
             ) : (
-              <Text type="secondary">No documents uploaded</Text>
+              <Text type="secondary">No Documents Uploaded</Text>
             )}
           </Card>
         </Col>
