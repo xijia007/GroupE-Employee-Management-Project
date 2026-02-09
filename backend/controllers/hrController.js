@@ -564,6 +564,5 @@ export default {
   getApplicationById,
   reviewApplication,
   getAllEmployees,
-  getVisaStatusList,
-  reviewVisaDocument,
+  getEmployeeById,
 };

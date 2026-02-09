@@ -3,7 +3,6 @@ import {
   submitApplication,
   getMyApplication,
   getApplicationStatus,
-  deleteMyApplication,
 } from "../controllers/onboardingController.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
 import {
@@ -27,10 +26,5 @@ router.get("/my-application", verifyToken, getMyApplication);
 // - Get application status (quick check)
 // - Protected: requires authentication
 router.get("/status", verifyToken, getApplicationStatus);
-
-// DELETE /api/onboarding/my-application
-// - Delete current user's onboarding application (reset to Never Submitted)
-// - Protected: requires authentication
-router.delete("/my-application", verifyToken, deleteMyApplication);
 
 export default router;
