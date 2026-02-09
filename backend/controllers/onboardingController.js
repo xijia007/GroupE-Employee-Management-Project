@@ -1,5 +1,6 @@
 import OnboardingApplication from "../models/OnboardingApplication.js";
 import User from "../models/User.js";
+import { normalizeStatusValue } from "../utils/statusUtils.js";
 
 // ============================================
 // Submit or Update Onboarding Application
@@ -64,7 +65,10 @@ export const submitApplication = async (req, res) => {
 
         res.status(200).json({
             message: 'Onboarding application submitted successfully',
-            application: application
+            application: {
+                ...application.toObject(),
+                status: normalizeStatusValue(application.status)
+            }
         });
 
     } catch (err) {
@@ -95,7 +99,10 @@ export const getMyApplication = async (req, res) => {
         }
 
         res.status(200).json({
-            application: application
+            application: {
+                ...application.toObject(),
+                status: normalizeStatusValue(application.status)
+            }
         });
 
     } catch (err) {
@@ -124,7 +131,7 @@ export const getApplicationStatus = async (req, res) => {
         }
 
         res.status(200).json({
-            status: application.status,
+            status: normalizeStatusValue(application.status),
             feedback: application.feedback,
             submittedAt: application.submittedAt,
             reviewedAt: application.reviewedAt

@@ -5,7 +5,8 @@ import {
     getAllApplications,
     getApplicationById,
     reviewApplication,
-    getAllEmployees
+    getAllEmployees,
+    getEmployeeById
 } from '../controllers/hrController.js';
 import { verifyToken } from '../middleware/authMiddleware.js';
 
@@ -63,5 +64,6 @@ router.get('/onboarding-applications/:id', verifyToken, getApplicationById);
 router.patch('/onboarding-applications/:id/review', verifyToken, reviewApplication);
 
 router.get('/employees', verifyToken, getAllEmployees);
+router.get('/employees/:id', verifyToken, getEmployeeById);
 
 export default router;

@@ -11,6 +11,7 @@
 import RegistrationToken from "../models/RegistrationToken.js";
 import OnboardingApplication from "../models/OnboardingApplication.js";
 import User from "../models/User.js";
+import { normalizeStatusKey, normalizeStatusValue } from "../utils/statusUtils.js";
 import {
   sendRegistrationEmail,
   sendApplicationStatusEmail,
@@ -183,6 +184,7 @@ export const getAllApplications = async (req, res) => {
 
         return {
           ...app.toObject(), // Convert Mongoose document to a plain object
+          status: normalizeStatusValue(app.status),
           user, // Add user information
         };
       }),
@@ -234,7 +236,10 @@ export const getApplicationById = async (req, res) => {
     // Return complete information (including sensitive fields)
     // Note: This is the details page; HR needs to see all the information.
     res.status(200).json({
-      application,
+      application: {
+        ...application.toObject(),
+        status: normalizeStatusValue(application.status),
+      },
       user,
     });
   } catch (err) {
@@ -322,13 +327,13 @@ export const reviewApplication = async (req, res) => {
 // ============================================
 // getAllEmployees:
 // Function: Get all registered employees with their onboarding status
-// Route: GET /api/hr/employees?status=All|Pending|Approved|Rejected|NotStarted
+// Route: GET /api/hr/employees?status=All|Pending|Approved|Rejected|Never Submitted
 // Query Parameters: status (optional)
 // Response: { count: number, employees: array }
 // ============================================
 export const getAllEmployees = async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, search } = req.query;
 
     let users = await User.find({ role: 'Employee' })
       .select('username email onboardingStatus createdAt')
@@ -338,18 +343,28 @@ export const getAllEmployees = async (req, res) => {
       users.map(async (user) => {
         const application = await OnboardingApplication.findOne({
           userId: user._id
-        }).select('firstName lastName status submittedAt reviewedAt');
+        }).select('firstName lastName middleName preferredName ssn cellPhone visaTitle status submittedAt reviewedAt');
 
         return {
           _id: user._id,
           username: user.username,
           email: user.email,
-          onboardingStatus: user.onboardingStatus || 'Not Started',
+          firstName: application?.firstName || '',
+          middleName: application?.middleName || '',
+          lastName: application?.lastName || '',
+          preferredName: application?.preferredName || '',
+          fullName: application
+            ? `${application.firstName} ${application.middleName || ''} ${application.lastName}`
+            .replace(/\s+/g, ' ').trim() : 'N/A',
+          ssn: application?.ssn || 'N/A',
+          phone: application?.cellPhone || 'N/A',
+          visaTitle: application?.visaTitle || 'N/A',
+          onboardingStatus: normalizeStatusValue(user.onboardingStatus),
           createdAt: user.createdAt,
           application: application ? {
             firstName: application.firstName,
             lastName: application.lastName,
-            status: application.status,
+            status: normalizeStatusValue(application.status),
             submittedAt: application.submittedAt,
             reviewedAt: application.reviewedAt
           } : null
@@ -357,19 +372,41 @@ export const getAllEmployees = async (req, res) => {
       })
     );
 
+    // Filter by status if provided
     let filteredEmployees = employeesWithDetails;
 
-    if (status && status !== 'All') {
-      if (status === 'NotStarted') {
+    const normalizedStatus = normalizeStatusKey(status);
+
+    if (status && normalizedStatus !== 'all') {
+      if (normalizedStatus === 'notstarted') {
         filteredEmployees = employeesWithDetails.filter(
-          emp => !emp.application || emp.onboardingStatus === 'Not Started'
+          emp => !emp.application || normalizeStatusKey(emp.onboardingStatus) === 'neversubmitted'
         );
       } else {
         filteredEmployees = employeesWithDetails.filter(
-          emp => emp.onboardingStatus === status
+          emp => normalizeStatusKey(emp.onboardingStatus) === normalizedStatus
         );
       }
     }
+
+    // Filter by search keyword if provided
+    if (search && search.trim()) {
+      const keyword = search.trim().toLowerCase();
+      filteredEmployees = filteredEmployees.filter(emp => {
+        const firstName = (emp.firstName || '').toLowerCase();
+        const lastName = (emp.lastName || '').toLowerCase();
+        const preferredName = (emp.preferredName || '').toLowerCase();
+
+        return firstName.includes(keyword) || lastName.includes(keyword) || preferredName.includes(keyword);
+      });
+    }
+
+    // Sort by lastName alphabetically (A-Z)
+    filteredEmployees.sort((a,b) => {
+      const lastNameA = a.lastName.toLowerCase() || '';
+      const lastNameB = b.lastName.toLowerCase() || '';
+      return lastNameA.localeCompare(lastNameB);
+    });
 
     res.status(200).json({
       count: filteredEmployees.length,
@@ -381,6 +418,45 @@ export const getAllEmployees = async (req, res) => {
     res.status(500).json({
       message: 'Server error',
       error: err.message
+    });
+  }
+};
+
+// ============================================
+// getEmployeeById:
+// Function: Get a single employee's application by userId
+// Route: GET /api/hr/employees/:id
+// Parameters: id - MongoDB ObjectId of the user
+// Response: { application: object|null, user: object|null }
+// ============================================
+export const getEmployeeById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id).select("username email role onboardingStatus");
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const application = await OnboardingApplication.findOne({ userId: id });
+
+    res.status(200).json({
+      application: application
+        ? { ...application.toObject(), status: normalizeStatusValue(application.status) }
+        : null,
+      user: {
+        ...user.toObject(),
+        onboardingStatus: normalizeStatusValue(user.onboardingStatus),
+      },
+    });
+  } catch (err) {
+    console.error("Get employee detail error:", err);
+    res.status(500).json({
+      message: "Server error",
+      error: err.message,
     });
   }
 };
