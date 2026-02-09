@@ -408,14 +408,20 @@ export const getAllEmployees = async (req, res) => {
           userId: user._id,
         }).select("firstName lastName status submittedAt reviewedAt");
 
+        // Source of truth: OnboardingApplication.
+        // If the application record is deleted, treat as not started (even if
+        // User.onboardingStatus is stale).
+        const derivedOnboardingStatus = application?.status || "Not Started";
+
         return {
           _id: user._id,
           username: user.username,
           email: user.email,
-          onboardingStatus: user.onboardingStatus || "Not Started",
+          onboardingStatus: derivedOnboardingStatus,
           createdAt: user.createdAt,
           application: application
             ? {
+                applicationId: application._id,
                 firstName: application.firstName,
                 lastName: application.lastName,
                 status: application.status,
@@ -454,6 +460,106 @@ export const getAllEmployees = async (req, res) => {
   }
 };
 
+// ============================================
+// getVisaStatusList:
+// Function: HR list of employees with visa info + OPT document review status
+// Route: GET /api/hr/visa-status
+// Response: { count: number, employees: array }
+// ============================================
+export const getVisaStatusList = async (req, res) => {
+  try {
+    const users = await User.find({ role: "Employee" })
+      .select("username email role createdAt")
+      .sort({ createdAt: -1 });
+
+    const employees = await Promise.all(
+      users.map(async (user) => {
+        const profile = await Profile.findOne({ user: user._id }).select(
+          "firstName lastName preferredName profile_picture visaInformation documents visaDocuments",
+        );
+
+        return {
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          createdAt: user.createdAt,
+          profile: profile ? profile.toObject() : null,
+        };
+      }),
+    );
+
+    // Only keep F1 employees (e.g. 'F1(CPT/OPT)')
+    const f1Employees = employees.filter((e) => {
+      const visaType = e?.profile?.visaInformation?.visaType;
+      if (!visaType) return false;
+      return visaType === "F1(CPT/OPT)" || String(visaType).startsWith("F1");
+    });
+
+    res.status(200).json({ count: f1Employees.length, employees: f1Employees });
+  } catch (err) {
+    console.error("Get visa status list error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+// ============================================
+// reviewVisaDocument:
+// Function: HR approves/rejects a specific OPT document
+// Route: PATCH /api/hr/visa-status/:userId/documents/:docType/review
+// Body: { status: "approved"|"rejected", feedback?: string }
+// ============================================
+export const reviewVisaDocument = async (req, res) => {
+  try {
+    const { userId, docType } = req.params;
+    const { status, feedback } = req.body;
+
+    const allowedDocTypes = new Set(["optReceipt", "optEad", "i983", "i20"]);
+    if (!allowedDocTypes.has(docType)) {
+      return res.status(400).json({ message: "Invalid document type" });
+    }
+
+    if (!["approved", "rejected"].includes(status)) {
+      return res
+        .status(400)
+        .json({ message: 'Status must be either "approved" or "rejected"' });
+    }
+
+    const profile = await Profile.findOne({ user: userId });
+    if (!profile) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+
+    const path = profile?.documents?.[docType];
+    if (!path) {
+      return res
+        .status(400)
+        .json({ message: "No uploaded document to review" });
+    }
+
+    profile.visaDocuments = profile.visaDocuments || {};
+    profile.visaDocuments[docType] = {
+      ...(profile.visaDocuments[docType] || {}),
+      status,
+      feedback: status === "rejected" ? feedback || "" : "",
+      reviewedAt: new Date(),
+    };
+
+    await profile.save();
+
+    res.status(200).json({
+      message: "Visa document reviewed",
+      userId,
+      docType,
+      status,
+      profile,
+    });
+  } catch (err) {
+    console.error("Review visa document error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
 export default {
   generateToken,
   getAllTokens,
@@ -461,4 +567,6 @@ export default {
   getApplicationById,
   reviewApplication,
   getAllEmployees,
+  getVisaStatusList,
+  reviewVisaDocument,
 };

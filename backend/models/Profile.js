@@ -132,6 +132,85 @@ const profileSchema = new mongoose.Schema(
         type: String,
         default: "",
       },
+      optReceipt: {
+        type: String,
+        default: "",
+      },
+      optEad: {
+        type: String,
+        default: "",
+      },
+      i983: {
+        type: String,
+        default: "",
+      },
+      i20: {
+        type: String,
+        default: "",
+      },
+    },
+
+    visaDocuments: {
+      optReceipt: {
+        status: {
+          type: String,
+          enum: ["locked", "Not Uploaded", "pending", "approved", "rejected"],
+          default: "Not Uploaded",
+        },
+        feedback: {
+          type: String,
+          default: "",
+        },
+        reviewedAt: {
+          type: Date,
+          default: null,
+        },
+      },
+      optEad: {
+        status: {
+          type: String,
+          enum: ["locked", "Not Uploaded", "pending", "approved", "rejected"],
+          default: "locked",
+        },
+        feedback: {
+          type: String,
+          default: "",
+        },
+        reviewedAt: {
+          type: Date,
+          default: null,
+        },
+      },
+      i983: {
+        status: {
+          type: String,
+          enum: ["locked", "Not Uploaded", "pending", "approved", "rejected"],
+          default: "locked",
+        },
+        feedback: {
+          type: String,
+          default: "",
+        },
+        reviewedAt: {
+          type: Date,
+          default: null,
+        },
+      },
+      i20: {
+        status: {
+          type: String,
+          enum: ["locked", "Not Uploaded", "pending", "approved", "rejected"],
+          default: "locked",
+        },
+        feedback: {
+          type: String,
+          default: "",
+        },
+        reviewedAt: {
+          type: Date,
+          default: null,
+        },
+      },
     },
 
     // Additional profile fields can be added here

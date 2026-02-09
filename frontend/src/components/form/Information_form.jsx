@@ -53,11 +53,6 @@ function PersonInformation({ userId, onboardingApplicationId }) {
   const transformProfileData = (data) => {
     if (!data) return {};
 
-    console.log("=== Transform Profile Data ===");
-    console.log("Raw SSN:", data.ssn);
-    console.log("Raw dateOfBirth:", data.dateOfBirth);
-    console.log("Raw gender:", data.gender);
-
     const transformed = {
       firstName: data.firstName,
       lastName: data.lastName,

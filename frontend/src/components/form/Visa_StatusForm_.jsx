@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Badge,
@@ -16,10 +16,12 @@ import {
   EyeOutlined,
   DownloadOutlined,
 } from "@ant-design/icons";
+import api from "../../services/api";
 
 const { Title, Text } = Typography;
 
 const STATUS_COLOR = {
+  "Not Uploaded": "default",
   locked: "default",
   pending: "processing",
   approved: "success",
@@ -28,6 +30,7 @@ const STATUS_COLOR = {
 
 function StatusTag({ status }) {
   const map = {
+    "Not Uploaded": "NOT UPLOADED",
     locked: "LOCKED",
     pending: "PENDING",
     approved: "APPROVED",
@@ -37,43 +40,120 @@ function StatusTag({ status }) {
 }
 
 function fileUrl(file) {
-  return file?.originFileObj ? URL.createObjectURL(file.originFileObj) : null;
+  if (typeof file === "string" && file.trim()) return file;
+  const blob = file?.originFileObj ?? file;
+  return blob instanceof Blob ? URL.createObjectURL(blob) : null;
+}
+
+function toAbsoluteUrl(urlOrPath) {
+  if (!urlOrPath) return null;
+  if (/^https?:\/\//i.test(urlOrPath)) return urlOrPath;
+
+  const cleaned = String(urlOrPath).replace(/\\/g, "/");
+
+  const apiBaseUrl = api?.defaults?.baseURL || "http://localhost:3001/api";
+  const origin = apiBaseUrl.replace(/\/api\/?$/, "");
+  const normalizedPath = cleaned.startsWith("/") ? cleaned : `/${cleaned}`;
+  return `${origin}${normalizedPath}`;
 }
 
 function VisaStatusManagementPage({ isOPTUser = true }) {
   const [docs, setDocs] = useState({
-    optReceipt: { status: "pending", file: null, feedback: "" }, // receipt 通常来自 onboarding；这里假设 pending
+    optReceipt: { status: "Not Uploaded", file: null, feedback: "" },
     optEad: { status: "locked", file: null, feedback: "" },
     i983: { status: "locked", file: null, feedback: "" },
     i20: { status: "locked", file: null, feedback: "" },
   });
 
-  // 解锁规则（根据当前状态派生）
-  const derived = useMemo(() => {
-    const next = structuredClone(docs);
+  useEffect(() => {
+    let cancelled = false;
 
-    if (
-      docs.optReceipt.status === "approved" &&
-      next.optEad.status === "locked"
-    )
-      next.optEad.status = "pending"; // 或者 "ready"
-    if (docs.optEad.status === "approved" && next.i983.status === "locked")
-      next.i983.status = "pending";
-    if (docs.i983.status === "approved" && next.i20.status === "locked")
-      next.i20.status = "pending";
+    const refreshProfile = async () => {
+      try {
+        const res = await api.get("/info/profile");
+        if (cancelled) return;
 
-    return next;
+        const profileDocs = res?.data?.documents || {};
+        const visaDocs = res?.data?.visaDocuments || {};
+
+        setDocs((prev) => {
+          const next = { ...prev };
+          for (const key of ["optReceipt", "optEad", "i983", "i20"]) {
+            const file = profileDocs?.[key] || null;
+            const serverStatus = visaDocs?.[key]?.status;
+            const serverFeedback = visaDocs?.[key]?.feedback;
+
+            // Normalize server status to UI status.
+            // Source of truth is whether a file exists:
+            // - No file => "Not Uploaded" (even if legacy status says pending/locked)
+            // - Has file => if status is missing/"Not Uploaded"/"locked" => treat as "pending"
+            let status;
+            if (!file) {
+              status = "Not Uploaded";
+            } else {
+              const normalized = String(serverStatus || "").toLowerCase();
+              if (
+                !serverStatus ||
+                normalized === "locked" ||
+                normalized === "not uploaded"
+              ) {
+                status = "pending";
+              } else {
+                status = serverStatus;
+              }
+            }
+
+            next[key] = {
+              ...next[key],
+              file,
+              status,
+              feedback: serverFeedback || "",
+            };
+          }
+          return next;
+        });
+      } catch {
+        // ignore load failures (e.g. not logged in)
+      }
+    };
+
+    // Initial load
+    refreshProfile();
+
+    // If user navigates away/back without unmounting, refresh on focus/visibility.
+    const onFocus = () => refreshProfile();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") refreshProfile();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
+
+  // 解锁规则：不再把 "locked" 当成后端/状态字段存储，而是 UI 根据流程派生“是否锁定”。
+  const isFlowLocked = useMemo(() => {
+    return {
+      optReceipt: false,
+      optEad: docs.optReceipt.status !== "approved",
+      i983: docs.optEad.status !== "approved",
+      i20: docs.i983.status !== "approved",
+    };
   }, [docs]);
 
   // 当前 step index
   const currentStep = useMemo(() => {
     const order = ["optReceipt", "optEad", "i983", "i20"];
     for (let i = 0; i < order.length; i++) {
-      const s = derived[order[i]].status;
+      const s = docs[order[i]].status;
       if (s !== "approved") return i; // 第一个未 approved 的就是当前
     }
     return 3;
-  }, [derived]);
+  }, [docs]);
 
   if (!isOPTUser) {
     return (
@@ -89,26 +169,63 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
     );
   }
 
-  const onUpload =
-    (key) =>
-    ({ file }) => {
+  const uploadToProfile = async (key, file, onSuccess, onError) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await api.post(`/info/profile/documents/${key}`, formData, {
+        headers: {
+          // override api.js default application/json for this multipart request
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      const savedPath = res?.data?.path;
+      const savedStatus = res?.data?.profile?.visaDocuments?.[key]?.status;
+      const savedFeedback = res?.data?.profile?.visaDocuments?.[key]?.feedback;
+
       setDocs((prev) => ({
         ...prev,
-        [key]: { ...prev[key], file, status: "pending", feedback: "" }, // 上传后进入 pending（等待 HR）
+        [key]: {
+          ...prev[key],
+          file: savedPath || prev[key].file,
+          status: savedStatus || "pending",
+          feedback: savedFeedback || "",
+        },
       }));
-      return false; // 阻止自动上传
-    };
+
+      onSuccess?.(res?.data);
+    } catch (err) {
+      onError?.(err);
+    }
+  };
 
   const renderMessage = (key) => {
-    const { status, feedback } = derived[key];
+    const { status, feedback } = docs[key];
 
-    if (status === "locked") {
+    if (isFlowLocked[key]) {
       return (
         <Alert
           type="warning"
           showIcon
           message="Locked"
           description="Complete the previous step first."
+        />
+      );
+    }
+    if (status === "Not Uploaded") {
+      const msgMap = {
+        optReceipt: "Please upload a copy of your OPT Receipt.",
+        optEad: "Please upload a copy of your OPT EAD.",
+        i983: "Please upload your I-983 form.",
+        i20: "Please upload your I-20 form.",
+      };
+      return (
+        <Alert
+          type="warning"
+          showIcon
+          message="Not Uploaded"
+          description={msgMap[key]}
         />
       );
     }
@@ -162,15 +279,40 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
   };
 
   const renderActions = (key) => {
-    const { status, file } = derived[key];
-    const url = fileUrl(file);
+    const { status, file } = docs[key];
+    const url = toAbsoluteUrl(fileUrl(file));
 
-    const canUpload = status !== "locked" && status !== "approved"; // approved 后通常不允许再改（你也可以允许重新上传）
+    const downloadName =
+      typeof file === "string" && file.trim()
+        ? file.split("/").pop() || `${key}.pdf`
+        : file?.name || `${key}.pdf`;
+
+    const uploadFileList = url
+      ? [
+          {
+            uid: `${key}-1`,
+            name: downloadName,
+            status: "done",
+            url,
+          },
+        ]
+      : [];
+
+    const canUpload =
+      !isFlowLocked[key] && status !== "approved" && status !== "pending"; // pending 时避免重复提交；rejected/Not Uploaded 允许上传
     const uploadBtn = (
       <Upload
-        beforeUpload={onUpload(key)}
+        customRequest={({ file, onSuccess, onError }) =>
+          uploadToProfile(key, file, onSuccess, onError)
+        }
         maxCount={1}
         accept=".pdf,.png,.jpg,.jpeg"
+        fileList={uploadFileList}
+        showUploadList={{
+          showRemoveIcon: false,
+          showPreviewIcon: false,
+          showDownloadIcon: false,
+        }}
       >
         <Button icon={<UploadOutlined />} disabled={!canUpload}>
           Upload
@@ -196,7 +338,7 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
           if (!url) return;
           const a = document.createElement("a");
           a.href = url;
-          a.download = file?.name || `${key}.pdf`;
+          a.download = downloadName;
           a.click();
         }}
       >
@@ -257,7 +399,11 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
             title={
               <Space>
                 <Text strong>{step.title}</Text>
-                <StatusTag status={derived[step.key].status} />
+                <StatusTag
+                  status={
+                    isFlowLocked[step.key] ? "locked" : docs[step.key].status
+                  }
+                />
               </Space>
             }
           >

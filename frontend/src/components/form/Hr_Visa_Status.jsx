@@ -9,19 +9,20 @@ import {
   Select,
   Button,
   Avatar,
-  Dropdown,
   Typography,
   Tooltip,
 } from "antd";
 import {
   SearchOutlined,
-  MoreOutlined,
   EyeOutlined,
+  CheckOutlined,
+  CloseOutlined,
   EditOutlined,
   BellOutlined,
   DownloadOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import api from "../../services/api";
 
 const { RangePicker } = DatePicker;
 const { Text } = Typography;
@@ -98,13 +99,193 @@ function daysLeftTag(endDate) {
   return <Tag color="green">{diff} days</Tag>;
 }
 
-// TODO: replace with real API call
+function toAbsoluteUrl(urlOrPath) {
+  if (!urlOrPath) return null;
+  if (/^https?:\/\//i.test(urlOrPath)) return urlOrPath;
+
+  const cleaned = String(urlOrPath).replace(/\\/g, "/");
+  const apiBaseUrl = api?.defaults?.baseURL || "http://localhost:3001/api";
+  const origin = apiBaseUrl.replace(/\/api\/?$/, "");
+  const normalizedPath = cleaned.startsWith("/") ? cleaned : `/${cleaned}`;
+  return `${origin}${normalizedPath}`;
+}
+
+const DOCS = [
+  { key: "optReceipt", label: "OPT Receipt" },
+  { key: "optEad", label: "OPT EAD" },
+  { key: "i983", label: "I-983" },
+  { key: "i20", label: "I-20" },
+];
+
+function pickCurrStatusDoc(profile) {
+  const docs = profile?.documents || {};
+
+  // Determine based on which files have been provided (uploaded) rather than status.
+  // Pick the latest provided file in the required sequence.
+  const lastProvided = [...DOCS].reverse().find((d) => !!docs[d.key]);
+  if (!lastProvided) return { label: "OPT Receipt" };
+  return { label: lastProvided.label };
+}
+
+function computeOverallStatus(profile) {
+  const docs = profile?.documents || {};
+  const visaDocs = profile?.visaDocuments || {};
+
+  const anyUploaded = DOCS.some((d) => !!docs[d.key]);
+  if (!anyUploaded) return "Never Submitted";
+
+  // 1) If any uploaded doc is rejected => Rejected
+  const anyRejected = DOCS.some((d) => {
+    if (!docs[d.key]) return false;
+    const st = String(visaDocs?.[d.key]?.status || "").toLowerCase();
+    return st === "rejected";
+  });
+  if (anyRejected) return "Rejected";
+
+  // 2) If any uploaded doc is awaiting review => Pending
+  const anyAwaitingReview = DOCS.some((d) => {
+    if (!docs[d.key]) return false;
+    const st = String(visaDocs?.[d.key]?.status || "").toLowerCase();
+    return !st || st === "pending" || st === "locked" || st === "not uploaded";
+  });
+  if (anyAwaitingReview) return "Pending";
+
+  // 3) Otherwise, everything uploaded so far is approved => Approved
+  const allUploadedAreApproved = DOCS.filter((d) => !!docs[d.key]).every(
+    (d) => {
+      const st = String(visaDocs?.[d.key]?.status || "").toLowerCase();
+      return st === "approved";
+    },
+  );
+  if (allUploadedAreApproved) return "Approved";
+
+  // Fallback
+  return "Pending";
+}
+
+function pickDefaultViewDoc(profile) {
+  const docs = profile?.documents || {};
+  const visaDocs = profile?.visaDocuments || {};
+
+  // Prefer docs that are awaiting review (pending/locked/missing status), otherwise
+  // fall back to the first uploaded doc.
+  const preferred = DOCS.find((d) => {
+    if (!docs[d.key]) return false;
+    const st = String(visaDocs?.[d.key]?.status || "").toLowerCase();
+    return !st || st === "pending" || st === "locked" || st === "not uploaded";
+  })?.key;
+  if (preferred) return preferred;
+
+  return DOCS.find((d) => !!docs[d.key])?.key;
+}
+
 async function fetchVisaList({ page, pageSize, filters }) {
-  // return { items: [...], total: 123 }
-  return {
-    items: [],
-    total: 0,
-  };
+  const res = await api.get("/hr/visa-status");
+  const employees = res?.data?.employees || [];
+
+  const normalized = employees.map((e) => {
+    const profile = e.profile || {};
+    const fullName =
+      `${profile.firstName || ""} ${profile.lastName || ""}`.trim() ||
+      e.username;
+
+    return {
+      _id: e._id,
+      userId: e._id,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      name: fullName,
+      email: e.email || profile.email,
+      role: e.role,
+      createdAt: e.createdAt,
+      avatarUrl: profile.profile_picture || "",
+      visaTitle: profile?.visaInformation?.visaType || "",
+      visaStartDate: profile?.visaInformation?.StartDate || null,
+      visaEndDate: profile?.visaInformation?.EndDate || null,
+      profile,
+      status: computeOverallStatus(profile),
+      defaultViewDoc: pickDefaultViewDoc(profile),
+      currStatusDoc: pickCurrStatusDoc(profile),
+    };
+  });
+
+  let items = normalized;
+
+  // filters
+  if (filters?.role && filters.role !== "all") {
+    items = items.filter((r) => r.role === filters.role);
+  }
+  if (filters?.visaType && filters.visaType !== "all") {
+    items = items.filter((r) => r.visaTitle === filters.visaType);
+  }
+  if (filters?.appStatus && filters.appStatus !== "all") {
+    items = items.filter((r) => r.status === filters.appStatus);
+  }
+  if (filters?.search) {
+    const q = String(filters.search).trim().toLowerCase();
+    if (q) {
+      items = items.filter((r) => {
+        const fullName = `${r.firstName || ""} ${r.lastName || ""}`.trim();
+        return (
+          fullName.toLowerCase().includes(q) ||
+          String(r.email || "")
+            .toLowerCase()
+            .includes(q)
+        );
+      });
+    }
+  }
+  if (filters?.dateRange?.length === 2) {
+    const [start, end] = filters.dateRange;
+    if (start && end) {
+      const s = dayjs(start).startOf("day");
+      const t = dayjs(end).endOf("day");
+      items = items.filter((r) => {
+        if (!r.createdAt) return false;
+        const c = dayjs(r.createdAt);
+        return c.isAfter(s) && c.isBefore(t);
+      });
+    }
+  }
+
+  // sort
+  switch (filters?.sortBy) {
+    case "endSoon":
+      items = [...items].sort(
+        (a, b) =>
+          dayjs(a.visaEndDate || 0).valueOf() -
+          dayjs(b.visaEndDate || 0).valueOf(),
+      );
+      break;
+    case "endLate":
+      items = [...items].sort(
+        (a, b) =>
+          dayjs(b.visaEndDate || 0).valueOf() -
+          dayjs(a.visaEndDate || 0).valueOf(),
+      );
+      break;
+    case "last30": {
+      const cutoff = dayjs().subtract(30, "day");
+      items = items.filter(
+        (r) => !r.createdAt || dayjs(r.createdAt).isAfter(cutoff),
+      );
+      break;
+    }
+    case "last7":
+    default: {
+      const cutoff = dayjs().subtract(7, "day");
+      items = items.filter(
+        (r) => !r.createdAt || dayjs(r.createdAt).isAfter(cutoff),
+      );
+      break;
+    }
+  }
+
+  const total = items.length;
+  const startIdx = (page - 1) * pageSize;
+  const paged = items.slice(startIdx, startIdx + pageSize);
+
+  return { items: paged, total };
 }
 
 export default function HrVisaStatusPage() {
@@ -123,6 +304,40 @@ export default function HrVisaStatusPage() {
     sortBy: "last7",
     search: "",
   });
+
+  const load = React.useCallback(
+    async (nextPage = page, nextPageSize = pageSize, nextFilters = filters) => {
+      setLoading(true);
+      try {
+        const res = await fetchVisaList({
+          page: nextPage,
+          pageSize: nextPageSize,
+          filters: nextFilters,
+        });
+        setRows(res.items || []);
+        setTotal(res.total || 0);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [page, pageSize, filters],
+  );
+
+  const handleReview = React.useCallback(
+    async ({ userId, docType, status, feedback }) => {
+      await api.patch(`/hr/visa-status/${userId}/documents/${docType}/review`, {
+        status,
+        feedback,
+      });
+      await load(page, pageSize, filters);
+    },
+    [filters, load, page, pageSize],
+  );
+
+  const handlePreview = React.useCallback((path) => {
+    const url = toAbsoluteUrl(path);
+    if (url) window.open(url, "_blank");
+  }, []);
 
   const columns = useMemo(() => {
     return [
@@ -192,6 +407,16 @@ export default function HrVisaStatusPage() {
         render: (v) => daysLeftTag(v),
       },
       {
+        title: "Current Status File",
+        dataIndex: "currStatusDoc",
+        key: "currStatusFile",
+        render: (v) => {
+          const label = v?.label || "—";
+          if (label === "—") return <Text type="secondary">{label}</Text>;
+          return <Text>{label}</Text>;
+        },
+      },
+      {
         title: "Status",
         dataIndex: "status",
         key: "status",
@@ -202,76 +427,95 @@ export default function HrVisaStatusPage() {
         key: "actions",
         align: "right",
         render: (_, r) => {
-          const menuItems = [
-            {
-              key: "view",
-              icon: <EyeOutlined />,
-              label: "View details",
-            },
-            {
-              key: "edit",
-              icon: <EditOutlined />,
-              label: "Edit visa info",
-            },
-            {
-              key: "remind",
-              icon: <BellOutlined />,
-              label: "Send reminder",
-              disabled: !r.visaEndDate,
-            },
-            {
-              key: "export",
-              icon: <DownloadOutlined />,
-              label: "Export row",
-            },
-          ];
+          const profile = r.profile || {};
+          const docs = profile.documents || {};
+          const visaDocs = profile.visaDocuments || {};
+
+          const currentPendingDocType = DOCS.find((d) => {
+            if (!docs[d.key]) return false;
+            const st = String(visaDocs?.[d.key]?.status || "").toLowerCase();
+            return !st || st === "pending" || st === "locked";
+          })?.key;
+
+          const reviewDocType =
+            currentPendingDocType ||
+            [...DOCS].reverse().find((d) => !!docs[d.key])?.key;
 
           return (
             <Space>
-              <Tooltip title="View">
-                <Button icon={<EyeOutlined />} />
-              </Tooltip>
-              <Dropdown
-                menu={{
-                  items: menuItems,
-                  onClick: ({ key }) => {
-                    // TODO: hook to your navigation/modals
-                    // view -> open drawer
-                    // edit -> open modal form
-                    // remind -> trigger email or notification
-                    // export -> download
-                    console.log(key, r);
-                  },
-                }}
-                trigger={["click"]}
+              <Tooltip
+                title={
+                  currentPendingDocType
+                    ? `Approve ${DOCS.find((d) => d.key === currentPendingDocType)?.label || ""}`
+                    : "No pending document"
+                }
               >
-                <Button icon={<MoreOutlined />} />
-              </Dropdown>
+                <Button
+                  type="primary"
+                  icon={<CheckOutlined />}
+                  disabled={!currentPendingDocType}
+                  onClick={async () => {
+                    if (!currentPendingDocType) return;
+                    await handleReview({
+                      userId: r.userId,
+                      docType: currentPendingDocType,
+                      status: "approved",
+                      feedback: "",
+                    });
+                  }}
+                />
+              </Tooltip>
+
+              <Tooltip
+                title={
+                  currentPendingDocType
+                    ? `Reject ${DOCS.find((d) => d.key === currentPendingDocType)?.label || ""}`
+                    : "No pending document"
+                }
+              >
+                <Button
+                  danger
+                  icon={<CloseOutlined />}
+                  disabled={!currentPendingDocType}
+                  onClick={async () => {
+                    if (!currentPendingDocType) return;
+                    const feedback =
+                      window.prompt("Rejection feedback (required):", "") || "";
+                    if (!String(feedback).trim()) return;
+
+                    await handleReview({
+                      userId: r.userId,
+                      docType: currentPendingDocType,
+                      status: "rejected",
+                      feedback,
+                    });
+                  }}
+                />
+              </Tooltip>
+
+              <Tooltip
+                title={
+                  reviewDocType
+                    ? `Review ${DOCS.find((d) => d.key === reviewDocType)?.label || ""}`
+                    : "No document to review"
+                }
+              >
+                <Button
+                  icon={<EyeOutlined />}
+                  disabled={!reviewDocType}
+                  onClick={() => {
+                    if (!reviewDocType) return;
+                    const path = docs?.[reviewDocType];
+                    handlePreview(path);
+                  }}
+                />
+              </Tooltip>
             </Space>
           );
         },
       },
     ];
-  }, []);
-
-  const load = async (
-    nextPage = page,
-    nextPageSize = pageSize,
-    nextFilters = filters,
-  ) => {
-    setLoading(true);
-    try {
-      const res = await fetchVisaList({
-        page: nextPage,
-        pageSize: nextPageSize,
-        filters: nextFilters,
-      });
-      setRows(res.items || []);
-      setTotal(res.total || 0);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [handlePreview, handleReview]);
 
   // initial load (simple; if you prefer useEffect, add it)
   React.useEffect(() => {
