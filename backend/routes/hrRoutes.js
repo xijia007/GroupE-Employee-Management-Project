@@ -10,7 +10,7 @@ import {
     getVisaStatusList,
     reviewVisaDocument,
 } from '../controllers/hrController.js';
-import { verifyToken } from '../middleware/authMiddleware.js';
+import { verifyToken, requireHR } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
