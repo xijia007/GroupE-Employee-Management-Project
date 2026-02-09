@@ -6,9 +6,11 @@ import {
     getApplicationById,
     reviewApplication,
     getAllEmployees,
-    getEmployeeById
+    getEmployeeById,
+    getVisaStatusList,
+    reviewVisaDocument,
 } from '../controllers/hrController.js';
-import { verifyToken } from '../middleware/authMiddleware.js';
+import { verifyToken, requireHR } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -69,5 +71,14 @@ router.patch(
 
 router.get('/employees', verifyToken, getAllEmployees);
 router.get('/employees/:id', verifyToken, getEmployeeById);
+
+// Visa Status Review (OPT documents)
+router.get("/visa-status", verifyToken, requireHR, getVisaStatusList);
+router.patch(
+  "/visa-status/:userId/documents/:docType/review",
+  verifyToken,
+  requireHR,
+  reviewVisaDocument,
+);
 
 export default router;

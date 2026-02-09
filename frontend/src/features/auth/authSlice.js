@@ -90,6 +90,7 @@ const authSlice = createSlice({
         builder
             .addCase(logoutUser.fulfilled, (state) => {
                 state.loading = false;
+                state.isAuthenticated = false;  // ✅ Must set to false to trigger ProtectedRoute redirect
                 state.user = null;
                 state.accessToken = null;
                 state.error = null;
