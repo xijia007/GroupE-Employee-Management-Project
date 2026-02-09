@@ -40,7 +40,9 @@ export const logoutUser = createAsyncThunk(
     'auth/logout',
     async(_, { rejectWithValue }) => {
         try {
-            await axios.post(`${API_URL}/auth/logout`);
+            await axios.post(`${API_URL}/auth/logout`, {}, {
+                withCredentials: true  // Send httpOnly cookie to server
+            });
             localStorage.removeItem('accessToken');
             localStorage.removeItem('user');
 

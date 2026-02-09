@@ -80,71 +80,6 @@ export const submitApplication = async (req, res) => {
             details: process.env.NODE_ENV === 'development' ? err.stack : undefined
         });
     }
-    if (typeof applicationData.emergencyContacts === "string") {
-      applicationData.emergencyContacts = JSON.parse(
-        applicationData.emergencyContacts,
-      );
-    }
-
-    // handle the path for uploaded files
-    if (req.files) {
-      applicationData.documents = applicationData.documents || {};
-
-      if (req.files.driverLicense) {
-        applicationData.documents.driverLicense =
-          req.files.driverLicense[0].path;
-      }
-
-      if (req.files.workAuthorization) {
-        applicationData.documents.workAuthorization =
-          req.files.workAuthorization[0].path;
-      }
-
-      if (req.files.other) {
-        applicationData.documents.other = req.files.other[0].path;
-      }
-    }
-
-    // check if there is an application
-    let application = await OnboardingApplication.findOne({ userId });
-
-    if (application) {
-      console.log("📝 Updating existing application");
-      Object.assign(application, applicationData);
-      application.status = "Pending";
-      application.submittedAt = new Date();
-    } else {
-      console.log("📝 Creating new application");
-      application = new OnboardingApplication({
-        userId,
-        ...applicationData,
-        status: "Pending",
-        submittedAt: new Date(),
-      });
-    }
-
-    await application.save();
-    console.log("✅ Application saved successfully");
-
-    // update user onboarding Status
-    await User.findByIdAndUpdate(userId, {
-      onboardingStatus: "Pending",
-    });
-    console.log("✅ User status updated");
-
-    res.status(200).json({
-      message: "Onboarding application submitted successfully",
-      application: application,
-    });
-  } catch (err) {
-    console.error("❌ Submit application error:", err);
-    console.error("Error stack:", err.stack);
-    res.status(500).json({
-      message: "Server Error",
-      error: err.message,
-      details: process.env.NODE_ENV === "development" ? err.stack : undefined,
-    });
-  }
 };
 
 // ============================================
@@ -177,17 +112,6 @@ export const getMyApplication = async (req, res) => {
             error: err.message
         });
     }
-
-    res.status(200).json({
-      application: application,
-    });
-  } catch (err) {
-    console.error("Get application error:", err);
-    res.status(500).json({
-      message: "Server error",
-      error: err.message,
-    });
-  }
 };
 
 // ============================================
