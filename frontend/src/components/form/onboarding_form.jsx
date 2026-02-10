@@ -17,7 +17,7 @@ import {
 } from "antd";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../features/auth/authSlice";
-import { UploadOutlined } from "@ant-design/icons";
+import { UploadOutlined, MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 const config = {
@@ -28,6 +28,7 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
 
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const user = useSelector(selectUser); // Get current user for email
 
   const [fileList, setFileList] = useState({
     driverLicense: [],
@@ -38,6 +39,13 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
   const profileUrl = Form.useWatch("profilePicture", form);
   const usResident = Form.useWatch("usResident", form);
   const IsReference = Form.useWatch("IsReference", form);
+
+  // Pre-fill email from user account on mount
+  useEffect(() => {
+    if (user?.email) {
+      form.setFieldsValue({ email: user.email });
+    }
+  }, [user, form]);
 
   useEffect(() => {
     if (initialData) {
@@ -75,7 +83,8 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
         } else if (key === 'emergencyContacts') {
           formData.append(key, JSON.stringify(values[key]));
         } else if (key === 'reference') {
-          const emergencyContact = {
+          // Reference is a single object, not an array
+          const referenceData = {
             firstName: values.reference?.firstName || '',
             middleName: values.reference?.middleName || '',
             lastName: values.reference?.lastName || '',
@@ -83,7 +92,7 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
             email: values.reference?.email || '',
             relationship: values.reference?.relationship || ''
           };
-          formData.append('emergencyContacts', JSON.stringify([emergencyContact]));
+          formData.append('reference', JSON.stringify(referenceData));
         } else if (key !== 'size' && key !== 'profilePicture' && key !== 'optReceipt' && key !== 'IsReference') {
           if (values[key] !== undefined && values[key] !== null) {
             formData.append(key, values[key]);
@@ -232,8 +241,13 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
             { required: true, message: 'Email is required'},
             { type: 'email', message: 'Please enter a valid email'}
           ]}
+          tooltip="Email is pre-filled from your registration and cannot be changed"
         >
-          <Input placeholder="your.email@example.com"/>
+          <Input 
+            placeholder="your.email@example.com" 
+            disabled
+            style={{ backgroundColor: '#f5f5f5', color: '#000' }}
+          />
         </Form.Item>
 
         <Form.Item 
@@ -402,9 +416,10 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
 
         <Form.Item
           name="IsReference"
-          label="Emergency Contact"
+          label="Reference"
           required
-          rules={[{ required: true, message: "Please specify if you have an emergency contact" }]}
+          rules={[{ required: true, message: "Please specify if you have a reference" }]}
+          tooltip="Who referred you to this company?"
         >
           <Select
             placeholder="Select"
@@ -426,7 +441,7 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
               }}
             >
               <div style={{ fontWeight: 600, marginBottom: 12 }}>
-                Emergency Contact Information
+                Reference Information
               </div>
 
               <Row gutter={16}>
@@ -499,6 +514,156 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
             </div>
           </Form.Item>
         )}
+
+        {/* Emergency Contacts Section */}
+        <Form.Item 
+          label="Emergency Contacts" 
+          required
+          style={{ marginBottom: 8 }}
+        >
+          <div style={{ marginBottom: 12, color: '#666' }}>
+            Add at least one emergency contact
+          </div>
+        </Form.Item>
+
+        <Form.List
+          name="emergencyContacts"
+          rules={[
+            {
+              validator: async (_, emergencyContacts) => {
+                if (!emergencyContacts || emergencyContacts.length < 1) {
+                  return Promise.reject(new Error('At least 1 emergency contact is required'));
+                }
+              },
+            },
+          ]}
+        >
+          {(fields, { add, remove }, { errors }) => (
+            <>
+              {fields.map((field, index) => (
+                <Form.Item
+                  required={false}
+                  key={field.key}
+                  style={{ marginBottom: 16 }}
+                >
+                  <div
+                    style={{
+                      border: "1px solid #d9d9d9",
+                      borderRadius: 10,
+                      padding: 16,
+                      background: "#fafafa",
+                      position: "relative",
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, marginBottom: 12 }}>
+                      Emergency Contact #{index + 1}
+                    </div>
+
+                    {fields.length > 1 && (
+                      <MinusCircleOutlined
+                        style={{
+                          position: "absolute",
+                          top: 16,
+                          right: 16,
+                          fontSize: 20,
+                          color: "#ff4d4f",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => remove(field.name)}
+                      />
+                    )}
+
+                    <Row gutter={16}>
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "firstName"]}
+                          rules={[{ required: true, message: "First name required" }]}
+                          style={{ marginBottom: 12 }}
+                        >
+                          <Input placeholder="First Name" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "middleName"]}
+                          style={{ marginBottom: 12 }}
+                        >
+                          <Input placeholder="Middle Name (Optional)" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "lastName"]}
+                          rules={[{ required: true, message: "Last name required" }]}
+                          style={{ marginBottom: 12 }}
+                        >
+                          <Input placeholder="Last Name" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <Row gutter={16}>
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "relationship"]}
+                          rules={[{ required: true, message: "Relationship required" }]}
+                          style={{ marginBottom: 0 }}
+                        >
+                          <Input placeholder="Relationship" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "phone"]}
+                          rules={[{ required: true, message: "Phone required" }]}
+                          style={{ marginBottom: 0 }}
+                        >
+                          <Input placeholder="Phone Number" />
+                        </Form.Item>
+                      </Col>
+
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "email"]}
+                          rules={[
+                            { required: true, message: "Email required" },
+                            { type: "email", message: "Invalid email" },
+                          ]}
+                          style={{ marginBottom: 0 }}
+                        >
+                          <Input placeholder="Email" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </div>
+                </Form.Item>
+              ))}
+
+              <Form.Item>
+                <Button
+                  type="dashed"
+                  onClick={() => add()}
+                  block
+                  icon={<PlusOutlined />}
+                  style={{ marginBottom: 8 }}
+                >
+                  Add Emergency Contact
+                </Button>
+                <Form.ErrorList errors={errors} />
+              </Form.Item>
+            </>
+          )}
+        </Form.List>
+
 
         <Form.Item label='Driver License'>
           <Upload

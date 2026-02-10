@@ -207,14 +207,34 @@ function HomePage() {
                   </Button>
                 </li>
                 <li>
-                  <Button type="link" onClick={() => navigate('/personInformation')}>
+                  <Button 
+                    type="link" 
+                    onClick={() => navigate('/personInformation')}
+                    disabled={applicationStatus !== 'Approved'}
+                    title={applicationStatus !== 'Approved' ? 'Available after onboarding approval' : ''}
+                  >
                     👤 View/Update Personal Information
                   </Button>
+                  {applicationStatus !== 'Approved' && (
+                    <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                      (Available after onboarding approval)
+                    </span>
+                  )}
                 </li>
                 <li>
-                  <Button type="link" onClick={() => navigate('/visaStatus')}>
+                  <Button 
+                    type="link" 
+                    onClick={() => navigate('/visaStatus')}
+                    disabled={applicationStatus !== 'Approved'}
+                    title={applicationStatus !== 'Approved' ? 'Available after onboarding approval' : ''}
+                  >
                     📄 Check Visa Status
                   </Button>
+                  {applicationStatus !== 'Approved' && (
+                    <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                      (Available after onboarding approval)
+                    </span>
+                  )}
                 </li>
               </>
             )}

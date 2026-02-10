@@ -50,6 +50,77 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   return children;
 };
 
+// Route guard that requires approved onboarding for employees
+const ApprovedOnlyRoute = ({ children }) => {
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectUser);
+  const [loading, setLoading] = useState(true);
+  const [isApproved, setIsApproved] = useState(false);
+
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+
+      // HR users can access everything
+      if (user?.role === 'HR') {
+        setIsApproved(true);
+        setLoading(false);
+        return;
+      }
+
+      // Check employee onboarding status
+      if (user?.role === 'Employee') {
+        try {
+          const response = await fetch('/api/onboarding/status', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            setIsApproved(data.status === 'Approved');
+          }
+        } catch (error) {
+          console.error('Error checking onboarding status:', error);
+          setIsApproved(false);
+        }
+      }
+      
+      setLoading(false);
+    };
+
+    checkOnboardingStatus();
+  }, [isAuthenticated, user]);
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  // Employees must have approved onboarding to access
+  if (user?.role === 'Employee' && !isApproved) {
+    return <Navigate to="/home" replace />;
+  }
+
+  return children;
+};
+
 const AppLayout = ({ children }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [siderCollapsed, setSiderCollapsed] = useState(false);
@@ -147,9 +218,11 @@ const App = () => (
       path="/personApplication"
       element={
         <ProtectedRoute>
-          <AppLayout>
-            <PersonApplication />
-          </AppLayout>
+          <ApprovedOnlyRoute>
+            <AppLayout>
+              <PersonApplication />
+            </AppLayout>
+          </ApprovedOnlyRoute>
         </ProtectedRoute>
       }
     />
@@ -157,9 +230,11 @@ const App = () => (
       path="/personInformation"
       element={
         <ProtectedRoute>
-          <AppLayout>
-            <PersonInformation />
-          </AppLayout>
+          <ApprovedOnlyRoute>
+            <AppLayout>
+              <PersonInformation />
+            </AppLayout>
+          </ApprovedOnlyRoute>
         </ProtectedRoute>
       }
     />
@@ -167,9 +242,11 @@ const App = () => (
       path="/visaStatus"
       element={
         <ProtectedRoute>
-          <AppLayout>
-            <VisaStatusManagement />
-          </AppLayout>
+          <ApprovedOnlyRoute>
+            <AppLayout>
+              <VisaStatusManagement />
+            </AppLayout>
+          </ApprovedOnlyRoute>
         </ProtectedRoute>
       }
     />

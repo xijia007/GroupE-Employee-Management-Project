@@ -132,6 +132,34 @@ const onboardingApplicationSchema = new mongoose.Schema({
         }
     }],
 
+    // Reference (who referred you to this company)
+    reference: {
+        firstName: {
+            type: String,
+            default: ""
+        },
+        lastName: {
+            type: String,
+            default: ""
+        },
+        middleName: {
+            type: String,
+            default: ""
+        },
+        phone: {
+            type: String,
+            default: ""
+        },
+        email: {
+            type: String,
+            default: ""
+        },
+        relationship: {
+            type: String,
+            default: ""
+        }
+    },
+
     // Documents
     documents: {
         driverLicense: {
