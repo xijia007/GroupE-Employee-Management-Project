@@ -42,8 +42,15 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
 
   // Pre-fill email from user account on mount
   useEffect(() => {
+    console.log('Onboarding Form - User object:', user);
+    console.log('Onboarding Form - User object keys:', Object.keys(user || {}));
+    console.log('Onboarding Form - User email:', user?.email);
+    console.log('Onboarding Form - localStorage user:', JSON.parse(localStorage.getItem('user') || '{}'));
     if (user?.email) {
       form.setFieldsValue({ email: user.email });
+      console.log('Onboarding Form - Email set to:', user.email);
+    } else {
+      console.warn('Onboarding Form - No email found in user object');
     }
   }, [user, form]);
 
