@@ -184,7 +184,7 @@ function HomePage() {
           {/* Pending Visa Documents Card */}
           <Card
             hoverable
-            onClick={() => navigate('/visaStatus')}
+            onClick={() => navigate('/hr/visaStatus')}
             style={{
               background: hrDashboard.pendingVisaDocuments > 0 ? '#fff1f0' : '#f5f5f5',
               borderColor: hrDashboard.pendingVisaDocuments > 0 ? '#ff7875' : '#d9d9d9',
@@ -511,7 +511,7 @@ function HomePage() {
                   </Button>
                 </li>
                 <li>
-                  <Button type="link" onClick={() => navigate('/visaStatus')}>
+                  <Button type="link" onClick={() => navigate('/hr/visaStatus')}>
                     📄 Visa Status Management
                   </Button>
                 </li>
