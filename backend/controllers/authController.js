@@ -101,6 +101,7 @@ export const register = async (req, res) => {
         // Create new user
         const newUser = new User({
             username,
+            email: regToken.email,  // Get email from registration token
             password: hashedPassword,
             role: 'Employee',
             onboardingStatus: 'Never Submitted'
@@ -197,6 +198,7 @@ export const login = async (req, res) => {
             user: {
                 id: user._id,
                 username: user.username,
+                email: user.email,
                 role: user.role,
                 onboardingStatus: normalizeStatusValue(user.onboardingStatus)
             }
