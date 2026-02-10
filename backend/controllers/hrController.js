@@ -11,6 +11,7 @@
 import RegistrationToken from "../models/RegistrationToken.js";
 import OnboardingApplication from "../models/OnboardingApplication.js";
 import User from "../models/User.js";
+import Profile from "../models/Profile.js";
 import { normalizeStatusKey, normalizeStatusValue } from "../utils/statusUtils.js";
 import {
   sendRegistrationEmail,
