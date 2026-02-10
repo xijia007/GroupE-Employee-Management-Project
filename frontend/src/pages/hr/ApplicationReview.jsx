@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Descriptions, Button, Tag, message, Input, Space, Spin } from 'antd';
-import { ArrowLeftOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { Card, Descriptions, Button, Tag, message, Input, Space, Spin, Image } from 'antd';
+import { ArrowLeftOutlined, CheckOutlined, CloseOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons';
 import api from '../../services/api';
 
 const { TextArea } = Input;
@@ -75,6 +75,19 @@ function ApplicationReview() {
             setSubmitting(false);
         }
     }
+
+    const handlePreview = (fileUrl) => {
+        window.open(fileUrl, '_blank');
+    };
+
+    const handleDownload = (fileUrl, fileName) => {
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     if (loading) {
         return (
@@ -210,6 +223,131 @@ function ApplicationReview() {
                     </Descriptions.Item>
 
                 </Descriptions>
+
+                {/* Uploaded Documents Section */}
+                <Card 
+                    type="inner" 
+                    title="📎 Uploaded Documents" 
+                    style={{ marginTop: 24 }}
+                >
+                    {application.documents && (Object.keys(application.documents).some(key => application.documents[key])) ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            {application.profile_picture && (
+                                <div style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    alignItems: 'center', 
+                                    padding: '12px', 
+                                    border: '1px solid #f0f0f0', 
+                                    borderRadius: 8 
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                        <strong>Profile Picture:</strong>
+                                        <Image 
+                                            src={application.profile_picture} 
+                                            alt="Profile" 
+                                            width={80}
+                                            height={80}
+                                            style={{ objectFit: 'cover', borderRadius: 4 }}
+                                        />
+                                    </div>
+                                    <Button 
+                                        icon={<DownloadOutlined />} 
+                                        onClick={() => handleDownload(application.profile_picture, 'profile-picture.jpg')}
+                                    >
+                                        Download
+                                    </Button>
+                                </div>
+                            )}
+
+                            {application.documents.driverLicense && (
+                                <div style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    alignItems: 'center', 
+                                    padding: '12px', 
+                                    border: '1px solid #f0f0f0', 
+                                    borderRadius: 8 
+                                }}>
+                                    <span><strong>Driver's License:</strong> {application.documents.driverLicense.split('/').pop()}</span>
+                                    <div>
+                                        <Button 
+                                            icon={<EyeOutlined />} 
+                                            onClick={() => handlePreview(`/${application.documents.driverLicense}`)}
+                                            style={{ marginRight: 8 }}
+                                        >
+                                            Preview
+                                        </Button>
+                                        <Button 
+                                            icon={<DownloadOutlined />} 
+                                            onClick={() => handleDownload(`/${application.documents.driverLicense}`, 'driver-license.pdf')}
+                                        >
+                                            Download
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {application.documents.workAuthorization && (
+                                <div style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    alignItems: 'center', 
+                                    padding: '12px', 
+                                    border: '1px solid #f0f0f0', 
+                                    borderRadius: 8 
+                                }}>
+                                    <span><strong>Work Authorization:</strong> {application.documents.workAuthorization.split('/').pop()}</span>
+                                    <div>
+                                        <Button 
+                                            icon={<EyeOutlined />} 
+                                            onClick={() => handlePreview(`/${application.documents.workAuthorization}`)}
+                                            style={{ marginRight: 8 }}
+                                        >
+                                            Preview
+                                        </Button>
+                                        <Button 
+                                            icon={<DownloadOutlined />} 
+                                            onClick={() => handleDownload(`/${application.documents.workAuthorization}`, 'work-authorization.pdf')}
+                                        >
+                                            Download
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {application.documents.other && (
+                                <div style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    alignItems: 'center', 
+                                    padding: '12px', 
+                                    border: '1px solid #f0f0f0', 
+                                    borderRadius: 8 
+                                }}>
+                                    <span><strong>Other Document:</strong> {application.documents.other.split('/').pop()}</span>
+                                    <div>
+                                        <Button 
+                                            icon={<EyeOutlined />} 
+                                            onClick={() => handlePreview(`/${application.documents.other}`)}
+                                            style={{ marginRight: 8 }}
+                                        >
+                                            Preview
+                                        </Button>
+                                        <Button 
+                                            icon={<DownloadOutlined />} 
+                                            onClick={() => handleDownload(`/${application.documents.other}`, 'other-document.pdf')}
+                                        >
+                                            Download
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <p style={{ color: '#999', textAlign: 'center' }}>No documents uploaded</p>
+                    )}
+                </Card>
 
 
                 {/* 审批操作区域 */}
