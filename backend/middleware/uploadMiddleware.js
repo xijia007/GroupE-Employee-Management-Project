@@ -53,6 +53,8 @@ export const uploadRequiredDocuments = upload.fields([
   { name: "driverLicense", maxCount: 1 },
   { name: "workAuthorization", maxCount: 1 },
   { name: "other", maxCount: 1 },
+  { name: "profilePicture", maxCount: 1 },
+  { name: "optReceipt", maxCount: 1 },
 ]);
 
 export default upload;

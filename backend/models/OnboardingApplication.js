@@ -39,6 +39,11 @@ const onboardingApplicationSchema = new mongoose.Schema({
         required: true
     },
 
+    profile_picture: {
+        type: String,
+        default: ''
+    },
+
     // Current Address
     currentAddress: {
         building: {
@@ -171,6 +176,10 @@ const onboardingApplicationSchema = new mongoose.Schema({
             default: ''
         },
         other: {
+            type: String,
+            default: ''
+        },
+        optReceipt: {
             type: String,
             default: ''
         }

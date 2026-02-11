@@ -157,7 +157,12 @@ function OnboardingApplication() {
 
     return (
       <Card title="📄 Your Submitted Application" style={{ marginBottom: 24 }}>
-        <Descriptions bordered column={2}>
+        <Descriptions 
+            bordered 
+            layout="vertical"
+            labelStyle={{ textAlign: 'left', fontWeight: 'bold' }}
+            contentStyle={{ textAlign: 'left' }}
+        >
           <Descriptions.Item label="First Name">
             {applicationData.firstName}
           </Descriptions.Item>

@@ -205,8 +205,14 @@ function ApplicationReview() {
           </div>
         }
       >
-        <Descriptions bordered column={2}>
-          <Descriptions.Item label="Full Name" span={2}>
+        <Descriptions 
+          bordered 
+          layout="vertical"
+          column={1}
+          labelStyle={{ textAlign: 'left', fontWeight: 'bold' }}
+          contentStyle={{ textAlign: 'left' }}
+        >
+          <Descriptions.Item label="Full Name">
             {application.firstName} {application.middleName}{" "}
             {application.lastName}
           </Descriptions.Item>
@@ -229,11 +235,11 @@ function ApplicationReview() {
             {application.gender}
           </Descriptions.Item>
 
-          <Descriptions.Item label="SSN" span={2}>
+          <Descriptions.Item label="SSN">
             {application.ssn}
           </Descriptions.Item>
 
-          <Descriptions.Item label="Address" span={2}>
+          <Descriptions.Item label="Address">
             {application.currentAddress ? (
               <>
                 {application.currentAddress.building},{" "}
@@ -248,7 +254,7 @@ function ApplicationReview() {
             )}
           </Descriptions.Item>
 
-          <Descriptions.Item label="US Resident Status" span={2}>
+          <Descriptions.Item label="US Resident Status">
             {application.usResident === "usCitizen"
               ? "US Citizen"
               : application.usResident === "greenCard"
@@ -273,7 +279,7 @@ function ApplicationReview() {
             </>
           )}
 
-          <Descriptions.Item label="Emergency Contacts" span={2}>
+          <Descriptions.Item label="Emergency Contacts">
             {application.emergencyContacts &&
             application.emergencyContacts.length > 0
               ? application.emergencyContacts.map((contact, index) => (

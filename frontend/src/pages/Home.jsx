@@ -630,15 +630,15 @@ function HomePage() {
 
         <div style={{ marginTop: 24 }}>
           <Title level={4}>Quick Links:</Title>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "16px" }}>
+          <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "24px", fontSize: "16px", marginTop: "16px" }}>
             {user?.role === "Employee" && (
               <>
-                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
-                  <Button type="link" onClick={() => navigate("/onboarding")} style={{ padding: 0, height: "auto", whiteSpace: "normal", textAlign: "left" }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <Button type="link" onClick={() => navigate("/onboarding")} style={{ padding: 0, height: "auto" }}>
                     📝 Complete Onboarding Application
                   </Button>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/personInformation")}
@@ -648,19 +648,12 @@ function HomePage() {
                         ? "Available after onboarding approval"
                         : ""
                     }
-                    style={{ padding: 0, height: "auto", whiteSpace: "normal", textAlign: "left" }}
+                    style={{ padding: 0, height: "auto" }}
                   >
                     👤 View/Update Personal Information
                   </Button>
-                  {applicationStatus !== "Approved" && (
-                    <span
-                      style={{ color: "#999", fontSize: "12px", marginLeft: 8 }}
-                    >
-                      (Available after onboarding approval)
-                    </span>
-                  )}
                 </div>
-                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/visaStatus")}
@@ -670,46 +663,39 @@ function HomePage() {
                         ? "Available after onboarding approval"
                         : ""
                     }
-                    style={{ padding: 0, height: "auto", whiteSpace: "normal", textAlign: "left" }}
+                    style={{ padding: 0, height: "auto" }}
                   >
                     📄 Check Visa Status
                   </Button>
-                  {applicationStatus !== "Approved" && (
-                    <span
-                      style={{ color: "#999", fontSize: "12px", marginLeft: 8 }}
-                    >
-                      (Available after onboarding approval)
-                    </span>
-                  )}
                 </div>
               </>
             )}
 
             {user?.role === "HR" && (
               <>
-                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/hr/hiring_management")}
-                    style={{ padding: 0, height: "auto", whiteSpace: "normal", textAlign: "left" }}
+                    style={{ padding: 0, height: "auto" }}
                   >
                     🔑 Hiring Management
                   </Button>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/hr/employeeProfiles")}
-                    style={{ padding: 0, height: "auto", whiteSpace: "normal", textAlign: "left" }}
+                    style={{ padding: 0, height: "auto" }}
                   >
                     👥 Employee Profiles
                   </Button>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/hr/visaStatus")}
-                    style={{ padding: 0, height: "auto", whiteSpace: "normal", textAlign: "left" }}
+                    style={{ padding: 0, height: "auto" }}
                   >
                     📄 Visa Status Management
                   </Button>
