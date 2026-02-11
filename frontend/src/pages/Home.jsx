@@ -630,15 +630,15 @@ function HomePage() {
 
         <div style={{ marginTop: 24 }}>
           <Title level={4}>Quick Links:</Title>
-          <ul style={{ fontSize: "16px", lineHeight: "2" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "16px" }}>
             {user?.role === "Employee" && (
               <>
-                <li>
-                  <Button type="link" onClick={() => navigate("/onboarding")}>
+                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
+                  <Button type="link" onClick={() => navigate("/onboarding")} style={{ padding: 0, height: "auto", whiteSpace: "normal", textAlign: "left" }}>
                     📝 Complete Onboarding Application
                   </Button>
-                </li>
-                <li>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/personInformation")}
@@ -648,6 +648,7 @@ function HomePage() {
                         ? "Available after onboarding approval"
                         : ""
                     }
+                    style={{ padding: 0, height: "auto", whiteSpace: "normal", textAlign: "left" }}
                   >
                     👤 View/Update Personal Information
                   </Button>
@@ -658,8 +659,8 @@ function HomePage() {
                       (Available after onboarding approval)
                     </span>
                   )}
-                </li>
-                <li>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/visaStatus")}
@@ -669,6 +670,7 @@ function HomePage() {
                         ? "Available after onboarding approval"
                         : ""
                     }
+                    style={{ padding: 0, height: "auto", whiteSpace: "normal", textAlign: "left" }}
                   >
                     📄 Check Visa Status
                   </Button>
@@ -679,39 +681,42 @@ function HomePage() {
                       (Available after onboarding approval)
                     </span>
                   )}
-                </li>
+                </div>
               </>
             )}
 
             {user?.role === "HR" && (
               <>
-                <li>
+                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/hr/hiring_management")}
+                    style={{ padding: 0, height: "auto", whiteSpace: "normal", textAlign: "left" }}
                   >
                     🔑 Hiring Management
                   </Button>
-                </li>
-                <li>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/hr/employeeProfiles")}
+                    style={{ padding: 0, height: "auto", whiteSpace: "normal", textAlign: "left" }}
                   >
                     👥 Employee Profiles
                   </Button>
-                </li>
-                <li>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/hr/visaStatus")}
+                    style={{ padding: 0, height: "auto", whiteSpace: "normal", textAlign: "left" }}
                   >
                     📄 Visa Status Management
                   </Button>
-                </li>
+                </div>
               </>
             )}
-          </ul>
+          </div>
         </div>
       </Card>
     </div>
