@@ -51,7 +51,6 @@ function EmployeeDetail() {
       const response = await api.get(`/hr/employees/${id}`);
       const { application, user, profile } = response.data;
 
-      // Set employee basic info from user object
       setEmployee({
         _id: id,
         username: user?.username || "N/A",
@@ -63,8 +62,64 @@ function EmployeeDetail() {
       // Set complete application data
       console.log("Application Documents:", application?.documents);
       console.log("Profile Visa Documents:", profile?.visaDocuments);
-      setApplication(application);
       setProfile(profile);
+
+      // Merge profile data over application data for display
+      // If profile exists, it contains the most up-to-date info.
+      // If not, fall back to application data.
+      let displayData = application;
+      
+      if (profile) {
+          // Check if profile.address is fully populated to avoid overwriting with empty
+          // Profile schema ensures address fields are required, so it should be fine.
+          displayData = {
+            ...application, // Start with application data (preserves status, reviews, etc.)
+            ...profile,     // Overwrite with profile data (e.g. email, phone)
+            
+            // Explicitly map fields where names differ or need deep merge
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            middleName: profile.middleName,
+            preferredName: profile.preferredName,
+            email: profile.email,
+            ssn: profile.ssn,
+            dateOfBirth: profile.dateOfBirth,
+            gender: profile.gender,
+            
+            // Map Profile 'address' to Application 'currentAddress'
+            currentAddress: profile.address, 
+            
+            // Map Profile 'contactInfo' to Application flat fields if needed or preserve
+            // Application schema has 'cellPhone' and 'workPhone' at root.
+            cellPhone: profile.contactInfo?.cellPhone,
+            workPhone: profile.contactInfo?.workPhone,
+            
+            // Visa Info
+            // Application has 'visaTitle', 'visaStartDate', 'visaEndDate'
+            // Profile has 'visaInformation' object
+            visaTitle: profile.visaInformation?.visaType,
+            visaStartDate: profile.visaInformation?.StartDate,
+            visaEndDate: profile.visaInformation?.EndDate,
+            
+            emergencyContacts: profile.emergencyContacts,
+            
+            // Documents: Merge them so we see everything
+            documents: { 
+                ...application.documents, 
+                ...profile.documents,
+                // Ensure we don't lose specific doc paths if keys match
+            },
+            
+            // Preserve application-specific fields that Profile doesn't have
+            status: application.status,
+            submittedAt: application.submittedAt,
+            reviewedAt: application.reviewedAt,
+            feedback: application.feedback,
+            usResident: application.usResident
+          };
+      }
+      
+      setApplication(displayData);
     } catch (err) {
       console.error("Error fetching employee detail:", err);
       message.error("Failed to load employee details");

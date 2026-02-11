@@ -442,32 +442,55 @@ export const getAllEmployees = async (req, res) => {
       .select("username email onboardingStatus createdAt")
       .sort({ createdAt: -1 });
 
-    const employeesWithDetails = await Promise.all(
+  const employeesWithDetails = await Promise.all(
       users.map(async (user) => {
         const application = await OnboardingApplication.findOne({
           userId: user._id
-        }).select('firstName lastName middleName preferredName ssn cellPhone visaTitle usResident status submittedAt reviewedAt');
+        }).select('firstName lastName middleName preferredName ssn cellPhone visaTitle usResident status submittedAt reviewedAt visaStartDate visaEndDate');
+        
+        const profile = await Profile.findOne({
+          user: user._id
+        }).select('firstName lastName middleName preferredName ssn contactInfo visaInformation address emergencyContacts documents');
+
+        // Prefer Profile data, fallback to Application data
+        // For name:
+        const firstName = profile?.firstName || application?.firstName || '';
+        const lastName = profile?.lastName || application?.lastName || '';
+        const middleName = profile?.middleName || application?.middleName || '';
+        const preferredName = profile?.preferredName || application?.preferredName || '';
+        
+        // For SSN:
+        const ssn = profile?.ssn || application?.ssn || 'N/A';
+        
+        // For Phone: Profile has cellPhone in contactInfo
+        const phone = profile?.contactInfo?.cellPhone || application?.cellPhone || 'N/A';
+        
+        // For Visa Title:
+        // Profile has visaInformation.visaType. Application has usResident + visaTitle logic.
+        // We should replicate the logic or use the profile's explicit visaType if set.
+        let visaTitle = 'N/A';
+        if (profile?.visaInformation?.visaType) {
+             visaTitle = profile.visaInformation.visaType;
+        } else if (application) {
+             visaTitle = (application.usResident === 'greenCard'
+              ? 'Green Card'
+              : application.usResident === 'usCitizen'
+                ? 'US Citizen'
+                : application.visaTitle) || 'N/A';
+        }
 
         return {
           _id: user._id,
           username: user.username,
           email: user.email,
-          firstName: application?.firstName || '',
-          middleName: application?.middleName || '',
-          lastName: application?.lastName || '',
-          preferredName: application?.preferredName || '',
-          fullName: application
-            ? `${application.firstName} ${application.middleName || ''} ${application.lastName}`
-            .replace(/\s+/g, ' ').trim() : 'N/A',
-          ssn: application?.ssn || 'N/A',
-          phone: application?.cellPhone || 'N/A',
-          visaTitle: application
-            ? (application.usResident === 'greenCard'
-              ? 'Green Card'
-              : application.usResident === 'usCitizen'
-                ? 'US Citizen'
-                : application.visaTitle) || 'N/A'
-            : 'N/A',
+          firstName,
+          middleName,
+          lastName,
+          preferredName,
+          fullName: `${firstName} ${middleName} ${lastName}`.replace(/\s+/g, ' ').trim() || 'N/A',
+          ssn,
+          phone,
+          visaTitle,
           onboardingStatus: normalizeStatusValue(user.onboardingStatus),
           createdAt: user.createdAt,
           application: application ? {

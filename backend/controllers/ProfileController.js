@@ -102,14 +102,24 @@ const UpdateUserProfile = async (req, res) => {
   try {
     const userId = req.userId; // From verifyToken middleware
     const updateData = req.body;
+    
+    // Use $set to ensure fields are updated, and handle potential dot notation if needed by frontend, 
+    // though usually frontend sends object. 
+    // Explicitly using $set is safer to avoid accidental replacement of root document if something is malformed,
+    // although Mongoose treats top-level keys as $set by default.
+    // However, for consistency and ensuring we are doing an update:
+    
     const profile = await Profile.findOneAndUpdate(
       { user: new mongoose.Types.ObjectId(userId) },
-      updateData,
+      { $set: updateData },
       { new: true, runValidators: true },
     );
+
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
     }
+    
+    console.log("Profile updated successfully for user:", userId);
     res.status(200).json(profile);
   } catch (err) {
     console.error("Update Profile Error:", err);
