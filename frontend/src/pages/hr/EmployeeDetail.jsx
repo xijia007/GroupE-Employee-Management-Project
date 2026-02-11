@@ -14,6 +14,7 @@ import {
   Divider,
   Grid,
   Empty,
+  List,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -22,6 +23,7 @@ import {
   MailOutlined,
   HomeOutlined,
   SafetyOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import api from "../../services/api";
 
@@ -178,7 +180,15 @@ function EmployeeDetail() {
   const normalizedApplicationStatus = normalizeStatus(application?.status);
 
   return (
-    <div style={{ padding: "24px", maxWidth: "1400px", margin: "0 auto" }}>
+    <div
+      style={{
+        padding: "24px",
+        maxWidth: "1400px",
+        margin: "0 auto",
+        textAlign: "left",
+        lineHeight: "1.5",
+      }}
+    >
       {/* Header */}
       <div
         style={{
@@ -248,7 +258,14 @@ function EmployeeDetail() {
             }
             style={{ marginBottom: 16 }}
           >
-            <Descriptions column={screens.md ? 2 : 1} bordered size="small">
+            <Descriptions
+              column={{ xs: 1, sm: 2, md: 2, lg: 2, xl: 2, xxl: 2 }}
+              bordered
+              size="small"
+              layout="vertical"
+              labelStyle={{ fontWeight: "bold", width: "100%" }}
+              contentStyle={{ width: "100%" }}
+            >
               <Descriptions.Item label="First Name">
                 {application.firstName}
               </Descriptions.Item>
@@ -287,11 +304,18 @@ function EmployeeDetail() {
             style={{ marginBottom: 16 }}
           >
             {application.currentAddress ? (
-              <Descriptions column={screens.md ? 2 : 1} bordered size="small">
+              <Descriptions
+                column={{ xs: 1, sm: 2, md: 2, lg: 2, xl: 2, xxl: 2 }}
+                bordered
+                size="small"
+                layout="vertical"
+                labelStyle={{ fontWeight: "bold", width: "100%" }}
+                contentStyle={{ width: "100%" }}
+              >
                 <Descriptions.Item label="Building/Apt #">
                   {application.currentAddress.building || "N/A"}
                 </Descriptions.Item>
-                <Descriptions.Item label="Street">
+                <Descriptions.Item label="Street" span={2}>
                   {application.currentAddress.street || "N/A"}
                 </Descriptions.Item>
                 <Descriptions.Item label="City">
@@ -317,14 +341,21 @@ function EmployeeDetail() {
               </>
             }
           >
-            <Descriptions column={screens.md ? 2 : 1} bordered size="small">
+            <Descriptions
+              column={{ xs: 1, sm: 2, md: 2, lg: 2, xl: 2, xxl: 2 }}
+              bordered
+              size="small"
+              layout="vertical"
+              labelStyle={{ fontWeight: "bold", width: "100%" }}
+              contentStyle={{ width: "100%" }}
+            >
               <Descriptions.Item label="Cell Phone">
                 {application.cellPhone || "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Work Phone">
                 {application.workPhone || "N/A"}
               </Descriptions.Item>
-              <Descriptions.Item label="Email">
+              <Descriptions.Item label="Email" span={2}>
                 {application.email || employee.email}
               </Descriptions.Item>
             </Descriptions>
@@ -342,7 +373,14 @@ function EmployeeDetail() {
             }
             style={{ marginBottom: 16 }}
           >
-            <Descriptions column={screens.md ? 2 : 1} bordered size="small">
+            <Descriptions
+              column={{ xs: 1, sm: 2, md: 2, lg: 2, xl: 2, xxl: 2 }}
+              bordered
+              size="small"
+              layout="vertical"
+              labelStyle={{ fontWeight: "bold", width: "100%" }}
+              contentStyle={{ width: "100%" }}
+            >
               <Descriptions.Item label="Status">
                 {application.usResident === "greenCard"
                   ? "Green Card"
@@ -375,11 +413,14 @@ function EmployeeDetail() {
                 <div key={index}>
                   {index > 0 && <Divider />}
                   <Descriptions
-                    column={screens.md ? 2 : 1}
+                    column={{ xs: 1, sm: 2, md: 2, lg: 2, xl: 2, xxl: 2 }}
                     bordered
                     size="small"
+                    layout="vertical"
+                    labelStyle={{ fontWeight: "bold", width: "100%" }}
+                    contentStyle={{ width: "100%" }}
                   >
-                    <Descriptions.Item label="Name">
+                    <Descriptions.Item label="Name" span={2}>
                       {contact.firstName} {contact.lastName}
                     </Descriptions.Item>
                     <Descriptions.Item label="Relationship">
@@ -388,7 +429,7 @@ function EmployeeDetail() {
                     <Descriptions.Item label="Phone">
                       {contact.phone || "N/A"}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Email">
+                    <Descriptions.Item label="Email" span={2}>
                       {contact.email || "N/A"}
                     </Descriptions.Item>
                   </Descriptions>
@@ -431,7 +472,7 @@ function EmployeeDetail() {
                   <List.Item
                     actions={[
                       <a
-                        href={`http://localhost:5000${item.url.startsWith("/") ? "" : "/"}${item.url}`}
+                        href={`http://localhost:3001${item.url.startsWith("/") ? "" : "/"}${item.url}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ fontWeight: "bold" }}
@@ -447,7 +488,6 @@ function EmployeeDetail() {
                         />
                       }
                       title={item.name}
-                      description={item.url.split("/").pop()}
                     />
                   </List.Item>
                 )}
@@ -467,88 +507,79 @@ function EmployeeDetail() {
                 <Title level={5} style={{ marginTop: 24 }}>
                   Visa Documents
                 </Title>
-                {/* Visa Documents */}
-                {profile?.visaDocuments && (
-                  <>
-                    <Title level={5} style={{ marginTop: 24 }}>
-                      Visa Documents
-                    </Title>
-                    <List
-                      size="small"
-                      bordered
-                      dataSource={[
-                        {
-                          name: "OPT Receipt",
-                          doc: profile.visaDocuments.optReceipt,
-                          url: profile.documents?.optReceipt,
-                        },
-                        {
-                          name: "OPT EAD",
-                          doc: profile.visaDocuments.optEad,
-                          url: profile.documents?.optEad,
-                        },
-                        {
-                          name: "I-983",
-                          doc: profile.visaDocuments.i983,
-                          url: profile.documents?.i983,
-                        },
-                        {
-                          name: "I-20",
-                          doc: profile.visaDocuments.i20,
-                          url: profile.documents?.i20,
-                        },
-                      ].filter((item) => item.url)} // Only show if URL exists
-                      renderItem={(item) => (
-                        <List.Item
-                          actions={[
-                            <Tag
-                              color={
-                                item.doc?.status === "approved"
-                                  ? "success"
-                                  : item.doc?.status === "rejected"
-                                    ? "error"
-                                    : item.doc?.status === "pending"
-                                      ? "processing"
-                                      : item.doc?.status === "Not Uploaded"
-                                        ? "default"
-                                        : "default"
-                              }
-                            >
-                              {item.doc?.status
-                                ? item.doc.status.toUpperCase()
-                                : "N/A"}
-                            </Tag>,
-                            <a
-                              href={`http://localhost:5000${item.url.startsWith("/") ? "" : "/"}${item.url}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ fontWeight: "bold" }}
-                            >
-                              View
-                            </a>,
-                          ]}
+                <List
+                  size="small"
+                  bordered
+                  dataSource={[
+                    {
+                      name: "OPT Receipt",
+                      doc: profile.visaDocuments.optReceipt,
+                      url: profile.documents?.optReceipt,
+                    },
+                    {
+                      name: "OPT EAD",
+                      doc: profile.visaDocuments.optEad,
+                      url: profile.documents?.optEad,
+                    },
+                    {
+                      name: "I-983",
+                      doc: profile.visaDocuments.i983,
+                      url: profile.documents?.i983,
+                    },
+                    {
+                      name: "I-20",
+                      doc: profile.visaDocuments.i20,
+                      url: profile.documents?.i20,
+                    },
+                  ].filter((item) => item.url)} // Only show if URL exists
+                  renderItem={(item) => (
+                    <List.Item
+                      actions={[
+                        <Tag
+                          color={
+                            item.doc?.status === "approved"
+                              ? "success"
+                              : item.doc?.status === "rejected"
+                                ? "error"
+                                : item.doc?.status === "pending"
+                                  ? "processing"
+                                  : item.doc?.status === "Not Uploaded"
+                                    ? "default"
+                                    : "default"
+                          }
                         >
-                          <List.Item.Meta
-                            avatar={
-                              <SafetyOutlined
-                                style={{ fontSize: "20px", color: "#52c41a" }}
-                              />
-                            }
-                            title={item.name}
-                            description={item.url.split("/").pop()}
+                          {item.doc?.status
+                            ? item.doc.status.toUpperCase()
+                            : "N/A"}
+                        </Tag>,
+                        <a
+                          href={`http://localhost:3001${item.url.startsWith("/") ? "" : "/"}${item.url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ fontWeight: "bold" }}
+                        >
+                          View
+                        </a>,
+                      ]}
+                    >
+                      <List.Item.Meta
+                        avatar={
+                          <SafetyOutlined
+                            style={{ fontSize: "20px", color: "#52c41a" }}
                           />
-                        </List.Item>
-                      )}
-                    />
-                    {[
-                      profile.documents?.optReceipt,
-                      profile.documents?.optEad,
-                      profile.documents?.i983,
-                      profile.documents?.i20,
-                    ].every((url) => !url) && (
-                      <Text type="secondary">No visa documents uploaded.</Text>
-                    )}
-                  </>
+                        }
+                        title={item.name}
+                      />
+                    </List.Item>
+                  )}
+                />
+                {[
+                  profile.documents?.optReceipt,
+                  profile.documents?.optEad,
+                  profile.documents?.i983,
+                  profile.documents?.i20,
+                ].every((url) => !url) && (
+                  <Text type="secondary">No visa documents uploaded.</Text>
                 )}
               </>
             )}
@@ -563,7 +594,13 @@ function EmployeeDetail() {
             title="📋 Application Review Information"
             style={{ marginTop: 16 }}
           >
-            <Descriptions column={screens.md ? 2 : 1} bordered>
+            <Descriptions
+              column={{ xs: 1, sm: 2, md: 2, lg: 3, xl: 3, xxl: 3 }}
+              bordered
+              layout="vertical"
+              labelStyle={{ fontWeight: "bold", width: "100%" }}
+              contentStyle={{ width: "100%" }}
+            >
               <Descriptions.Item label="Status">
                 {getStatusTag(application.status)}
               </Descriptions.Item>
@@ -577,7 +614,7 @@ function EmployeeDetail() {
                   ? new Date(application.reviewedAt).toLocaleString()
                   : "Not reviewed yet"}
               </Descriptions.Item>
-              <Descriptions.Item label="Feedback" span={2}>
+              <Descriptions.Item label="Feedback" span={3}>
                 {normalizedApplicationStatus === "approved"
                   ? approvedFeedback
                   : application.feedback || "No feedback provided"}

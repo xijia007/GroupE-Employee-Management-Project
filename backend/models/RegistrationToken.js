@@ -28,6 +28,4 @@ const registrationTokenSchema = new mongoose.Schema({
     collection: 'RegistrationToken'  // Specify exact collection name
 });
 
-registrationTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
 export default mongoose.model('RegistrationToken', registrationTokenSchema);
