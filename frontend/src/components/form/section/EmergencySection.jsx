@@ -16,9 +16,11 @@ import {
   TreeSelect,
   Upload,
 } from "antd";
-import React from "react";
+import React, { useState } from "react";
+import SectionButton from "./SectionButton";
 
-export default function EmergencySection() {
+export default function EmergencySection({ sectionButtonProps }) {
+  const [isEditing, setIsEditing] = useState(false);
   return (
     <Card
       title="Emergency Contact Information"
@@ -63,7 +65,11 @@ export default function EmergencySection() {
                   name={["emergencyContacts", 0, "firstName"]}
                   style={{ marginBottom: 16 }}
                 >
-                  <Input size="large" placeholder="First Name" />
+                  <Input
+                    size="large"
+                    placeholder="First Name"
+                    disabled={!isEditing}
+                  />
                 </Form.Item>
               </Col>
 
@@ -72,7 +78,11 @@ export default function EmergencySection() {
                   name={["emergencyContacts", 0, "middleName"]}
                   style={{ marginBottom: 16 }}
                 >
-                  <Input size="large" placeholder="Middle Name" />
+                  <Input
+                    size="large"
+                    placeholder="Middle Name"
+                    disabled={!isEditing}
+                  />
                 </Form.Item>
               </Col>
 
@@ -81,7 +91,11 @@ export default function EmergencySection() {
                   name={["emergencyContacts", 0, "lastName"]}
                   style={{ marginBottom: 16 }}
                 >
-                  <Input size="large" placeholder="Last Name" />
+                  <Input
+                    size="large"
+                    placeholder="Last Name"
+                    disabled={!isEditing}
+                  />
                 </Form.Item>
               </Col>
             </Row>
@@ -93,7 +107,11 @@ export default function EmergencySection() {
                   name={["emergencyContacts", 0, "relationship"]}
                   style={{ marginBottom: 0 }}
                 >
-                  <Input size="large" placeholder="Relationship" />
+                  <Input
+                    size="large"
+                    placeholder="Relationship"
+                    disabled={!isEditing}
+                  />
                 </Form.Item>
               </Col>
 
@@ -102,7 +120,11 @@ export default function EmergencySection() {
                   name={["emergencyContacts", 0, "phone"]}
                   style={{ marginBottom: 0 }}
                 >
-                  <Input size="large" placeholder="Phone Number" />
+                  <Input
+                    size="large"
+                    placeholder="Phone Number"
+                    disabled={!isEditing}
+                  />
                 </Form.Item>
               </Col>
 
@@ -112,13 +134,18 @@ export default function EmergencySection() {
                   rules={[{ type: "email", message: "Invalid email" }]}
                   style={{ marginBottom: 0 }}
                 >
-                  <Input size="large" placeholder="Email" />
+                  <Input
+                    size="large"
+                    placeholder="Email"
+                    disabled={!isEditing}
+                  />
                 </Form.Item>
               </Col>
             </Row>
           </div>
         </div>
       </Form.Item>
+      <SectionButton {...sectionButtonProps} onEditingChange={setIsEditing} />
     </Card>
   );
 }

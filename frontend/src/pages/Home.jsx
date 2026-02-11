@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Typography, Button, Alert, Spin, List, Avatar, Tag } from 'antd';
-import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { selectUser } from '../features/auth/authSlice';
-import api from '../services/api';
+import React, { useState, useEffect } from "react";
+import { Card, Typography, Button, Alert, Spin, List, Avatar, Tag } from "antd";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { selectUser } from "../features/auth/authSlice";
+import api from "../services/api";
 
 const { Title, Paragraph } = Typography;
 
@@ -12,7 +12,7 @@ function HomePage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState(null);
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState("");
   const [profile, setProfile] = useState(null);
 
   // HR Dashboard state
@@ -25,50 +25,52 @@ function HomePage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (user?.role === 'Employee') {
+      if (user?.role === "Employee") {
         setLoading(true);
         try {
           // Fetch onboarding status
-          const statusResponse = await api.get('/onboarding/status');
+          const statusResponse = await api.get("/onboarding/status");
           setApplicationStatus(statusResponse.data.status);
-          setFeedback(statusResponse.data.feedback || '');
+          setFeedback(statusResponse.data.feedback || "");
 
           // Fetch profile for visa document status
           try {
-            const profileResponse = await api.get('/info/profile');
+            const profileResponse = await api.get("/info/profile");
             setProfile(profileResponse.data);
           } catch (profileError) {
-            console.log('Profile not found, user might not be approved yet');
+            console.log("Profile not found, user might not be approved yet");
           }
         } catch (error) {
-          console.error('Error fetching status:', error);
+          console.error("Error fetching status:", error);
         } finally {
           setLoading(false);
         }
       }
 
       // Fetch HR dashboard data
-      if (user?.role === 'HR') {
+      if (user?.role === "HR") {
         setLoading(true);
         try {
           // Fetch pending applications
-          const applicationsResponse = await api.get('/hr/applications?status=Pending');
+          const applicationsResponse = await api.get(
+            "/hr/applications?status=Pending",
+          );
           const pendingApps = applicationsResponse.data.count || 0;
 
           // Fetch all employees
-          const employeesResponse = await api.get('/hr/employees');
+          const employeesResponse = await api.get("/hr/employees");
           const totalEmps = employeesResponse.data.count || 0;
 
           // Fetch pending visa documents
-          const visaResponse = await api.get('/hr/visa-status');
+          const visaResponse = await api.get("/hr/visa-status");
           const visaEmployees = visaResponse.data.employees || [];
-          const pendingDocs = visaEmployees.filter(emp => {
+          const pendingDocs = visaEmployees.filter((emp) => {
             const docs = emp.profile?.visaDocuments || {};
             return (
-              docs.optReceipt?.status === 'pending' ||
-              docs.optEad?.status === 'pending' ||
-              docs.i983?.status === 'pending' ||
-              docs.i20?.status === 'pending'
+              docs.optReceipt?.status === "pending" ||
+              docs.optEad?.status === "pending" ||
+              docs.i983?.status === "pending" ||
+              docs.i20?.status === "pending"
             );
           }).length;
 
@@ -80,42 +82,51 @@ function HomePage() {
 
           // Process Recent Activity
           // 1. Recent applications
-          const allApplicationsResponse = await api.get('/hr/applications');
+          const allApplicationsResponse = await api.get("/hr/applications");
           const allApps = allApplicationsResponse.data.applications || [];
-          
+
           const appActivities = allApps
-            .filter(app => (app.status === 'Approved' || app.status === 'Rejected') && (app.reviewedAt || app.updatedAt))
-            .map(app => ({
+            .filter(
+              (app) =>
+                (app.status === "Approved" || app.status === "Rejected") &&
+                (app.reviewedAt || app.updatedAt),
+            )
+            .map((app) => ({
               id: `app-${app._id}`,
-              type: 'Application',
+              type: "Application",
               user: `${app.firstName} ${app.lastName}`,
               status: app.status,
               date: new Date(app.reviewedAt || app.updatedAt),
-              details: `Onboarding Application`
+              details: `Onboarding Application`,
             }));
 
           // 2. Recent visa documents
           const docActivities = [];
-          visaEmployees.forEach(emp => {
+          visaEmployees.forEach((emp) => {
             const docs = emp.profile?.visaDocuments || {};
-            const docTypes = ['optReceipt', 'optEad', 'i983', 'i20'];
+            const docTypes = ["optReceipt", "optEad", "i983", "i20"];
             const docNames = {
-              'optReceipt': 'OPT Receipt',
-              'optEad': 'OPT EAD',
-              'i983': 'I-983',
-              'i20': 'I-20'
+              optReceipt: "OPT Receipt",
+              optEad: "OPT EAD",
+              i983: "I-983",
+              i20: "I-20",
             };
-            
-            docTypes.forEach(type => {
+
+            docTypes.forEach((type) => {
               const doc = docs[type];
-              if (doc && (doc.status === 'approved' || doc.status === 'rejected') && doc.reviewedAt) {
+              if (
+                doc &&
+                (doc.status === "approved" || doc.status === "rejected") &&
+                doc.reviewedAt
+              ) {
                 docActivities.push({
                   id: `doc-${emp._id}-${type}`,
-                  type: 'Visa',
-                  user: emp.username, 
-                  status: doc.status.charAt(0).toUpperCase() + doc.status.slice(1),
+                  type: "Visa",
+                  user: emp.username,
+                  status:
+                    doc.status.charAt(0).toUpperCase() + doc.status.slice(1),
                   date: new Date(doc.reviewedAt),
-                  details: docNames[type]
+                  details: docNames[type],
                 });
               }
             });
@@ -128,7 +139,7 @@ function HomePage() {
 
           setRecentActivities(activities);
         } catch (error) {
-          console.error('Error fetching HR dashboard data:', error);
+          console.error("Error fetching HR dashboard data:", error);
         } finally {
           setLoading(false);
         }
@@ -142,38 +153,54 @@ function HomePage() {
 
   // Render HR Dashboard
   const renderHRDashboard = () => {
-    if (user?.role !== 'HR') return null;
+    if (user?.role !== "HR") return null;
 
     return (
       <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ marginBottom: 16 }}>📊 Dashboard Overview</Title>
-        
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '16px',
-          marginBottom: 24 
-        }}>
+        <Title level={3} style={{ marginBottom: 16 }}>
+          📊 Dashboard Overview
+        </Title>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+            gap: "16px",
+            marginBottom: 24,
+          }}
+        >
           {/* Pending Applications Card */}
           <Card
             hoverable
-            onClick={() => navigate('/hr/hiring_management')}
+            onClick={() => navigate("/hr/hiring_management")}
             style={{
-              background: hrDashboard.pendingApplications > 0 ? '#fff7e6' : '#f5f5f5',
-              borderColor: hrDashboard.pendingApplications > 0 ? '#ffa940' : '#d9d9d9',
-              cursor: 'pointer'
+              background:
+                hrDashboard.pendingApplications > 0 ? "#fff7e6" : "#f5f5f5",
+              borderColor:
+                hrDashboard.pendingApplications > 0 ? "#ffa940" : "#d9d9d9",
+              cursor: "pointer",
             }}
           >
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#fa8c16' }}>
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  fontSize: "36px",
+                  fontWeight: "bold",
+                  color: "#fa8c16",
+                }}
+              >
                 {hrDashboard.pendingApplications}
               </div>
-              <div style={{ fontSize: '14px', color: '#666', marginTop: 8 }}>
+              <div style={{ fontSize: "14px", color: "#666", marginTop: 8 }}>
                 Pending Onboarding Applications
               </div>
               {hrDashboard.pendingApplications > 0 && (
                 <div style={{ marginTop: 12 }}>
-                  <Button type="primary" size="small" style={{ background: '#fa8c16', borderColor: '#fa8c16' }}>
+                  <Button
+                    type="primary"
+                    size="small"
+                    style={{ background: "#fa8c16", borderColor: "#fa8c16" }}
+                  >
                     Review Now →
                   </Button>
                 </div>
@@ -184,18 +211,26 @@ function HomePage() {
           {/* Pending Visa Documents Card */}
           <Card
             hoverable
-            onClick={() => navigate('/visaStatus')}
+            onClick={() => navigate("/hr/visaStatus")}
             style={{
-              background: hrDashboard.pendingVisaDocuments > 0 ? '#fff1f0' : '#f5f5f5',
-              borderColor: hrDashboard.pendingVisaDocuments > 0 ? '#ff7875' : '#d9d9d9',
-              cursor: 'pointer'
+              background:
+                hrDashboard.pendingVisaDocuments > 0 ? "#fff1f0" : "#f5f5f5",
+              borderColor:
+                hrDashboard.pendingVisaDocuments > 0 ? "#ff7875" : "#d9d9d9",
+              cursor: "pointer",
             }}
           >
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#f5222d' }}>
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  fontSize: "36px",
+                  fontWeight: "bold",
+                  color: "#f5222d",
+                }}
+              >
                 {hrDashboard.pendingVisaDocuments}
               </div>
-              <div style={{ fontSize: '14px', color: '#666', marginTop: 8 }}>
+              <div style={{ fontSize: "14px", color: "#666", marginTop: 8 }}>
                 Pending Visa Documents
               </div>
               {hrDashboard.pendingVisaDocuments > 0 && (
@@ -211,18 +246,24 @@ function HomePage() {
           {/* Total Employees Card */}
           <Card
             hoverable
-            onClick={() => navigate('/hr/employeeProfiles')}
+            onClick={() => navigate("/hr/employeeProfiles")}
             style={{
-              background: '#f0f5ff',
-              borderColor: '#adc6ff',
-              cursor: 'pointer'
+              background: "#f0f5ff",
+              borderColor: "#adc6ff",
+              cursor: "pointer",
             }}
           >
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#1890ff' }}>
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  fontSize: "36px",
+                  fontWeight: "bold",
+                  color: "#1890ff",
+                }}
+              >
                 {hrDashboard.totalEmployees}
               </div>
-              <div style={{ fontSize: '14px', color: '#666', marginTop: 8 }}>
+              <div style={{ fontSize: "14px", color: "#666", marginTop: 8 }}>
                 Total Employees
               </div>
               <div style={{ marginTop: 12 }}>
@@ -235,19 +276,22 @@ function HomePage() {
         </div>
 
         {/* Action Required Alert */}
-        {(hrDashboard.pendingApplications > 0 || hrDashboard.pendingVisaDocuments > 0) && (
+        {(hrDashboard.pendingApplications > 0 ||
+          hrDashboard.pendingVisaDocuments > 0) && (
           <Alert
             message="⚠️ Action Required"
             description={
               <div>
                 {hrDashboard.pendingApplications > 0 && (
-                  <p style={{ margin: '4px 0' }}>
-                    • <strong>{hrDashboard.pendingApplications}</strong> onboarding application(s) waiting for review
+                  <p style={{ margin: "4px 0" }}>
+                    • <strong>{hrDashboard.pendingApplications}</strong>{" "}
+                    onboarding application(s) waiting for review
                   </p>
                 )}
                 {hrDashboard.pendingVisaDocuments > 0 && (
-                  <p style={{ margin: '4px 0' }}>
-                    • <strong>{hrDashboard.pendingVisaDocuments}</strong> visa document(s) waiting for approval
+                  <p style={{ margin: "4px 0" }}>
+                    • <strong>{hrDashboard.pendingVisaDocuments}</strong> visa
+                    document(s) waiting for approval
                   </p>
                 )}
               </div>
@@ -266,25 +310,45 @@ function HomePage() {
               <List
                 itemLayout="horizontal"
                 dataSource={recentActivities}
-                renderItem={item => (
+                renderItem={(item) => (
                   <List.Item>
                     <List.Item.Meta
                       avatar={
-                        <Avatar 
-                          style={{ backgroundColor: item.status === 'Approved' ? '#52c41a' : '#f5222d' }}
+                        <Avatar
+                          style={{
+                            backgroundColor:
+                              item.status === "Approved"
+                                ? "#52c41a"
+                                : "#f5222d",
+                          }}
                         >
-                          {item.type === 'Application' ? 'A' : 'V'}
+                          {item.type === "Application" ? "A" : "V"}
                         </Avatar>
                       }
                       title={
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ fontWeight: 'bold' }}>{item.user}</span>
-                          <span style={{ fontSize: '12px', color: '#999' }}>{item.date.toLocaleString()}</span>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <span style={{ fontWeight: "bold" }}>
+                            {item.user}
+                          </span>
+                          <span style={{ fontSize: "12px", color: "#999" }}>
+                            {item.date.toLocaleString()}
+                          </span>
                         </div>
                       }
                       description={
                         <div style={{ marginTop: 4 }}>
-                          <Tag color={item.status === 'Approved' ? 'success' : 'error'}>{item.status}</Tag>
+                          <Tag
+                            color={
+                              item.status === "Approved" ? "success" : "error"
+                            }
+                          >
+                            {item.status}
+                          </Tag>
                           <span>{item.details}</span>
                         </div>
                       }
@@ -293,7 +357,9 @@ function HomePage() {
                 )}
               />
             ) : (
-              <div style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
+              <div
+                style={{ textAlign: "center", color: "#999", padding: "20px" }}
+              >
                 No recent activity found
               </div>
             )}
@@ -305,10 +371,10 @@ function HomePage() {
 
   // Render status alert for employees
   const renderStatusAlert = () => {
-    if (!applicationStatus || user?.role !== 'Employee') return null;
+    if (!applicationStatus || user?.role !== "Employee") return null;
 
     // Rejected - Show HR feedback
-    if (applicationStatus === 'Rejected' && feedback) {
+    if (applicationStatus === "Rejected" && feedback) {
       return (
         <Alert
           message="⚠️ Application Rejected"
@@ -317,7 +383,11 @@ function HomePage() {
               <p style={{ marginBottom: 8 }}>
                 <strong>HR Feedback:</strong> {feedback}
               </p>
-              <Button type="primary" danger onClick={() => navigate('/onboarding')}>
+              <Button
+                type="primary"
+                danger
+                onClick={() => navigate("/onboarding")}
+              >
                 Revise and Resubmit Application
               </Button>
             </div>
@@ -330,7 +400,7 @@ function HomePage() {
     }
 
     // Pending - Waiting for approval
-    if (applicationStatus === 'Pending') {
+    if (applicationStatus === "Pending") {
       return (
         <Alert
           message="⏳ Application Under Review"
@@ -343,12 +413,12 @@ function HomePage() {
     }
 
     // Approved - Check OPT document status
-    if (applicationStatus === 'Approved') {
+    if (applicationStatus === "Approved") {
       const optReceiptStatus = profile?.visaDocuments?.optReceipt?.status;
       const optEadStatus = profile?.visaDocuments?.optEad?.status;
 
       // If OPT Receipt is pending or not uploaded
-      if (!optReceiptStatus || optReceiptStatus === 'pending') {
+      if (!optReceiptStatus || optReceiptStatus === "pending") {
         return (
           <Alert
             message="📄 OPT Receipt Pending"
@@ -356,7 +426,10 @@ function HomePage() {
               <div>
                 <p>Waiting for HR to approve your OPT Receipt.</p>
                 {!optReceiptStatus && (
-                  <Button type="primary" onClick={() => navigate('/visaStatus')}>
+                  <Button
+                    type="primary"
+                    onClick={() => navigate("/visaStatus")}
+                  >
                     Upload OPT Receipt
                   </Button>
                 )}
@@ -370,14 +443,20 @@ function HomePage() {
       }
 
       // If OPT Receipt is approved, prompt for OPT EAD
-      if (optReceiptStatus === 'approved' && (!optEadStatus || optEadStatus === 'pending')) {
+      if (
+        optReceiptStatus === "approved" &&
+        (!optEadStatus || optEadStatus === "pending")
+      ) {
         return (
           <Alert
             message="✅ OPT Receipt Approved"
             description={
               <div>
-                <p>Your OPT Receipt has been approved! Please upload a copy of your OPT EAD.</p>
-                <Button type="primary" onClick={() => navigate('/visaStatus')}>
+                <p>
+                  Your OPT Receipt has been approved! Please upload a copy of
+                  your OPT EAD.
+                </p>
+                <Button type="primary" onClick={() => navigate("/visaStatus")}>
                   Upload OPT EAD
                 </Button>
               </div>
@@ -390,7 +469,7 @@ function HomePage() {
       }
 
       // All documents approved or in review
-      if (optEadStatus === 'approved') {
+      if (optEadStatus === "approved") {
         return (
           <Alert
             message="🎉 All Documents Approved"
@@ -402,7 +481,7 @@ function HomePage() {
         );
       }
 
-      if (optEadStatus === 'pending') {
+      if (optEadStatus === "pending") {
         return (
           <Alert
             message="⏳ OPT EAD Under Review"
@@ -416,14 +495,14 @@ function HomePage() {
     }
 
     // Never Submitted
-    if (applicationStatus === 'Never Submitted') {
+    if (applicationStatus === "Never Submitted") {
       return (
         <Alert
           message="📝 Action Required"
           description={
             <div>
               <p>You haven't submitted your onboarding application yet.</p>
-              <Button type="primary" onClick={() => navigate('/onboarding')}>
+              <Button type="primary" onClick={() => navigate("/onboarding")}>
                 Complete Onboarding Application
               </Button>
             </div>
@@ -439,79 +518,97 @@ function HomePage() {
   };
 
   return (
-    <div style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ padding: "24px", maxWidth: "800px", margin: "0 auto" }}>
       <Card>
         <Title level={2}>👋 Welcome, {user?.username}!</Title>
-        <Paragraph style={{ fontSize: '16px', color: '#666' }}>
+        <Paragraph style={{ fontSize: "16px", color: "#666" }}>
           Welcome to the Employee Management System
         </Paragraph>
 
         {loading && (
-          <div style={{ textAlign: 'center', padding: '20px' }}>
+          <div style={{ textAlign: "center", padding: "20px" }}>
             <Spin />
           </div>
         )}
 
         {!loading && renderHRDashboard()}
         {!loading && renderStatusAlert()}
-        
+
         <div style={{ marginTop: 24 }}>
           <Title level={4}>Quick Links:</Title>
-          <ul style={{ fontSize: '16px', lineHeight: '2' }}>
-            {user?.role === 'Employee' && (
+          <ul style={{ fontSize: "16px", lineHeight: "2" }}>
+            {user?.role === "Employee" && (
               <>
                 <li>
-                  <Button type="link" onClick={() => navigate('/onboarding')}>
+                  <Button type="link" onClick={() => navigate("/onboarding")}>
                     📝 Complete Onboarding Application
                   </Button>
                 </li>
                 <li>
-                  <Button 
-                    type="link" 
-                    onClick={() => navigate('/personInformation')}
-                    disabled={applicationStatus !== 'Approved'}
-                    title={applicationStatus !== 'Approved' ? 'Available after onboarding approval' : ''}
+                  <Button
+                    type="link"
+                    onClick={() => navigate("/personInformation")}
+                    disabled={applicationStatus !== "Approved"}
+                    title={
+                      applicationStatus !== "Approved"
+                        ? "Available after onboarding approval"
+                        : ""
+                    }
                   >
                     👤 View/Update Personal Information
                   </Button>
-                  {applicationStatus !== 'Approved' && (
-                    <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                  {applicationStatus !== "Approved" && (
+                    <span
+                      style={{ color: "#999", fontSize: "12px", marginLeft: 8 }}
+                    >
                       (Available after onboarding approval)
                     </span>
                   )}
                 </li>
                 <li>
-                  <Button 
-                    type="link" 
-                    onClick={() => navigate('/visaStatus')}
-                    disabled={applicationStatus !== 'Approved'}
-                    title={applicationStatus !== 'Approved' ? 'Available after onboarding approval' : ''}
+                  <Button
+                    type="link"
+                    onClick={() => navigate("/visaStatus")}
+                    disabled={applicationStatus !== "Approved"}
+                    title={
+                      applicationStatus !== "Approved"
+                        ? "Available after onboarding approval"
+                        : ""
+                    }
                   >
                     📄 Check Visa Status
                   </Button>
-                  {applicationStatus !== 'Approved' && (
-                    <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                  {applicationStatus !== "Approved" && (
+                    <span
+                      style={{ color: "#999", fontSize: "12px", marginLeft: 8 }}
+                    >
                       (Available after onboarding approval)
                     </span>
                   )}
                 </li>
               </>
             )}
-            
-            {user?.role === 'HR' && (
+
+            {user?.role === "HR" && (
               <>
                 <li>
-                  <Button type="link" onClick={() => navigate('/hr/hiring_management')}>
+                  <Button
+                    type="link"
+                    onClick={() => navigate("/hr/hiring_management")}
+                  >
                     🔑 Hiring Management
                   </Button>
                 </li>
                 <li>
-                  <Button type="link" onClick={() => navigate('/hr/employeeProfiles')}>
+                  <Button
+                    type="link"
+                    onClick={() => navigate("/hr/employeeProfiles")}
+                  >
                     👥 Employee Profiles
                   </Button>
                 </li>
                 <li>
-                  <Button type="link" onClick={() => navigate('/visaStatus')}>
+                  <Button type="link" onClick={() => navigate("/visaStatus")}>
                     📄 Visa Status Management
                   </Button>
                 </li>

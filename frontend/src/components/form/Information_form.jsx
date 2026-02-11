@@ -29,9 +29,7 @@ import {
   message,
 } from "antd";
 import dayjs from "dayjs";
-
-// Backend API base URL
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+import api from "../../services/api";
 
 /**
  * PersonInformation Component
@@ -44,6 +42,7 @@ function PersonInformation({ userId, onboardingApplicationId }) {
   const [componentSize, setComponentSize] = useState("default");
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const [savedSectionValues, setSavedSectionValues] = useState({});
 
   const onFormLayoutChange = ({ size }) => {
     setComponentSize(size);
@@ -124,38 +123,40 @@ function PersonInformation({ userId, onboardingApplicationId }) {
 
       setLoading(true);
       try {
-        let response;
-        let url;
+        // Current API reads current logged-in user's profile
+        // (userId/onboardingApplicationId currently not used by backend route)
+        const res = await api.get("/info/profile");
+        const data = res.data;
+        console.log("Received profile data:", data);
 
-        // Fetch by user/profile ID (for both employee and HR viewing specific profile)
-        if (userId || onboardingApplicationId) {
-          url = `${API_URL}/info/profile`;
-          console.log("Fetching user's profile:", url);
-          response = await fetch(url, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-          });
-        }
-
-        console.log("Response status:", response.status);
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Received profile data:", data);
-
-          const formattedData = transformProfileData(data);
-          console.log("Formatted data for form:", formattedData);
-          form.setFieldsValue(formattedData);
-          message.success("Personal information loaded successfully");
-        } else {
-          const errorText = await response.text();
-          console.error("Response error:", errorText);
-          message.warning("No profile found");
-        }
+        const formattedData = transformProfileData(data);
+        console.log("Formatted data for form:", formattedData);
+        form.setFieldsValue(formattedData);
+        setSavedSectionValues({
+          name: {
+            firstName: formattedData.firstName,
+            middleName: formattedData.middleName,
+            lastName: formattedData.lastName,
+            preferredName: formattedData.preferredName,
+            email: formattedData.email,
+            profile_picture: formattedData.profile_picture,
+            ssn: formattedData.ssn,
+            dateOfBirth: formattedData.dateOfBirth,
+            gender: formattedData.gender,
+          },
+          address: { address: formattedData.address },
+          contact: { contactInfo: formattedData.contactInfo },
+          visa: { visaInformation: formattedData.visaInformation },
+          emergency: { emergencyContacts: formattedData.emergencyContacts },
+          documents: { documents: formattedData.documents },
+        });
+        message.success("Personal information loaded successfully");
       } catch (error) {
         console.error("Error fetching profile data:", error);
-        message.error("Failed to load personal information");
+        message.error(
+          error?.response?.data?.message ||
+            "Failed to load personal information",
+        );
       } finally {
         setLoading(false);
       }
@@ -164,33 +165,160 @@ function PersonInformation({ userId, onboardingApplicationId }) {
     fetchProfileData();
   }, [userId, onboardingApplicationId, form]);
 
+  const normalizeProfilePayload = (values) => {
+    const input = values ?? {};
+    const normalized = {
+      ...input,
+      address: input.address ? { ...input.address } : input.address,
+      contactInfo: input.contactInfo
+        ? { ...input.contactInfo }
+        : input.contactInfo,
+      visaInformation: input.visaInformation
+        ? { ...input.visaInformation }
+        : input.visaInformation,
+      documents: input.documents ? { ...input.documents } : input.documents,
+      emergencyContacts: Array.isArray(input.emergencyContacts)
+        ? input.emergencyContacts.map((c) => ({ ...c }))
+        : input.emergencyContacts,
+    };
+
+    // AntD DatePicker returns Dayjs; convert to ISO strings for API
+    if (dayjs.isDayjs(normalized.dateOfBirth)) {
+      normalized.dateOfBirth = normalized.dateOfBirth.toISOString();
+    }
+    if (dayjs.isDayjs(normalized.visaInformation?.StartDate)) {
+      normalized.visaInformation.StartDate =
+        normalized.visaInformation.StartDate.toISOString();
+    }
+    if (dayjs.isDayjs(normalized.visaInformation?.EndDate)) {
+      normalized.visaInformation.EndDate =
+        normalized.visaInformation.EndDate.toISOString();
+    }
+
+    return normalized;
+  };
+
   const handleSubmit = async (values) => {
     try {
       console.log("Submitting form values:", values);
-
-      const response = await fetch(`${API_URL}/info/profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (response.ok) {
-        const updatedProfile = await response.json();
-        console.log("Profile updated:", updatedProfile);
-        message.success("Information saved successfully");
-      } else {
-        const errorData = await response.json();
-        console.error("Update error:", errorData);
-        message.error(errorData.message || "Failed to save information");
-      }
+      const payload = normalizeProfilePayload(values);
+      const res = await api.put("/info/profile", payload);
+      console.log("Profile updated:", res.data);
+      message.success("Information saved successfully");
     } catch (error) {
       console.error("Error saving profile:", error);
-      message.error("Failed to save information");
+      message.error(
+        error?.response?.data?.message || "Failed to save information",
+      );
+      throw error;
     }
   };
+
+  const sectionConfig = {
+    name: {
+      validateFields: [
+        "firstName",
+        "middleName",
+        "lastName",
+        "preferredName",
+        "email",
+        "profile_picture",
+        "ssn",
+        "dateOfBirth",
+        "gender",
+      ],
+      buildPayload: (allValues) => ({
+        firstName: allValues.firstName,
+        middleName: allValues.middleName,
+        lastName: allValues.lastName,
+        preferredName: allValues.preferredName,
+        email: allValues.email,
+        profile_picture: allValues.profile_picture,
+        ssn: allValues.ssn,
+        dateOfBirth: allValues.dateOfBirth,
+        gender: allValues.gender,
+      }),
+    },
+    address: {
+      validateFields: [
+        ["address", "street"],
+        ["address", "building"],
+        ["address", "city"],
+        ["address", "state"],
+        ["address", "zip"],
+      ],
+      buildPayload: (allValues) => ({ address: allValues.address }),
+    },
+    contact: {
+      validateFields: [
+        ["contactInfo", "cellPhone"],
+        ["contactInfo", "workPhone"],
+      ],
+      buildPayload: (allValues) => ({ contactInfo: allValues.contactInfo }),
+    },
+    visa: {
+      validateFields: [
+        ["visaInformation", "visaType"],
+        ["visaInformation", "StartDate"],
+        ["visaInformation", "EndDate"],
+      ],
+      buildPayload: (allValues) => ({
+        visaInformation: allValues.visaInformation,
+      }),
+    },
+    emergency: {
+      validateFields: [
+        ["emergencyContacts", 0, "firstName"],
+        ["emergencyContacts", 0, "middleName"],
+        ["emergencyContacts", 0, "lastName"],
+        ["emergencyContacts", 0, "relationship"],
+        ["emergencyContacts", 0, "phone"],
+        ["emergencyContacts", 0, "email"],
+      ],
+      buildPayload: (allValues) => ({
+        emergencyContacts: allValues.emergencyContacts,
+      }),
+    },
+    documents: {
+      validateFields: [
+        ["documents", "driverLicense"],
+        ["documents", "workAuthorization"],
+        ["documents", "other"],
+      ],
+      buildPayload: (allValues) => ({ documents: allValues.documents }),
+    },
+  };
+
+  const handleSectionCancel = (sectionKey) => {
+    const cfg = sectionConfig[sectionKey];
+    const snapshot = savedSectionValues?.[sectionKey];
+
+    if (snapshot) {
+      form.setFieldsValue(snapshot);
+    } else {
+      form.resetFields(cfg.validateFields);
+    }
+    message.info("Changes discarded");
+  };
+
+  const handleSectionSave = async (sectionKey) => {
+    const cfg = sectionConfig[sectionKey];
+
+    await form.validateFields(cfg.validateFields);
+    const allValues = form.getFieldsValue(true);
+    const partial = cfg.buildPayload(allValues);
+    const payload = normalizeProfilePayload(partial);
+
+    const res = await api.put("/info/profile", payload);
+    console.log("Profile updated:", res.data);
+    setSavedSectionValues((prev) => ({ ...prev, [sectionKey]: partial }));
+    message.success("Information saved successfully");
+  };
+
+  const getSectionButtonProps = (sectionKey) => ({
+    onSave: () => handleSectionSave(sectionKey),
+    onCancel: () => handleSectionCancel(sectionKey),
+  });
 
   if (loading) {
     return (
@@ -242,26 +370,18 @@ function PersonInformation({ userId, onboardingApplicationId }) {
         size={componentSize}
         style={{ maxWidth: 1200, paddingTop: 50 }}
       >
-        <NameSection />
-        <AddressSection />
-        <ContactSection />
-        <VisaInformationSection />
-        <EmergencySection />
-        <UploadDocument />
-
-        <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
-          <Form.Item>
-            <Button danger onClick={() => form.resetFields()}>
-              Cancel
-            </Button>
-          </Form.Item>
-
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Save
-            </Button>
-          </Form.Item>
-        </div>
+        <NameSection sectionButtonProps={getSectionButtonProps("name")} />
+        <AddressSection sectionButtonProps={getSectionButtonProps("address")} />
+        <ContactSection sectionButtonProps={getSectionButtonProps("contact")} />
+        <VisaInformationSection
+          sectionButtonProps={getSectionButtonProps("visa")}
+        />
+        <EmergencySection
+          sectionButtonProps={getSectionButtonProps("emergency")}
+        />
+        <UploadDocument
+          sectionButtonProps={getSectionButtonProps("documents")}
+        />
       </Form>
     </div>
   );

@@ -18,40 +18,10 @@ import {
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import React, { useState } from "react";
+import SectionButton from "./SectionButton";
 
-export default function UploadDocument() {
-  const columns = [
-    {
-      title: "File Name",
-      dataIndex: "name",
-    },
-    {
-      title: "Action",
-      render: (_, file) => (
-        <Space>
-          {/* Preview */}
-          <Button
-            size="small"
-            onClick={() =>
-              window.open(
-                file.thumbUrl || URL.createObjectURL(file.originFileObj),
-              )
-            }
-          >
-            Preview
-          </Button>
-
-          {/* Download */}
-          <a
-            href={file.thumbUrl || URL.createObjectURL(file.originFileObj)}
-            download={file.name}
-          >
-            <Button size="small">Download</Button>
-          </a>
-        </Space>
-      ),
-    },
-  ];
+export default function UploadDocument({ sectionButtonProps }) {
+  const [isEditing, setIsEditing] = useState(false);
 
   return (
     <Card title="Documents" variant="borderless" style={{ marginBottom: 24 }}>
@@ -61,7 +31,7 @@ export default function UploadDocument() {
             name={["documents", "driverLicense"]}
             label="Driver License"
           >
-            <Input placeholder="Driver License URL" />
+            <Input placeholder="Driver License URL" disabled={!isEditing} />
           </Form.Item>
         </Col>
         <Col span={8}>
@@ -69,15 +39,16 @@ export default function UploadDocument() {
             name={["documents", "workAuthorization"]}
             label="Work Authorization"
           >
-            <Input placeholder="Work Authorization URL" />
+            <Input placeholder="Work Authorization URL" disabled={!isEditing} />
           </Form.Item>
         </Col>
         <Col span={8}>
           <Form.Item name={["documents", "other"]} label="Other Documents">
-            <Input placeholder="Other Documents URL" />
+            <Input placeholder="Other Documents URL" disabled={!isEditing} />
           </Form.Item>
         </Col>
       </Row>
+      <SectionButton {...sectionButtonProps} onEditingChange={setIsEditing} />
     </Card>
   );
 }

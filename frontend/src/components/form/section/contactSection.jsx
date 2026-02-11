@@ -16,9 +16,11 @@ import {
   TreeSelect,
   Upload,
 } from "antd";
-import React from "react";
+import React, { useState } from "react";
+import SectionButton from "./SectionButton";
 
-export default function ContactSection() {
+export default function ContactSection({ sectionButtonProps }) {
+  const [isEditing, setIsEditing] = useState(false);
   return (
     <Card
       title="Contact Information"
@@ -32,7 +34,7 @@ export default function ContactSection() {
               name={["contactInfo", "cellPhone"]}
               style={{ marginBottom: 0 }}
             >
-              <Input placeholder="Cell Phone" />
+              <Input placeholder="Cell Phone" disabled={!isEditing} />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -40,11 +42,12 @@ export default function ContactSection() {
               name={["contactInfo", "workPhone"]}
               style={{ marginBottom: 0 }}
             >
-              <Input placeholder="Work Phone" />
+              <Input placeholder="Work Phone" disabled={!isEditing} />
             </Form.Item>
           </Col>
         </Row>
       </Form.Item>
+      <SectionButton {...sectionButtonProps} onEditingChange={setIsEditing} />
     </Card>
   );
 }
