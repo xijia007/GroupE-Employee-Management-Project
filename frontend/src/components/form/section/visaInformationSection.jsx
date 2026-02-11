@@ -16,8 +16,11 @@ import {
   Card,
   Upload,
 } from "antd";
+import { useState } from "react";
+import SectionButton from "./SectionButton";
 
-export default function VisaInformationSection() {
+export default function VisaInformationSection({ sectionButtonProps }) {
+  const [isEditing, setIsEditing] = useState(false);
   return (
     <Card
       title="Visa Information"
@@ -32,7 +35,11 @@ export default function VisaInformationSection() {
               style={{ marginBottom: 0 }}
               rules={[{ required: true, message: "Please enter visa title" }]}
             >
-              <Input placeholder="Visa Title" style={{ width: "100%" }} />
+              <Input
+                placeholder="Visa Title"
+                style={{ width: "100%" }}
+                disabled={!isEditing}
+              />
             </Form.Item>
           </Col>
 
@@ -42,7 +49,11 @@ export default function VisaInformationSection() {
               style={{ marginBottom: 0 }}
               rules={[{ required: true, message: "Please select start date" }]}
             >
-              <DatePicker style={{ width: "100%" }} placeholder="Start Date" />
+              <DatePicker
+                style={{ width: "100%" }}
+                placeholder="Start Date"
+                disabled={!isEditing}
+              />
             </Form.Item>
           </Col>
 
@@ -52,11 +63,16 @@ export default function VisaInformationSection() {
               style={{ marginBottom: 0 }}
               rules={[{ required: true, message: "Please select end date" }]}
             >
-              <DatePicker style={{ width: "100%" }} placeholder="End Date" />
+              <DatePicker
+                style={{ width: "100%" }}
+                placeholder="End Date"
+                disabled={!isEditing}
+              />
             </Form.Item>
           </Col>
         </Row>
       </Form.Item>
+      <SectionButton {...sectionButtonProps} onEditingChange={setIsEditing} />
     </Card>
   );
 }

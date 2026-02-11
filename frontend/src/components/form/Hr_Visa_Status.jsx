@@ -11,6 +11,8 @@ import {
   Avatar,
   Typography,
   Tooltip,
+  Dropdown,
+  Menu,
 } from "antd";
 import {
   SearchOutlined,
@@ -20,6 +22,7 @@ import {
   EditOutlined,
   BellOutlined,
   DownloadOutlined,
+  EllipsisOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import api from "../../services/api";
@@ -120,11 +123,24 @@ const DOCS = [
 function pickCurrStatusDoc(profile) {
   const docs = profile?.documents || {};
 
+  // If all required documents are approved, show a single completion label.
+  if (allDocumentsApproved(profile)) return { label: "All Documents Approved" };
+
   // Determine based on which files have been provided (uploaded) rather than status.
   // Pick the latest provided file in the required sequence.
   const lastProvided = [...DOCS].reverse().find((d) => !!docs[d.key]);
   if (!lastProvided) return { label: "OPT Receipt" };
   return { label: lastProvided.label };
+}
+
+function allDocumentsApproved(profile) {
+  const docs = profile?.documents || {};
+  const visaDocs = profile?.visaDocuments || {};
+  return DOCS.every((d) => {
+    if (!docs[d.key]) return false;
+    const st = String(visaDocs?.[d.key]?.status || "").toLowerCase();
+    return st === "approved";
+  });
 }
 
 function computeOverallStatus(profile) {
@@ -204,6 +220,7 @@ async function fetchVisaList({ page, pageSize, filters }) {
       visaEndDate: profile?.visaInformation?.EndDate || null,
       profile,
       status: computeOverallStatus(profile),
+      allDocsApproved: allDocumentsApproved(profile),
       defaultViewDoc: pickDefaultViewDoc(profile),
       currStatusDoc: pickCurrStatusDoc(profile),
     };
@@ -334,9 +351,23 @@ export default function HrVisaStatusPage() {
     [filters, load, page, pageSize],
   );
 
-  const handlePreview = React.useCallback((path) => {
-    const url = toAbsoluteUrl(path);
-    if (url) window.open(url, "_blank");
+  const handlePreview = React.useCallback(async (path) => {
+    try {
+      const s = String(path || "");
+      if (s.includes("/api/files/")) {
+        const apiPath = s.startsWith("/api/") ? s.slice(4) : s;
+        const res = await api.get(apiPath, { responseType: "blob" });
+        const blobUrl = URL.createObjectURL(res.data);
+        window.open(blobUrl, "_blank", "noopener,noreferrer");
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+        return;
+      }
+
+      const url = toAbsoluteUrl(path);
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      console.error("Failed to preview document", e);
+    }
   }, []);
 
   const columns = useMemo(() => {
@@ -420,7 +451,12 @@ export default function HrVisaStatusPage() {
         title: "Status",
         dataIndex: "status",
         key: "status",
-        render: (v) => statusTag(v),
+        render: (_, r) =>
+          r.allDocsApproved ? (
+            <Tag color="green">All Documents Approved</Tag>
+          ) : (
+            statusTag(r.status)
+          ),
       },
       {
         title: "",
@@ -440,6 +476,56 @@ export default function HrVisaStatusPage() {
           const reviewDocType =
             currentPendingDocType ||
             [...DOCS].reverse().find((d) => !!docs[d.key])?.key;
+
+          const approvedDocKeys = DOCS.filter((d) => {
+            if (!docs[d.key]) return false;
+            const st = String(visaDocs?.[d.key]?.status || "").toLowerCase();
+            return st === "approved";
+          }).map((d) => d.key);
+
+          const approvedMenuItems = approvedDocKeys.map((k) => ({
+            key: k,
+            label: DOCS.find((d) => d.key === k)?.label || k,
+          }));
+
+          const approvedMenu = {
+            items: approvedMenuItems.length
+              ? approvedMenuItems
+              : [
+                  {
+                    key: "__none__",
+                    label: "No approved documents",
+                    disabled: true,
+                  },
+                ],
+            onClick: ({ key }) => {
+              if (key === "__none__") return;
+              const path = docs?.[key];
+              handlePreview(path);
+            },
+          };
+
+          if (r.allDocsApproved) {
+            return (
+              <Space>
+                <Tooltip title="Preview approved documents">
+                  <Dropdown
+                    disabled={!approvedMenuItems.length}
+                    trigger={["click"]}
+                    menu={{
+                      items: approvedMenuItems,
+                      onClick: ({ key }) => {
+                        const path = docs?.[key];
+                        handlePreview(path);
+                      },
+                    }}
+                  >
+                    <Button icon={<EllipsisOutlined />} />
+                  </Dropdown>
+                </Tooltip>
+              </Space>
+            );
+          }
 
           return (
             <Space>
@@ -500,15 +586,19 @@ export default function HrVisaStatusPage() {
                     : "No document to review"
                 }
               >
-                <Button
-                  icon={<EyeOutlined />}
+                <Dropdown.Button
+                  icon={<EllipsisOutlined />}
+                  trigger={["click"]}
                   disabled={!reviewDocType}
+                  menu={approvedMenu}
                   onClick={() => {
                     if (!reviewDocType) return;
                     const path = docs?.[reviewDocType];
                     handlePreview(path);
                   }}
-                />
+                >
+                  <EyeOutlined />
+                </Dropdown.Button>
               </Tooltip>
             </Space>
           );

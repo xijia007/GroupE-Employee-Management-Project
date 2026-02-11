@@ -1,5 +1,14 @@
 import Profile from "../models/Profile.js";
 import mongoose from "mongoose";
+import { uploadBufferToGridFS } from "../utils/gridfs.js";
+
+function sanitizeFilename(name) {
+  return String(name || "upload")
+    .replace(/\\/g, "_")
+    .replace(/\//g, "_")
+    .replace(/\s+/g, "_")
+    .replace(/[^a-zA-Z0-9._-]/g, "_");
+}
 
 const getUserProfile = async (req, res) => {
   try {
@@ -55,8 +64,22 @@ const uploadProfileDocument = async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Normalize Windows backslashes so frontend can build a valid /uploads URL
-    const filePath = String(req.file.path).replace(/\\/g, "/"); // e.g. uploads/documents/<filename>
+    const safeOriginalName = sanitizeFilename(req.file.originalname);
+    const uniqueName = `${userId}_${Date.now()}_${safeOriginalName}`;
+
+    const fileId = await uploadBufferToGridFS({
+      buffer: req.file.buffer,
+      filename: uniqueName,
+      contentType: req.file.mimetype,
+      metadata: {
+        userId,
+        docType,
+        context: "profile",
+        originalName: safeOriginalName,
+      },
+    });
+
+    const filePath = `/api/files/${fileId}/${encodeURIComponent(safeOriginalName)}`;
 
     const profile = await Profile.findOneAndUpdate(
       { user: new mongoose.Types.ObjectId(userId) },

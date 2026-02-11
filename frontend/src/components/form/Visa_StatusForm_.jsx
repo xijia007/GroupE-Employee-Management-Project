@@ -57,6 +57,51 @@ function toAbsoluteUrl(urlOrPath) {
   return `${origin}${normalizedPath}`;
 }
 
+function toApiRelativePath(urlOrPath) {
+  if (!urlOrPath) return null;
+
+  let pathname = String(urlOrPath);
+  try {
+    if (/^https?:\/\//i.test(pathname)) {
+      const u = new URL(pathname);
+      pathname = `${u.pathname}${u.search || ""}`;
+    }
+  } catch {
+    // ignore URL parse issues
+  }
+
+  pathname = pathname.replace(/\\/g, "/");
+
+  // Convert stored link like /api/files/... to axios api baseURL relative (/files/...)
+  if (pathname.startsWith("/api/")) return pathname.slice(4);
+  if (pathname.startsWith("api/")) return `/${pathname.slice(3)}`;
+
+  // If it's already /files/... keep as-is
+  if (pathname.startsWith("/files/")) return pathname;
+
+  return null;
+}
+
+function filenameFromLink(urlOrPath, fallback) {
+  if (!urlOrPath) return fallback;
+  const s = String(urlOrPath);
+  const noQuery = s.split("?")[0];
+  const last = noQuery.split("/").filter(Boolean).pop();
+  if (!last) return fallback;
+  try {
+    return decodeURIComponent(last);
+  } catch {
+    return last;
+  }
+}
+
+async function fetchFileBlob(urlOrPath) {
+  const apiPath = toApiRelativePath(urlOrPath);
+  if (!apiPath) return null;
+  const res = await api.get(apiPath, { responseType: "blob" });
+  return res?.data || null;
+}
+
 function VisaStatusManagementPage({ isOPTUser = true }) {
   const [docs, setDocs] = useState({
     optReceipt: { status: "Not Uploaded", file: null, feedback: "" },
@@ -280,11 +325,12 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
 
   const renderActions = (key) => {
     const { status, file } = docs[key];
-    const url = toAbsoluteUrl(fileUrl(file));
+    const storedLinkOrBlobUrl = fileUrl(file);
+    const url = toAbsoluteUrl(storedLinkOrBlobUrl);
 
     const downloadName =
       typeof file === "string" && file.trim()
-        ? file.split("/").pop() || `${key}.pdf`
+        ? filenameFromLink(file, `${key}.pdf`)
         : file?.name || `${key}.pdf`;
 
     const uploadFileList = url
@@ -324,7 +370,22 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
       <Button
         icon={<EyeOutlined />}
         disabled={!url}
-        onClick={() => url && window.open(url, "_blank")}
+        onClick={async () => {
+          if (!storedLinkOrBlobUrl) return;
+
+          // New: secured DB files (/api/files/...) => fetch as blob with Authorization
+          const blob = await fetchFileBlob(storedLinkOrBlobUrl);
+          if (blob) {
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, "_blank", "noopener,noreferrer");
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+            return;
+          }
+
+          // Legacy: public static /uploads/... or any absolute URL
+          const absolute = toAbsoluteUrl(storedLinkOrBlobUrl);
+          if (absolute) window.open(absolute, "_blank", "noopener,noreferrer");
+        }}
       >
         Preview
       </Button>
@@ -334,12 +395,31 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
       <Button
         icon={<DownloadOutlined />}
         disabled={!url}
-        onClick={() => {
-          if (!url) return;
+        onClick={async () => {
+          if (!storedLinkOrBlobUrl) return;
+
+          const blob = await fetchFileBlob(storedLinkOrBlobUrl);
+          if (blob) {
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = blobUrl;
+            a.download = downloadName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+            return;
+          }
+
+          // Legacy fallback
+          const absolute = toAbsoluteUrl(storedLinkOrBlobUrl);
+          if (!absolute) return;
           const a = document.createElement("a");
-          a.href = url;
+          a.href = absolute;
           a.download = downloadName;
+          document.body.appendChild(a);
           a.click();
+          a.remove();
         }}
       >
         Download

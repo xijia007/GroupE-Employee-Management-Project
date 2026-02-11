@@ -1,5 +1,14 @@
 import OnboardingApplication from "../models/OnboardingApplication.js";
 import User from "../models/User.js";
+import { uploadBufferToGridFS } from "../utils/gridfs.js";
+
+function sanitizeFilename(name) {
+  return String(name || "upload")
+    .replace(/\\/g, "_")
+    .replace(/\//g, "_")
+    .replace(/\s+/g, "_")
+    .replace(/[^a-zA-Z0-9._-]/g, "_");
+}
 
 // ============================================
 // Submit or Update Onboarding Application
@@ -21,22 +30,62 @@ export const submitApplication = async (req, res) => {
       );
     }
 
-    // handle the path for uploaded files
+    // Persist uploaded files to MongoDB GridFS and store links
     if (req.files) {
       applicationData.documents = applicationData.documents || {};
 
       if (req.files.driverLicense) {
-        applicationData.documents.driverLicense =
-          req.files.driverLicense[0].path;
+        const f = req.files.driverLicense[0];
+        const original = sanitizeFilename(f.originalname);
+        const uniqueName = `${userId}_${Date.now()}_${original}`;
+        const fileId = await uploadBufferToGridFS({
+          buffer: f.buffer,
+          filename: uniqueName,
+          contentType: f.mimetype,
+          metadata: {
+            userId,
+            docType: "driverLicense",
+            context: "onboarding",
+            originalName: original,
+          },
+        });
+        applicationData.documents.driverLicense = `/api/files/${fileId}/${encodeURIComponent(original)}`;
       }
 
       if (req.files.workAuthorization) {
-        applicationData.documents.workAuthorization =
-          req.files.workAuthorization[0].path;
+        const f = req.files.workAuthorization[0];
+        const original = sanitizeFilename(f.originalname);
+        const uniqueName = `${userId}_${Date.now()}_${original}`;
+        const fileId = await uploadBufferToGridFS({
+          buffer: f.buffer,
+          filename: uniqueName,
+          contentType: f.mimetype,
+          metadata: {
+            userId,
+            docType: "workAuthorization",
+            context: "onboarding",
+            originalName: original,
+          },
+        });
+        applicationData.documents.workAuthorization = `/api/files/${fileId}/${encodeURIComponent(original)}`;
       }
 
       if (req.files.other) {
-        applicationData.documents.other = req.files.other[0].path;
+        const f = req.files.other[0];
+        const original = sanitizeFilename(f.originalname);
+        const uniqueName = `${userId}_${Date.now()}_${original}`;
+        const fileId = await uploadBufferToGridFS({
+          buffer: f.buffer,
+          filename: uniqueName,
+          contentType: f.mimetype,
+          metadata: {
+            userId,
+            docType: "other",
+            context: "onboarding",
+            originalName: original,
+          },
+        });
+        applicationData.documents.other = `/api/files/${fileId}/${encodeURIComponent(original)}`;
       }
     }
 
