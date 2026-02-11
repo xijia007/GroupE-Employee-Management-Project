@@ -1,11 +1,29 @@
 import React, { useState, useEffect } from "react";
-import { Card, Typography, Button, Alert, Spin, List, Avatar, Tag } from "antd";
+import {
+  Card,
+  Typography,
+  Button,
+  Alert,
+  Spin,
+  List,
+  Avatar,
+  Tag,
+  Tooltip,
+} from "antd";
+import {
+  FileTextOutlined,
+  SafetyCertificateOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ClockCircleOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { selectUser } from "../features/auth/authSlice";
 import api from "../services/api";
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 function HomePage() {
   const user = useSelector(selectUser);
@@ -161,120 +179,6 @@ function HomePage() {
           📊 Dashboard Overview
         </Title>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: "16px",
-            marginBottom: 24,
-          }}
-        >
-          {/* Pending Applications Card */}
-          <Card
-            hoverable
-            onClick={() => navigate("/hr/hiring_management")}
-            style={{
-              background:
-                hrDashboard.pendingApplications > 0 ? "#fff7e6" : "#f5f5f5",
-              borderColor:
-                hrDashboard.pendingApplications > 0 ? "#ffa940" : "#d9d9d9",
-              cursor: "pointer",
-            }}
-          >
-            <div style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontSize: "36px",
-                  fontWeight: "bold",
-                  color: "#fa8c16",
-                }}
-              >
-                {hrDashboard.pendingApplications}
-              </div>
-              <div style={{ fontSize: "14px", color: "#666", marginTop: 8 }}>
-                Pending Onboarding Applications
-              </div>
-              {hrDashboard.pendingApplications > 0 && (
-                <div style={{ marginTop: 12 }}>
-                  <Button
-                    type="primary"
-                    size="small"
-                    style={{ background: "#fa8c16", borderColor: "#fa8c16" }}
-                  >
-                    Review Now →
-                  </Button>
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Pending Visa Documents Card */}
-          <Card
-            hoverable
-            onClick={() => navigate("/hr/visaStatus")}
-            style={{
-              background:
-                hrDashboard.pendingVisaDocuments > 0 ? "#fff1f0" : "#f5f5f5",
-              borderColor:
-                hrDashboard.pendingVisaDocuments > 0 ? "#ff7875" : "#d9d9d9",
-              cursor: "pointer",
-            }}
-          >
-            <div style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontSize: "36px",
-                  fontWeight: "bold",
-                  color: "#f5222d",
-                }}
-              >
-                {hrDashboard.pendingVisaDocuments}
-              </div>
-              <div style={{ fontSize: "14px", color: "#666", marginTop: 8 }}>
-                Pending Visa Documents
-              </div>
-              {hrDashboard.pendingVisaDocuments > 0 && (
-                <div style={{ marginTop: 12 }}>
-                  <Button type="primary" size="small" danger>
-                    Review Now →
-                  </Button>
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Total Employees Card */}
-          <Card
-            hoverable
-            onClick={() => navigate("/hr/employeeProfiles")}
-            style={{
-              background: "#f0f5ff",
-              borderColor: "#adc6ff",
-              cursor: "pointer",
-            }}
-          >
-            <div style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontSize: "36px",
-                  fontWeight: "bold",
-                  color: "#1890ff",
-                }}
-              >
-                {hrDashboard.totalEmployees}
-              </div>
-              <div style={{ fontSize: "14px", color: "#666", marginTop: 8 }}>
-                Total Employees
-              </div>
-              <div style={{ marginTop: 12 }}>
-                <Button type="primary" size="small">
-                  View All →
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-
         {/* Action Required Alert */}
         {(hrDashboard.pendingApplications > 0 ||
           hrDashboard.pendingVisaDocuments > 0) && (
@@ -283,16 +187,22 @@ function HomePage() {
             description={
               <div>
                 {hrDashboard.pendingApplications > 0 && (
-                  <p style={{ margin: "4px 0" }}>
+                  <div 
+                    onClick={() => navigate("/hr/hiring_management")}
+                    style={{ margin: "4px 0", cursor: "pointer", color: '#1890ff', textDecoration: 'underline' }}
+                  >
                     • <strong>{hrDashboard.pendingApplications}</strong>{" "}
-                    onboarding application(s) waiting for review
-                  </p>
+                    onboarding application(s) waiting for review (Click to view)
+                  </div>
                 )}
                 {hrDashboard.pendingVisaDocuments > 0 && (
-                  <p style={{ margin: "4px 0" }}>
+                  <div 
+                    onClick={() => navigate("/hr/visaStatus")}
+                    style={{ margin: "4px 0", cursor: "pointer", color: '#1890ff', textDecoration: 'underline' }}
+                  >
                     • <strong>{hrDashboard.pendingVisaDocuments}</strong> visa
-                    document(s) waiting for approval
-                  </p>
+                    document(s) waiting for approval (Click to view)
+                  </div>
                 )}
               </div>
             }
@@ -305,51 +215,120 @@ function HomePage() {
         {/* Recent Activity */}
         <div style={{ marginTop: 24 }}>
           <Title level={4}>🕒 Recent Activity</Title>
-          <Card style={{ marginTop: 16 }}>
+          <Card style={{ marginTop: 16 }} bodyStyle={{ padding: "0 12px" }}>
             {recentActivities.length > 0 ? (
               <List
                 itemLayout="horizontal"
                 dataSource={recentActivities}
                 renderItem={(item) => (
-                  <List.Item>
+                  <List.Item key={item.id} style={{ padding: "16px 8px" }}>
                     <List.Item.Meta
                       avatar={
-                        <Avatar
-                          style={{
-                            backgroundColor:
-                              item.status === "Approved"
-                                ? "#52c41a"
-                                : "#f5222d",
-                          }}
+                        <Tooltip
+                          title={
+                            item.type === "Application"
+                              ? "Onboarding Application"
+                              : "Visa Document"
+                          }
                         >
-                          {item.type === "Application" ? "A" : "V"}
-                        </Avatar>
+                          <Avatar
+                            size={48}
+                            shape="square"
+                            style={{
+                              backgroundColor:
+                                item.status === "Approved"
+                                  ? "#f6ffed"
+                                  : "#fff1f0",
+                              color:
+                                item.status === "Approved"
+                                  ? "#52c41a"
+                                  : "#ff4d4f",
+                              borderRadius: "12px",
+                              border: `1px solid ${item.status === "Approved" ? "#b7eb8f" : "#ffa39e"}`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                            icon={
+                              item.type === "Application" ? (
+                                <FileTextOutlined style={{ fontSize: 24 }} />
+                              ) : (
+                                <SafetyCertificateOutlined
+                                  style={{ fontSize: 24 }}
+                                />
+                              )
+                            }
+                          />
+                        </Tooltip>
                       }
                       title={
                         <div
                           style={{
                             display: "flex",
                             justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            flexWrap: "wrap",
+                            gap: "8px",
                           }}
                         >
-                          <span style={{ fontWeight: "bold" }}>
+                          <Text
+                            strong
+                            style={{ fontSize: "16px", lineHeight: "1.2" }}
+                          >
                             {item.user}
-                          </span>
-                          <span style={{ fontSize: "12px", color: "#999" }}>
-                            {item.date.toLocaleString()}
-                          </span>
+                          </Text>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              fontSize: "12px",
+                              color: "#8c8c8c",
+                            }}
+                          >
+                            <ClockCircleOutlined style={{ marginRight: 4 }} />
+                            {item.date.toLocaleDateString()}
+                          </div>
                         </div>
                       }
                       description={
-                        <div style={{ marginTop: 4 }}>
+                        <div
+                          style={{
+                            marginTop: 6,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            gap: "8px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <Text>{item.details}</Text>
+                          </div>
                           <Tag
                             color={
                               item.status === "Approved" ? "success" : "error"
                             }
+                            icon={
+                              item.status === "Approved" ? (
+                                <CheckCircleOutlined />
+                              ) : (
+                                <CloseCircleOutlined />
+                              )
+                            }
+                            style={{
+                              margin: 0,
+                              borderRadius: "6px",
+                              padding: "0 8px",
+                            }}
                           >
-                            {item.status}
+                            {item.status.toUpperCase()}
                           </Tag>
-                          <span>{item.details}</span>
                         </div>
                       }
                     />
@@ -358,9 +337,16 @@ function HomePage() {
               />
             ) : (
               <div
-                style={{ textAlign: "center", color: "#999", padding: "20px" }}
+                style={{ textAlign: "center", color: "#999", padding: "32px" }}
               >
-                No recent activity found
+                <ClockCircleOutlined
+                  style={{
+                    fontSize: "24px",
+                    marginBottom: "8px",
+                    color: "#d9d9d9",
+                  }}
+                />
+                <div>No recent activity found</div>
               </div>
             )}
           </Card>
@@ -414,6 +400,13 @@ function HomePage() {
 
     // Approved - Check OPT document status
     if (applicationStatus === "Approved") {
+      if (!profile) return null;
+
+      const visaType = profile.visaInformation?.visaType || "";
+      if (!visaType.startsWith("F1")) {
+        return null;
+      }
+
       const optReceiptStatus = profile?.visaDocuments?.optReceipt?.status;
       const optEadStatus = profile?.visaDocuments?.optEad?.status;
 
@@ -536,15 +529,15 @@ function HomePage() {
 
         <div style={{ marginTop: 24 }}>
           <Title level={4}>Quick Links:</Title>
-          <ul style={{ fontSize: "16px", lineHeight: "2" }}>
+          <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "24px", fontSize: "16px", marginTop: "16px" }}>
             {user?.role === "Employee" && (
               <>
-                <li>
-                  <Button type="link" onClick={() => navigate("/onboarding")}>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <Button type="link" onClick={() => navigate("/onboarding")} style={{ padding: 0, height: "auto" }}>
                     📝 Complete Onboarding Application
                   </Button>
-                </li>
-                <li>
+                </div>
+                <div style={{ display: "flex", alignItems: "center" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/personInformation")}
@@ -554,18 +547,12 @@ function HomePage() {
                         ? "Available after onboarding approval"
                         : ""
                     }
+                    style={{ padding: 0, height: "auto" }}
                   >
                     👤 View/Update Personal Information
                   </Button>
-                  {applicationStatus !== "Approved" && (
-                    <span
-                      style={{ color: "#999", fontSize: "12px", marginLeft: 8 }}
-                    >
-                      (Available after onboarding approval)
-                    </span>
-                  )}
-                </li>
-                <li>
+                </div>
+                <div style={{ display: "flex", alignItems: "center" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/visaStatus")}
@@ -575,46 +562,46 @@ function HomePage() {
                         ? "Available after onboarding approval"
                         : ""
                     }
+                    style={{ padding: 0, height: "auto" }}
                   >
                     📄 Check Visa Status
                   </Button>
-                  {applicationStatus !== "Approved" && (
-                    <span
-                      style={{ color: "#999", fontSize: "12px", marginLeft: 8 }}
-                    >
-                      (Available after onboarding approval)
-                    </span>
-                  )}
-                </li>
+                </div>
               </>
             )}
 
             {user?.role === "HR" && (
               <>
-                <li>
+                <div style={{ display: "flex", alignItems: "center" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/hr/hiring_management")}
+                    style={{ padding: 0, height: "auto" }}
                   >
                     🔑 Hiring Management
                   </Button>
-                </li>
-                <li>
+                </div>
+                <div style={{ display: "flex", alignItems: "center" }}>
                   <Button
                     type="link"
                     onClick={() => navigate("/hr/employeeProfiles")}
+                    style={{ padding: 0, height: "auto" }}
                   >
                     👥 Employee Profiles
                   </Button>
-                </li>
-                <li>
-                  <Button type="link" onClick={() => navigate("/visaStatus")}>
+                </div>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <Button
+                    type="link"
+                    onClick={() => navigate("/hr/visaStatus")}
+                    style={{ padding: 0, height: "auto" }}
+                  >
                     📄 Visa Status Management
                   </Button>
-                </li>
+                </div>
               </>
             )}
-          </ul>
+          </div>
         </div>
       </Card>
     </div>

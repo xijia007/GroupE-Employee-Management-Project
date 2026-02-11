@@ -183,13 +183,20 @@ function ApplicationReview() {
 
   return (
     <div>
-      <Button
-        icon={<ArrowLeftOutlined />}
+      <div 
         onClick={() => navigate("/hr/hiring_management")}
-        style={{ marginBottom: 16 }}
+        style={{ 
+            cursor: "pointer", 
+            display: "inline-flex", 
+            alignItems: "center", 
+            marginBottom: 16, 
+            fontSize: '16px',
+            color: '#1890ff',
+            fontWeight: '500'
+        }}
       >
-        Back to List
-      </Button>
+        <ArrowLeftOutlined style={{ marginRight: 8 }} /> Back to List
+      </div>
 
       <Card
         title={
@@ -205,8 +212,14 @@ function ApplicationReview() {
           </div>
         }
       >
-        <Descriptions bordered column={2}>
-          <Descriptions.Item label="Full Name" span={2}>
+        <Descriptions 
+          bordered 
+          layout="vertical"
+          column={1}
+          labelStyle={{ textAlign: 'left', fontWeight: 'bold' }}
+          contentStyle={{ textAlign: 'left' }}
+        >
+          <Descriptions.Item label="Full Name">
             {application.firstName} {application.middleName}{" "}
             {application.lastName}
           </Descriptions.Item>
@@ -229,11 +242,11 @@ function ApplicationReview() {
             {application.gender}
           </Descriptions.Item>
 
-          <Descriptions.Item label="SSN" span={2}>
+          <Descriptions.Item label="SSN">
             {application.ssn}
           </Descriptions.Item>
 
-          <Descriptions.Item label="Address" span={2}>
+          <Descriptions.Item label="Address">
             {application.currentAddress ? (
               <>
                 {application.currentAddress.building},{" "}
@@ -248,7 +261,7 @@ function ApplicationReview() {
             )}
           </Descriptions.Item>
 
-          <Descriptions.Item label="US Resident Status" span={2}>
+          <Descriptions.Item label="US Resident Status">
             {application.usResident === "usCitizen"
               ? "US Citizen"
               : application.usResident === "greenCard"
@@ -273,7 +286,7 @@ function ApplicationReview() {
             </>
           )}
 
-          <Descriptions.Item label="Emergency Contacts" span={2}>
+          <Descriptions.Item label="Emergency Contacts">
             {application.emergencyContacts &&
             application.emergencyContacts.length > 0
               ? application.emergencyContacts.map((contact, index) => (
@@ -474,7 +487,6 @@ function ApplicationReview() {
             <Space size="large">
               <Button
                 danger
-                size="large"
                 icon={<CloseOutlined />}
                 onClick={() => setActionType("reject")}
               >
@@ -482,7 +494,6 @@ function ApplicationReview() {
               </Button>
               <Button
                 type="primary"
-                size="large"
                 icon={<CheckOutlined />}
                 onClick={() => setActionType("approve")}
               >

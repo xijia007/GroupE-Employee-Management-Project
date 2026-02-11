@@ -11,12 +11,15 @@ import {
   uploadRequiredDocuments,
 } from "../middleware/uploadMiddleware.js";
 
+import { validateRequest } from '../middleware/validationMiddleware.js';
+import { onboardingSchema } from '../schemas/zodSchemas.js';
+
 const router = express.Router();
 
 // POST /api/onboarding/submit
 // - Submit or update onboarding application (with file uploads)
 // - Protected: requires authentication
-router.post("/submit", verifyToken, uploadRequiredDocuments, submitApplication);
+router.post("/submit", verifyToken, uploadRequiredDocuments, validateRequest(onboardingSchema), submitApplication);
 
 // GET /api/onboarding/my-application
 // - Get current user's application details

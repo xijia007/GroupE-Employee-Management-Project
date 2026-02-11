@@ -14,6 +14,7 @@ import {
   Divider,
   Grid,
   Empty,
+  List,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -22,6 +23,7 @@ import {
   MailOutlined,
   HomeOutlined,
   SafetyOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import api from "../../services/api";
 
@@ -35,6 +37,7 @@ function EmployeeDetail() {
   const [loading, setLoading] = useState(false);
   const [employee, setEmployee] = useState(null);
   const [application, setApplication] = useState(null);
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     fetchEmployeeDetail();
@@ -46,9 +49,8 @@ function EmployeeDetail() {
 
       // Fetch onboarding application (contains all employee info)
       const response = await api.get(`/hr/employees/${id}`);
-      const { application, user } = response.data;
+      const { application, user, profile } = response.data;
 
-      // Set employee basic info from user object
       setEmployee({
         _id: id,
         username: user?.username || "N/A",
@@ -58,7 +60,66 @@ function EmployeeDetail() {
       });
 
       // Set complete application data
-      setApplication(application);
+      console.log("Application Documents:", application?.documents);
+      console.log("Profile Visa Documents:", profile?.visaDocuments);
+      setProfile(profile);
+
+      // Merge profile data over application data for display
+      // If profile exists, it contains the most up-to-date info.
+      // If not, fall back to application data.
+      let displayData = application;
+      
+      if (profile) {
+          // Check if profile.address is fully populated to avoid overwriting with empty
+          // Profile schema ensures address fields are required, so it should be fine.
+          displayData = {
+            ...application, // Start with application data (preserves status, reviews, etc.)
+            ...profile,     // Overwrite with profile data (e.g. email, phone)
+            
+            // Explicitly map fields where names differ or need deep merge
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            middleName: profile.middleName,
+            preferredName: profile.preferredName,
+            email: profile.email,
+            ssn: profile.ssn,
+            dateOfBirth: profile.dateOfBirth,
+            gender: profile.gender,
+            
+            // Map Profile 'address' to Application 'currentAddress'
+            currentAddress: profile.address, 
+            
+            // Map Profile 'contactInfo' to Application flat fields if needed or preserve
+            // Application schema has 'cellPhone' and 'workPhone' at root.
+            cellPhone: profile.contactInfo?.cellPhone,
+            workPhone: profile.contactInfo?.workPhone,
+            
+            // Visa Info
+            // Application has 'visaTitle', 'visaStartDate', 'visaEndDate'
+            // Profile has 'visaInformation' object
+            visaTitle: profile.visaInformation?.visaType,
+            visaStartDate: profile.visaInformation?.StartDate,
+            visaEndDate: profile.visaInformation?.EndDate,
+            
+            emergencyContacts: profile.emergencyContacts,
+            
+            // Documents: Merge them so we see everything
+            documents: { 
+                ...application.documents, 
+                ...profile.documents,
+                // Ensure we don't lose specific doc paths if keys match
+            },
+            
+            // Preserve application-specific fields that Profile doesn't have
+            status: application.status,
+            submittedAt: application.submittedAt,
+            reviewedAt: application.reviewedAt,
+            feedback: application.feedback,
+            usResident: application.usResident
+          };
+      }
+      
+      setApplication(displayData);
     } catch (err) {
       console.error("Error fetching employee detail:", err);
       message.error("Failed to load employee details");
@@ -174,7 +235,15 @@ function EmployeeDetail() {
   const normalizedApplicationStatus = normalizeStatus(application?.status);
 
   return (
-    <div style={{ padding: "24px", maxWidth: "1400px", margin: "0 auto" }}>
+    <div
+      style={{
+        padding: "24px",
+        maxWidth: "1400px",
+        margin: "0 auto",
+        textAlign: "left",
+        lineHeight: "1.5",
+      }}
+    >
       {/* Header */}
       <div
         style={{
@@ -244,7 +313,14 @@ function EmployeeDetail() {
             }
             style={{ marginBottom: 16 }}
           >
-            <Descriptions column={screens.md ? 2 : 1} bordered size="small">
+            <Descriptions
+              column={{ xs: 1, sm: 2, md: 2, lg: 2, xl: 2, xxl: 2 }}
+              bordered
+              size="small"
+              layout="vertical"
+              labelStyle={{ fontWeight: "bold", width: "100%" }}
+              contentStyle={{ width: "100%" }}
+            >
               <Descriptions.Item label="First Name">
                 {application.firstName}
               </Descriptions.Item>
@@ -283,11 +359,18 @@ function EmployeeDetail() {
             style={{ marginBottom: 16 }}
           >
             {application.currentAddress ? (
-              <Descriptions column={screens.md ? 2 : 1} bordered size="small">
+              <Descriptions
+                column={{ xs: 1, sm: 2, md: 2, lg: 2, xl: 2, xxl: 2 }}
+                bordered
+                size="small"
+                layout="vertical"
+                labelStyle={{ fontWeight: "bold", width: "100%" }}
+                contentStyle={{ width: "100%" }}
+              >
                 <Descriptions.Item label="Building/Apt #">
                   {application.currentAddress.building || "N/A"}
                 </Descriptions.Item>
-                <Descriptions.Item label="Street">
+                <Descriptions.Item label="Street" span={2}>
                   {application.currentAddress.street || "N/A"}
                 </Descriptions.Item>
                 <Descriptions.Item label="City">
@@ -313,14 +396,21 @@ function EmployeeDetail() {
               </>
             }
           >
-            <Descriptions column={screens.md ? 2 : 1} bordered size="small">
+            <Descriptions
+              column={{ xs: 1, sm: 2, md: 2, lg: 2, xl: 2, xxl: 2 }}
+              bordered
+              size="small"
+              layout="vertical"
+              labelStyle={{ fontWeight: "bold", width: "100%" }}
+              contentStyle={{ width: "100%" }}
+            >
               <Descriptions.Item label="Cell Phone">
                 {application.cellPhone || "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Work Phone">
                 {application.workPhone || "N/A"}
               </Descriptions.Item>
-              <Descriptions.Item label="Email">
+              <Descriptions.Item label="Email" span={2}>
                 {application.email || employee.email}
               </Descriptions.Item>
             </Descriptions>
@@ -338,7 +428,14 @@ function EmployeeDetail() {
             }
             style={{ marginBottom: 16 }}
           >
-            <Descriptions column={screens.md ? 2 : 1} bordered size="small">
+            <Descriptions
+              column={{ xs: 1, sm: 2, md: 2, lg: 2, xl: 2, xxl: 2 }}
+              bordered
+              size="small"
+              layout="vertical"
+              labelStyle={{ fontWeight: "bold", width: "100%" }}
+              contentStyle={{ width: "100%" }}
+            >
               <Descriptions.Item label="Status">
                 {application.usResident === "greenCard"
                   ? "Green Card"
@@ -371,11 +468,14 @@ function EmployeeDetail() {
                 <div key={index}>
                   {index > 0 && <Divider />}
                   <Descriptions
-                    column={screens.md ? 2 : 1}
+                    column={{ xs: 1, sm: 2, md: 2, lg: 2, xl: 2, xxl: 2 }}
                     bordered
                     size="small"
+                    layout="vertical"
+                    labelStyle={{ fontWeight: "bold", width: "100%" }}
+                    contentStyle={{ width: "100%" }}
                   >
-                    <Descriptions.Item label="Name">
+                    <Descriptions.Item label="Name" span={2}>
                       {contact.firstName} {contact.lastName}
                     </Descriptions.Item>
                     <Descriptions.Item label="Relationship">
@@ -384,7 +484,7 @@ function EmployeeDetail() {
                     <Descriptions.Item label="Phone">
                       {contact.phone || "N/A"}
                     </Descriptions.Item>
-                    <Descriptions.Item label="Email">
+                    <Descriptions.Item label="Email" span={2}>
                       {contact.email || "N/A"}
                     </Descriptions.Item>
                   </Descriptions>
@@ -396,106 +496,147 @@ function EmployeeDetail() {
           </Card>
 
           {/* Documents */}
-          <Card title="📄 Uploaded Documents">
+          <Card
+            title={
+              <>
+                <FileTextOutlined /> Uploaded Documents
+              </>
+            }
+          >
+            {/* Onboarding Documents */}
+            <Title level={5} style={{ marginTop: 0 }}>
+              Onboarding Documents
+            </Title>
             {application.documents &&
             Object.values(application.documents).some((value) => !!value) ? (
-              <Descriptions column={screens.md ? 2 : 1} bordered size="small">
-                {application.documents.driverLicense && (
-                  <Descriptions.Item label="Driver License">
-                    <Space>
-                      <Button
-                        size="small"
-                        onClick={() =>
-                          previewOrDownload(
-                            application.documents.driverLicense,
-                            {
-                              download: false,
-                            },
-                          )
-                        }
+              <List
+                size="small"
+                bordered
+                dataSource={[
+                  {
+                    name: "Driver License",
+                    url: application.documents.driverLicense,
+                  },
+                  {
+                    name: "Work Authorization",
+                    url: application.documents.workAuthorization,
+                  },
+                  { name: "Other Document", url: application.documents.other },
+                ].filter((doc) => !!doc.url)}
+                renderItem={(item) => (
+                  <List.Item
+                    actions={[
+                      <a
+                        href={`http://localhost:3001${item.url.startsWith("/") ? "" : "/"}${item.url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontWeight: "bold" }}
                       >
-                        Preview
-                      </Button>
-                      <Button
-                        size="small"
-                        onClick={() =>
-                          previewOrDownload(
-                            application.documents.driverLicense,
-                            {
-                              download: true,
-                              filename: "driver-license.pdf",
-                            },
-                          )
-                        }
-                      >
-                        Download
-                      </Button>
-                    </Space>
-                  </Descriptions.Item>
+                        View
+                      </a>,
+                    ]}
+                  >
+                    <List.Item.Meta
+                      avatar={
+                        <FileTextOutlined
+                          style={{ fontSize: "20px", color: "#1890ff" }}
+                        />
+                      }
+                      title={item.name}
+                    />
+                  </List.Item>
                 )}
-                {application.documents.workAuthorization && (
-                  <Descriptions.Item label="Work Authorization">
-                    <Space>
-                      <Button
-                        size="small"
-                        onClick={() =>
-                          previewOrDownload(
-                            application.documents.workAuthorization,
-                            {
-                              download: false,
-                            },
-                          )
-                        }
-                      >
-                        Preview
-                      </Button>
-                      <Button
-                        size="small"
-                        onClick={() =>
-                          previewOrDownload(
-                            application.documents.workAuthorization,
-                            {
-                              download: true,
-                              filename: "work-authorization.pdf",
-                            },
-                          )
-                        }
-                      >
-                        Download
-                      </Button>
-                    </Space>
-                  </Descriptions.Item>
-                )}
-                {application.documents.other && (
-                  <Descriptions.Item label="Other Document">
-                    <Space>
-                      <Button
-                        size="small"
-                        onClick={() =>
-                          previewOrDownload(application.documents.other, {
-                            download: false,
-                          })
-                        }
-                      >
-                        Preview
-                      </Button>
-                      <Button
-                        size="small"
-                        onClick={() =>
-                          previewOrDownload(application.documents.other, {
-                            download: true,
-                            filename: "other-document.pdf",
-                          })
-                        }
-                      >
-                        Download
-                      </Button>
-                    </Space>
-                  </Descriptions.Item>
-                )}
-              </Descriptions>
+              />
             ) : (
-              <Text type="secondary">No Documents Uploaded</Text>
+              <Text
+                type="secondary"
+                style={{ display: "block", marginBottom: 16 }}
+              >
+                No onboarding documents uploaded.
+              </Text>
+            )}
+
+            {/* Visa Documents */}
+            {profile?.visaDocuments && (
+              <>
+                <Title level={5} style={{ marginTop: 24 }}>
+                  Visa Documents
+                </Title>
+                <List
+                  size="small"
+                  bordered
+                  dataSource={[
+                    {
+                      name: "OPT Receipt",
+                      doc: profile.visaDocuments.optReceipt,
+                      url: profile.documents?.optReceipt,
+                    },
+                    {
+                      name: "OPT EAD",
+                      doc: profile.visaDocuments.optEad,
+                      url: profile.documents?.optEad,
+                    },
+                    {
+                      name: "I-983",
+                      doc: profile.visaDocuments.i983,
+                      url: profile.documents?.i983,
+                    },
+                    {
+                      name: "I-20",
+                      doc: profile.visaDocuments.i20,
+                      url: profile.documents?.i20,
+                    },
+                  ].filter((item) => item.url)} // Only show if URL exists
+                  renderItem={(item) => (
+                    <List.Item
+                      actions={[
+                        <Tag
+                          color={
+                            item.doc?.status === "approved"
+                              ? "success"
+                              : item.doc?.status === "rejected"
+                                ? "error"
+                                : item.doc?.status === "pending"
+                                  ? "processing"
+                                  : item.doc?.status === "Not Uploaded"
+                                    ? "default"
+                                    : "default"
+                          }
+                        >
+                          {item.doc?.status
+                            ? item.doc.status.toUpperCase()
+                            : "N/A"}
+                        </Tag>,
+                        <a
+                          href={`http://localhost:3001${item.url.startsWith("/") ? "" : "/"}${item.url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ fontWeight: "bold" }}
+                        >
+                          View
+                        </a>,
+                      ]}
+                    >
+                      <List.Item.Meta
+                        avatar={
+                          <SafetyOutlined
+                            style={{ fontSize: "20px", color: "#52c41a" }}
+                          />
+                        }
+                        title={item.name}
+                      />
+                    </List.Item>
+                  )}
+                />
+                {[
+                  profile.documents?.optReceipt,
+                  profile.documents?.optEad,
+                  profile.documents?.i983,
+                  profile.documents?.i20,
+                ].every((url) => !url) && (
+                  <Text type="secondary">No visa documents uploaded.</Text>
+                )}
+              </>
             )}
           </Card>
         </Col>
@@ -508,7 +649,13 @@ function EmployeeDetail() {
             title="📋 Application Review Information"
             style={{ marginTop: 16 }}
           >
-            <Descriptions column={screens.md ? 2 : 1} bordered>
+            <Descriptions
+              column={{ xs: 1, sm: 2, md: 2, lg: 3, xl: 3, xxl: 3 }}
+              bordered
+              layout="vertical"
+              labelStyle={{ fontWeight: "bold", width: "100%" }}
+              contentStyle={{ width: "100%" }}
+            >
               <Descriptions.Item label="Status">
                 {getStatusTag(application.status)}
               </Descriptions.Item>
@@ -522,7 +669,7 @@ function EmployeeDetail() {
                   ? new Date(application.reviewedAt).toLocaleString()
                   : "Not reviewed yet"}
               </Descriptions.Item>
-              <Descriptions.Item label="Feedback" span={2}>
+              <Descriptions.Item label="Feedback" span={3}>
                 {normalizedApplicationStatus === "approved"
                   ? approvedFeedback
                   : application.feedback || "No feedback provided"}

@@ -152,7 +152,7 @@ export const login = async (req, res) => {
 
         if (!user) {
             return res.status(401).json({
-                message: 'Invalid credentials'
+                message: 'User does not exist'
             })
         }
 
@@ -161,7 +161,7 @@ export const login = async (req, res) => {
 
         if (!isPasswordValid) {
             return res.status(401).json({
-                message: 'Invalid credentials'
+                message: 'Incorrect password'
             });
         }
 

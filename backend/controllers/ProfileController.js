@@ -15,9 +15,76 @@ const getUserProfile = async (req, res) => {
     const userId = req.userId; // From verifyToken middleware
     console.log("Getting profile for userId:", userId);
 
-    const profile = await Profile.findOne({
+    let profile = await Profile.findOne({
       user: new mongoose.Types.ObjectId(userId),
     }).select("+ssn"); // Include SSN for user viewing their own profile
+
+    // Self-healing: If profile missing but user is approved, try to create it from application
+    if (!profile) {
+      console.log("Profile not found. Checking for approved application...");
+      // Dynamic import or ensure top-level import. Since we are in module, top-level is better, but local here is fine for now to avoid messing largely with top of file if not needed. 
+      // Actually, I'll use dynamic import to be safe with existing code structure or just rely on what I have? 
+      // The error was "OnboardingApplication is not defined".
+      // I will import it here.
+      const OnboardingApplication = (await import("../models/OnboardingApplication.js")).default;
+      const User = (await import("../models/User.js")).default;
+
+      const application = await OnboardingApplication.findOne({ userId }).select("+ssn");
+      // Note: User model might not be needed if we trust the token userId, but good for validation.
+      
+      if (application && application.status === "Approved") {
+        console.log("Found approved application. Auto-creating profile...");
+        
+        const profileData = {
+          user: userId,
+          firstName: application.firstName,
+          lastName: application.lastName,
+          middleName: application.middleName || "",
+          preferredName: application.preferredName || "",
+          email: application.email,
+          ssn: application.ssn,
+          dateOfBirth: application.dateOfBirth,
+          gender: application.gender,
+          profile_picture: application.profile_picture || "",
+          address: { ...application.currentAddress },
+          contactInfo: {
+            cellPhone: application.cellPhone,
+            workPhone: application.workPhone || "",
+          },
+          // Visa Info Mapping
+          visaInformation: {
+            visaType:
+              application.usResident === "usCitizen"
+                ? "US Citizen"
+                : application.usResident === "greenCard"
+                  ? "Green Card"
+                  : application.visaTitle || "",
+            StartDate:
+              application.usResident === "workAuth"
+                ? application.visaStartDate || null
+                : null,
+            EndDate:
+              application.usResident === "workAuth"
+                ? application.visaEndDate || null
+                : null,
+          },
+          emergencyContacts: application.emergencyContacts || [],
+          documents: {
+            driverLicense: application.documents?.driverLicense || "",
+            workAuthorization: application.documents?.workAuthorization || "",
+            other: application.documents?.other || "",
+          },
+        };
+
+        try {
+           profile = await Profile.create(profileData);
+           console.log("Profile auto-created successfully.");
+        } catch (createErr) {
+           console.error("Auto-create profile failed:", createErr);
+           // Fall through to 404 if creation fails
+        }
+      }
+    }
 
     if (!profile) {
       console.log("Profile not found for userId:", userId);
@@ -35,14 +102,24 @@ const UpdateUserProfile = async (req, res) => {
   try {
     const userId = req.userId; // From verifyToken middleware
     const updateData = req.body;
+    
+    // Use $set to ensure fields are updated, and handle potential dot notation if needed by frontend, 
+    // though usually frontend sends object. 
+    // Explicitly using $set is safer to avoid accidental replacement of root document if something is malformed,
+    // although Mongoose treats top-level keys as $set by default.
+    // However, for consistency and ensuring we are doing an update:
+    
     const profile = await Profile.findOneAndUpdate(
       { user: new mongoose.Types.ObjectId(userId) },
-      updateData,
+      { $set: updateData },
       { new: true, runValidators: true },
     );
+
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
     }
+    
+    console.log("Profile updated successfully for user:", userId);
     res.status(200).json(profile);
   } catch (err) {
     console.error("Update Profile Error:", err);

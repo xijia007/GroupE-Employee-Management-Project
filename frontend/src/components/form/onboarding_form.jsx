@@ -33,11 +33,20 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
   const [fileList, setFileList] = useState({
     driverLicense: [],
     workAuthorization: [],
-    other: []
+    driverLicense: [],
+    workAuthorization: [],
+    driverLicense: [],
+    workAuthorization: [],
+    other: [],
+    profilePicture: [],
+    optReceipt: []
   });
 
+  const [profileType, setProfileType] = useState('default'); // 'default' or 'upload'
+
   const profileUrl = Form.useWatch("profilePicture", form);
-  const usResident = Form.useWatch("usResident", form);
+  const isUSResident = Form.useWatch("isUSResident", form);
+  const workAuthType = Form.useWatch("workAuthType", form);
   const IsReference = Form.useWatch("IsReference", form);
 
   // Pre-fill email from user account on mount
@@ -100,12 +109,37 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
             relationship: values.reference?.relationship || ''
           };
           formData.append('reference', JSON.stringify(referenceData));
+        } else if (key === 'isUSResident') {
+            // Skip, handled by logic below
+        } else if (key === 'usResidentType') {
+           // Skip, handled by logic below
+        } else if (key === 'workAuthType') {
+           // Skip, handled by logic below
+        } else if (key === 'otherVisaTitle') {
+           // Skip, handled by logic below 
         } else if (key !== 'size' && key !== 'profilePicture' && key !== 'optReceipt' && key !== 'IsReference') {
           if (values[key] !== undefined && values[key] !== null) {
             formData.append(key, values[key]);
           }
         }
       });
+
+      // Handle Residency Mapping
+      if (values.isUSResident === 'yes') {
+          if (values.usResidentType === 'citizen') {
+              formData.append('usResident', 'usCitizen');
+          } else {
+              formData.append('usResident', 'greenCard');
+          }
+      } else {
+          formData.append('usResident', 'workAuth');
+          // Handle Visa Title
+          if (values.workAuthType === 'Other') {
+               formData.append('visaTitle', values.otherVisaTitle);
+          } else {
+               formData.append('visaTitle', values.workAuthType);
+          }
+      }
 
       if (fileList.driverLicense && fileList.driverLicense.length > 0) {
         formData.append('driverLicense', fileList.driverLicense[0].originFileObj);
@@ -115,6 +149,15 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
       }
       if (fileList.other && fileList.other.length > 0) {
         formData.append('other', fileList.other[0].originFileObj);
+      }
+      if (fileList.optReceipt && fileList.optReceipt.length > 0) {
+        formData.append('optReceipt', fileList.optReceipt[0].originFileObj);
+      }
+
+      if (profileType === 'upload' && fileList.profilePicture && fileList.profilePicture.length > 0) {
+        formData.append('profilePicture', fileList.profilePicture[0].originFileObj);
+      } else if (profileType === 'default' && values.profilePicture) {
+          formData.append('profilePicture', values.profilePicture);
       }
 
       if (onSubmit) {
@@ -160,10 +203,7 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
     >
       <Form
         form={form}
-        labelWrap
-        labelCol={{ span: 4 }}
-        wrapperCol={{ span: 14 }}
-        layout="horizontal"
+        layout="vertical"
         onFinish={handleSubmit}
         size="default"
         style={{ maxWidth: 1200, width: '100%' }}
@@ -209,90 +249,175 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
           <Input placeholder="Optional" />
         </Form.Item>
 
-        <Form.Item name="profilePicture" label="Profile picture">
-          <Input
-            placeholder="https://..."
-            addonAfter={
-              <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 6,
-                  overflow: "hidden",
+        <Form.Item label="Profile Picture" style={{ marginBottom: 24 }}>
+          <div style={{ background: '#f9f9f9', padding: '20px', borderRadius: '8px', border: '1px solid #eee' }}>
+            <Radio.Group 
+              value={profileType} 
+              onChange={(e) => {
+                  setProfileType(e.target.value);
+                  form.setFieldsValue({ profilePicture: null });
+                  setFileList(prev => ({ ...prev, profilePicture: [] }));
+              }}
+              style={{ marginBottom: 16, display: 'flex', gap: '20px' }}
+            >
+              <Radio value="default">Choose from Defaults</Radio>
+              <Radio value="upload">Upload Custom Photo</Radio>
+            </Radio.Group>
+
+            {profileType === 'default' ? (
+              <Form.Item name="profilePicture" noStyle>
+                <Radio.Group style={{ width: '100%' }}>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', 
+                    gap: '12px' 
+                  }}>
+                    {[
+                      'https://cdn-icons-png.flaticon.com/512/4140/4140048.png',
+                      'https://cdn-icons-png.flaticon.com/512/4140/4140047.png',
+                      'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
+                      'https://cdn-icons-png.flaticon.com/512/4140/4140051.png',
+                      'https://cdn-icons-png.flaticon.com/512/4140/4140040.png',
+                      'https://cdn-icons-png.flaticon.com/512/4140/4140052.png',
+                      'https://cdn-icons-png.flaticon.com/512/4140/4140046.png',
+                      'https://cdn-icons-png.flaticon.com/512/4140/4140039.png',
+                      'https://cdn-icons-png.flaticon.com/512/6858/6858504.png',
+                      'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png'
+                    ].map((url, index) => (
+                      <label key={index} style={{ cursor: 'pointer', textAlign: 'center' }}>
+                         <Radio value={url} style={{ display: 'none' }} />
+                         <div style={{
+                           border: profileUrl === url ? '2px solid #1890ff' : '2px solid transparent',
+                           borderRadius: '50%',
+                           padding: '2px',
+                           transition: 'all 0.3s'
+                         }}>
+                           <img 
+                             src={url} 
+                             alt={`Avatar ${index + 1}`} 
+                             style={{ 
+                               width: '100%', 
+                               borderRadius: '50%',
+                               opacity: profileUrl === url ? 1 : 0.7,
+                               transform: profileUrl === url ? 'scale(1.05)' : 'scale(1)'
+                             }} 
+                           />
+                         </div>
+                      </label>
+                    ))}
+                  </div>
+                </Radio.Group>
+              </Form.Item>
+            ) : (
+                <div style={{ textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '8px', border: '1px dashed #d9d9d9' }}>
+                   <Upload
+                      fileList={fileList.profilePicture}
+                      beforeUpload={beforeUpload}
+                      onChange={handleFileChange('profilePicture')}
+                      maxCount={1}
+                      listType="picture-card"
+                      accept="image/*"
+                      showUploadList={{ showPreviewIcon: false }}
+                    >
+                      {fileList.profilePicture.length >= 1 ? null : (
+                        <div>
+                          <PlusOutlined />
+                          <div style={{ marginTop: 8 }}>Upload</div>
+                        </div>
+                      )}
+                    </Upload>
+                </div>
+            )}
+          </div>
+        </Form.Item>
+
+        <Row gutter={24}>
+          <Col span={12}>
+            <Form.Item 
+              label="Email"
+              name='email'
+              required
+              rules={[
+                { required: true, message: 'Email is required'},
+                { type: 'email', message: 'Please enter a valid email'}
+              ]}
+              tooltip="Email is pre-filled from your registration and cannot be changed"
+            >
+              <Input 
+                placeholder="your.email@example.com" 
+                disabled
+                style={{ backgroundColor: '#f5f5f5', color: '#000' }}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item 
+              label="SSN"
+              name='ssn'
+              required
+              validateTrigger="onBlur"
+              rules={[
+                { required: true, message: 'SSN is required'},
+                { 
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    const cleanSSN = value.replace(/\D/g, '');
+                    if (cleanSSN.length !== 9) {
+                      return Promise.reject(new Error('SSN must be exactly 9 digits'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
+              <Input 
+                placeholder="XXX-XX-XXXX" 
+                maxLength={11} 
+                onChange={(e) => {
+                   let val = e.target.value.replace(/\D/g, '');
+                   if (val.length > 9) val = val.slice(0, 9);
+                   
+                   if (val.length > 5) {
+                       val = `${val.slice(0,3)}-${val.slice(3,5)}-${val.slice(5)}`;
+                   } else if (val.length > 3) {
+                       val = `${val.slice(0,3)}-${val.slice(3)}`;
+                   }
+                   form.setFieldsValue({ ssn: val });
                 }}
-              >
-                {profileUrl ? (
-                  <img
-                    src={profileUrl}
-                    alt="preview"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                    onError={(e) => (e.currentTarget.style.display = "none")}
-                  />
-                ) : (
-                  <span style={{ fontSize: 12, color: "#999" }}>—</span>
-                )}
-              </div>
-            }
-          />
-        </Form.Item>
+              />
+            </Form.Item>
+          </Col>
+        </Row>
 
-        <Form.Item 
-          label="Email"
-          name='email'
-          required
-          rules={[
-            { required: true, message: 'Email is required'},
-            { type: 'email', message: 'Please enter a valid email'}
-          ]}
-          tooltip="Email is pre-filled from your registration and cannot be changed"
-        >
-          <Input 
-            placeholder="your.email@example.com" 
-            disabled
-            style={{ backgroundColor: '#f5f5f5', color: '#000' }}
-          />
-        </Form.Item>
-
-        <Form.Item 
-          label="Social Security Number (SSN)"
-          name='ssn'
-          required
-          rules={[
-            { required: true, message: 'SSN is required'},
-            { pattern: /^\d{3}-\d{2}-\d{4}$/, message: 'Format: XXX-XX-XXXX'}
-          ]}
-        >
-          <Input placeholder="XXX-XX-XXXX" />
-        </Form.Item>
-
-        <Form.Item
-          name='dateOfBirth'
-          label='Date of Birth'
-          required
-          rules={[{ required: true, message: 'Date of birth is required'}]}
-        >
-          <DatePicker style={{ width: '100%'}} format='YYYY-MM-DD'/>
-        </Form.Item>
-
-        <Form.Item 
-          label="Gender" 
-          name='gender' 
-          required
-          rules={[{ required: true, message: 'Gender is required'}]}
-        >
-          <Select
-            placeholder='Select Gender'
-            options={[
-              { label: "Male", value: "Male" },
-              { label: "Female", value: "Female" },
-              { label: "I do not wish to answer", value: "I do not wish to answer" },
-            ]}
-          />
-        </Form.Item>
+        <Row gutter={24}>
+          <Col span={12}>
+            <Form.Item
+              name='dateOfBirth'
+              label='Date of Birth'
+              required
+              rules={[{ required: true, message: 'Date of birth is required'}]}
+            >
+              <DatePicker style={{ width: '100%'}} format='YYYY-MM-DD'/>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item 
+              label="Gender" 
+              name='gender' 
+              required
+              rules={[{ required: true, message: 'Gender is required'}]}
+            >
+              <Select
+                placeholder='Select Gender'
+                options={[
+                  { label: "Male", value: "Male" },
+                  { label: "Female", value: "Female" },
+                  { label: "I do not wish to answer", value: "I do not wish to answer" },
+                ]}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
 
         <Form.Item label='Current Address' required style={{ marginBottom: 24}}>
           <Form.Item
@@ -347,78 +472,178 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
           </Row>
         </Form.Item>
 
-        <Form.Item
-          label='Cell Phone'
-          name='cellPhone'
-          required
-          rules={[
-            {required: true, message: 'Cell phone is required'},
-            { pattern: /^\d{3}-\d{3}-\d{4}$/, message: 'Format: XXX-XXX-XXXX'}
-          ]}
-        >
-          <Input placeholder="XXX-XXX-XXXX"/>
-        </Form.Item>
-
-        <Form.Item
-          label='Work Phone'
-          name='workPhone'
-        >
-          <Input placeholder="XXX-XXX-XXXX (Optional)"/>
-        </Form.Item>
+        <Row gutter={24}>
+          <Col span={12}>
+            <Form.Item
+              label='Cell Phone'
+              name='cellPhone'
+              required
+              validateTrigger="onBlur"
+              rules={[
+                {required: true, message: 'Cell phone is required'},
+                { 
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    const cleanPhone = value.replace(/\D/g, '');
+                    if (cleanPhone.length !== 10) {
+                      return Promise.reject(new Error('Phone must be exactly 10 digits'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
+              <Input 
+                placeholder="XXX-XXX-XXXX" 
+                maxLength={12}
+                onChange={(e) => {
+                   let val = e.target.value.replace(/\D/g, '');
+                   if (val.length > 10) val = val.slice(0, 10);
+                   
+                   if (val.length > 6) {
+                       val = `${val.slice(0,3)}-${val.slice(3,6)}-${val.slice(6)}`;
+                   } else if (val.length > 3) {
+                       val = `${val.slice(0,3)}-${val.slice(3)}`;
+                   }
+                   form.setFieldsValue({ cellPhone: val });
+                }}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label='Work Phone'
+              name='workPhone'
+              validateTrigger="onBlur"
+              rules={[
+                 { 
+                  validator: (_, value) => {
+                    if (!value) return Promise.resolve();
+                    const cleanPhone = value.replace(/\D/g, '');
+                    if (cleanPhone.length !== 10) {
+                      return Promise.reject(new Error('Phone must be exactly 10 digits'));
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+            >
+              <Input 
+                placeholder="XXX-XXX-XXXX (Optional)" 
+                maxLength={12}
+                onChange={(e) => {
+                   let val = e.target.value.replace(/\D/g, '');
+                   if (val.length > 10) val = val.slice(0, 10);
+                   
+                   if (val.length > 6) {
+                       val = `${val.slice(0,3)}-${val.slice(3,6)}-${val.slice(6)}`;
+                   } else if (val.length > 3) {
+                       val = `${val.slice(0,3)}-${val.slice(3)}`;
+                   }
+                   form.setFieldsValue({ workPhone: val });
+                }}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
 
         {/* US Citizen or Permanent Resident Selection */}
         <Form.Item
-          name="usResident"
-          label="Citizen or PR of U.S.?"
+          name="isUSResident"
+          label="PR or citizen of the U.S.?"
           required
-          rules={[{ required: true, message: "Please select your status" }]}
+          rules={[{ required: true, message: "Please select an option" }]}
         >
-          <Select
-            placeholder="Select"
-            options={[
-              { label: "US Citizen", value: "usCitizen" },
-              { label: "Green Card", value: "greenCard" },
-              { label: "Work Authorization (Visa)", value: "workAuth" }
-            ]}
-          />
+          <Radio.Group>
+            <Radio value="yes">Yes</Radio>
+            <Radio value="no">No</Radio>
+          </Radio.Group>
         </Form.Item>
 
-        {/* Only show visa fields if user selected "Work Authorization" */}
-        {usResident === "workAuth" && (
-          <>
+        {/* If Yes: Select Citizen or Green Card */}
+        {isUSResident === "yes" && (
             <Form.Item
-              name='visaTitle'
-              label='Visa Type'
+              name="usResidentType"
+              label="Select Status"
               required
-              rules={[{ required: true, message: 'Visa type is required'}]}
+              rules={[{ required: true, message: "Please select your status" }]}
             >
-          <Select 
-            placeholder='Select Visa Type'
-            options={[
-              { label: 'H1-B', value: 'H1-B'},
-              { label: 'L2', value: 'L2'},
-              { label: 'F1(CPT/OPT)', value: 'F1(CPT/OPT)'},
-              { label: 'H4', value: 'H4'},
-              { label: 'Other', value: 'Other'}
-            ]}
-          />
-        </Form.Item>
+              <Select
+                placeholder="Select"
+                options={[
+                  { label: "Green Card", value: "greenCard" },
+                  { label: "Citizen", value: "citizen" },
+                ]}
+              />
+            </Form.Item>
+        )}
 
-        <Form.Item
-          name='workAuthRange'
-          label='Visa Validity Period'
-          required
-          rules={[
-            {
-              type: 'array',
-              required: true, 
-              message: 'Please select visa validity period'
-            }
-          ]}
-        >
-          <DatePicker.RangePicker style={{ width: '100%' }} format='YYYY-MM-DD' />
-        </Form.Item>
-          </>
+        {/* If No: Work Authorization Logic */}
+        {isUSResident === "no" && (
+          <div style={{ border: '1px solid #eee', padding: '16px', borderRadius: '8px', background: '#fafafa', marginBottom: '24px' }}>
+            <Form.Item
+              name="workAuthType"
+              label="What is your work authorization?"
+              required
+              rules={[{ required: true, message: 'Work authorization type is required'}]}
+            >
+              <Select 
+                placeholder='Select Visa Type'
+                options={[
+                  { label: 'H1-B', value: 'H1-B'},
+                  { label: 'L2', value: 'L2'},
+                  { label: 'F1(CPT/OPT)', value: 'F1(CPT/OPT)'},
+                  { label: 'H4', value: 'H4'},
+                  { label: 'Other', value: 'Other'}
+                ]}
+              />
+            </Form.Item>
+
+            {/* If Other: Specify Title */}
+            {workAuthType === "Other" && (
+                <Form.Item
+                  name="otherVisaTitle"
+                  label="Specify Visa Title"
+                  required
+                  rules={[{ required: true, message: "Please specify your visa title" }]}
+                >
+                  <Input placeholder="Enter visa title" />
+                </Form.Item>
+            )}
+
+            {/* If F1: Upload OPT Receipt */}
+            {workAuthType === "F1(CPT/OPT)" && (
+                 <Form.Item label="Upload OPT Receipt" required>
+                      <Upload
+                        fileList={fileList.optReceipt}
+                        beforeUpload={beforeUpload}
+                        onChange={handleFileChange('optReceipt')}
+                        maxCount={1}
+                      >
+                        <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                      </Upload>
+                      <div style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>Please upload your OPT Receipt (PDF)</div>
+                 </Form.Item>
+            )}
+
+            {/* Start and End Date for ALL Work Auth types */}
+            <Form.Item
+              name='workAuthRange'
+              label='Start and End Date'
+              required
+              rules={[
+                {
+                  type: 'array',
+                  required: true, 
+                  message: 'Please select validity period'
+                }
+              ]}
+            >
+              <DatePicker.RangePicker style={{ width: '100%' }} format='YYYY-MM-DD' />
+            </Form.Item>
+
+            {/* Work Authorization Upload moved to bottom section */}
+          </div>
         )}
 
         <Form.Item
@@ -498,10 +723,45 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
                 <Col span={8}>
                   <Form.Item
                     name={["reference", "phone"]}
-                    rules={[{ required: true, message: "Phone required" }]}
+                    validateTrigger="onBlur"
+                    rules={[
+                        { required: true, message: "Phone required" },
+                        { 
+                          validator: (_, value) => {
+                            if (!value) return Promise.resolve();
+                            const cleanPhone = value.replace(/\D/g, '');
+                            if (cleanPhone.length !== 10) {
+                              return Promise.reject(new Error('Phone must be exactly 10 digits'));
+                            }
+                            return Promise.resolve();
+                          }
+                        }
+                    ]}
                     style={{ marginBottom: 0 }}
                   >
-                    <Input placeholder="Phone Number" />
+                    <Input 
+                        placeholder="Phone Number" 
+                        maxLength={12}
+                        onChange={(e) => {
+                           let val = e.target.value.replace(/\D/g, '');
+                           if (val.length > 10) val = val.slice(0, 10);
+                           
+                           if (val.length > 6) {
+                               val = `${val.slice(0,3)}-${val.slice(3,6)}-${val.slice(6)}`;
+                           } else if (val.length > 3) {
+                               val = `${val.slice(0,3)}-${val.slice(3)}`;
+                           }
+                           
+                           // Specifically handle updating nested form value
+                           const currentReference = form.getFieldValue("reference") || {};
+                           form.setFieldsValue({ 
+                               reference: {
+                                   ...currentReference,
+                                   phone: val
+                               }
+                           });
+                        }}
+                    />
                   </Form.Item>
                 </Col>
 
@@ -630,10 +890,45 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
                         <Form.Item
                           {...field}
                           name={[field.name, "phone"]}
-                          rules={[{ required: true, message: "Phone required" }]}
+                          validateTrigger="onBlur"
+                          rules={[
+                              { required: true, message: "Phone required" },
+                              { 
+                                validator: (_, value) => {
+                                  if (!value) return Promise.resolve();
+                                  const cleanPhone = value.replace(/\D/g, '');
+                                  if (cleanPhone.length !== 10) {
+                                    return Promise.reject(new Error('Phone must be exactly 10 digits'));
+                                  }
+                                  return Promise.resolve();
+                                }
+                              }
+                          ]}
                           style={{ marginBottom: 0 }}
                         >
-                          <Input placeholder="Phone Number" />
+                          <Input 
+                              placeholder="Phone Number" 
+                              maxLength={12}
+                              onChange={(e) => {
+                                 let val = e.target.value.replace(/\D/g, '');
+                                 if (val.length > 10) val = val.slice(0, 10);
+                                 
+                                 if (val.length > 6) {
+                                     val = `${val.slice(0,3)}-${val.slice(3,6)}-${val.slice(6)}`;
+                                 } else if (val.length > 3) {
+                                     val = `${val.slice(0,3)}-${val.slice(3)}`;
+                                 }
+
+                                 // Update specific item in the array
+                                 const contacts = form.getFieldValue("emergencyContacts");
+                                 const updatedContacts = [...contacts];
+                                 updatedContacts[index] = {
+                                     ...updatedContacts[index],
+                                     phone: val
+                                 };
+                                 form.setFieldsValue({ emergencyContacts: updatedContacts });
+                              }}
+                          />
                         </Form.Item>
                       </Col>
 
@@ -683,7 +978,23 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
           </Upload>
         </Form.Item>
 
-        <Form.Item label='Work Authorization Document'>
+        <Form.Item 
+            label='Work Authorization Document'
+            required={ isUSResident === "no" && workAuthType !== "F1(CPT/OPT)" }
+            rules={[
+                {
+                    validator: async () => {
+                        // Logic: Required if NOT citizen/GC AND NOT F1
+                        const isRequired = isUSResident === "no" && workAuthType !== "F1(CPT/OPT)";
+                        
+                        if (isRequired && (!fileList.workAuthorization || fileList.workAuthorization.length === 0)) {
+                             return Promise.reject(new Error('Please upload your Work Authorization Document'));
+                        }
+                        return Promise.resolve();
+                    }
+                }
+            ]}
+        >
           <Upload
             fileList={fileList.workAuthorization}
             beforeUpload={beforeUpload}

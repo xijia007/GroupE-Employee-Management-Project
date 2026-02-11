@@ -87,6 +87,48 @@ export const submitApplication = async (req, res) => {
         });
         applicationData.documents.other = `/api/files/${fileId}/${encodeURIComponent(original)}`;
       }
+
+      if (req.files.optReceipt) {
+        const f = req.files.optReceipt[0];
+        const original = sanitizeFilename(f.originalname);
+        const uniqueName = `${userId}_${Date.now()}_${original}`;
+        const fileId = await uploadBufferToGridFS({
+          buffer: f.buffer,
+          filename: uniqueName,
+          contentType: f.mimetype,
+          metadata: {
+            userId,
+            docType: "optReceipt",
+            context: "onboarding",
+            originalName: original,
+          },
+        });
+        applicationData.documents.optReceipt = `/api/files/${fileId}/${encodeURIComponent(original)}`;
+      }
+      // Handle Profile Picture Upload
+      if (req.files.profilePicture) {
+        const f = req.files.profilePicture[0];
+        const original = sanitizeFilename(f.originalname);
+        const uniqueName = `${userId}_${Date.now()}_${original}`;
+        const fileId = await uploadBufferToGridFS({
+          buffer: f.buffer,
+          filename: uniqueName,
+          contentType: f.mimetype,
+          metadata: {
+            userId,
+            docType: "profilePicture",
+            context: "onboarding",
+            originalName: original,
+          },
+        });
+        // Save the URL to the profile_picture field
+        applicationData.profile_picture = `/api/files/${fileId}/${encodeURIComponent(original)}`;
+      }
+    }
+
+    // If no file uploaded but a default image string is provided in body
+    if (!req.files?.profilePicture && req.body.profile_picture) {
+        applicationData.profile_picture = req.body.profile_picture;
     }
 
     // check if there is an application
