@@ -80,15 +80,15 @@ const profileSchema = new mongoose.Schema(
     visaInformation: {
       visaType: {
         type: String,
-        required: true,
+        default: "",
       },
       StartDate: {
         type: Date,
-        required: true,
+        default: null,
       },
       EndDate: {
         type: Date,
-        required: true,
+        default: null,
       },
     },
     emergencyContacts: [

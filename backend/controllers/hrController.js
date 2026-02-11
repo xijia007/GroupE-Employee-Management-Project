@@ -353,11 +353,22 @@ export const reviewApplication = async (req, res) => {
             workPhone: application.workPhone || "",
           },
 
-          // Visa information
+          // Visa information mapping based on residency
           visaInformation: {
-            visaType: application.visaTitle || "",
-            StartDate: application.visaStartDate || null,
-            EndDate: application.visaEndDate || null,
+            visaType:
+              application.usResident === "usCitizen"
+                ? "US Citizen"
+                : application.usResident === "greenCard"
+                  ? "Green Card"
+                  : application.visaTitle || "",
+            StartDate:
+              application.usResident === "workAuth"
+                ? application.visaStartDate || null
+                : null,
+            EndDate:
+              application.usResident === "workAuth"
+                ? application.visaEndDate || null
+                : null,
           },
 
           // Emergency contacts

@@ -179,120 +179,6 @@ function HomePage() {
           📊 Dashboard Overview
         </Title>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: "16px",
-            marginBottom: 24,
-          }}
-        >
-          {/* Pending Applications Card */}
-          <Card
-            hoverable
-            onClick={() => navigate("/hr/hiring_management")}
-            style={{
-              background:
-                hrDashboard.pendingApplications > 0 ? "#fff7e6" : "#f5f5f5",
-              borderColor:
-                hrDashboard.pendingApplications > 0 ? "#ffa940" : "#d9d9d9",
-              cursor: "pointer",
-            }}
-          >
-            <div style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontSize: "36px",
-                  fontWeight: "bold",
-                  color: "#fa8c16",
-                }}
-              >
-                {hrDashboard.pendingApplications}
-              </div>
-              <div style={{ fontSize: "14px", color: "#666", marginTop: 8 }}>
-                Pending Onboarding Applications
-              </div>
-              {hrDashboard.pendingApplications > 0 && (
-                <div style={{ marginTop: 12 }}>
-                  <Button
-                    type="primary"
-                    size="small"
-                    style={{ background: "#fa8c16", borderColor: "#fa8c16" }}
-                  >
-                    Review Now →
-                  </Button>
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Pending Visa Documents Card */}
-          <Card
-            hoverable
-            onClick={() => navigate("/hr/visaStatus")}
-            style={{
-              background:
-                hrDashboard.pendingVisaDocuments > 0 ? "#fff1f0" : "#f5f5f5",
-              borderColor:
-                hrDashboard.pendingVisaDocuments > 0 ? "#ff7875" : "#d9d9d9",
-              cursor: "pointer",
-            }}
-          >
-            <div style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontSize: "36px",
-                  fontWeight: "bold",
-                  color: "#f5222d",
-                }}
-              >
-                {hrDashboard.pendingVisaDocuments}
-              </div>
-              <div style={{ fontSize: "14px", color: "#666", marginTop: 8 }}>
-                Pending Visa Documents
-              </div>
-              {hrDashboard.pendingVisaDocuments > 0 && (
-                <div style={{ marginTop: 12 }}>
-                  <Button type="primary" size="small" danger>
-                    Review Now →
-                  </Button>
-                </div>
-              )}
-            </div>
-          </Card>
-
-          {/* Total Employees Card */}
-          <Card
-            hoverable
-            onClick={() => navigate("/hr/employeeProfiles")}
-            style={{
-              background: "#f0f5ff",
-              borderColor: "#adc6ff",
-              cursor: "pointer",
-            }}
-          >
-            <div style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontSize: "36px",
-                  fontWeight: "bold",
-                  color: "#1890ff",
-                }}
-              >
-                {hrDashboard.totalEmployees}
-              </div>
-              <div style={{ fontSize: "14px", color: "#666", marginTop: 8 }}>
-                Total Employees
-              </div>
-              <div style={{ marginTop: 12 }}>
-                <Button type="primary" size="small">
-                  View All →
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-
         {/* Action Required Alert */}
         {(hrDashboard.pendingApplications > 0 ||
           hrDashboard.pendingVisaDocuments > 0) && (
@@ -301,16 +187,22 @@ function HomePage() {
             description={
               <div>
                 {hrDashboard.pendingApplications > 0 && (
-                  <p style={{ margin: "4px 0" }}>
+                  <div 
+                    onClick={() => navigate("/hr/hiring_management")}
+                    style={{ margin: "4px 0", cursor: "pointer", color: '#1890ff', textDecoration: 'underline' }}
+                  >
                     • <strong>{hrDashboard.pendingApplications}</strong>{" "}
-                    onboarding application(s) waiting for review
-                  </p>
+                    onboarding application(s) waiting for review (Click to view)
+                  </div>
                 )}
                 {hrDashboard.pendingVisaDocuments > 0 && (
-                  <p style={{ margin: "4px 0" }}>
+                  <div 
+                    onClick={() => navigate("/hr/visaStatus")}
+                    style={{ margin: "4px 0", cursor: "pointer", color: '#1890ff', textDecoration: 'underline' }}
+                  >
                     • <strong>{hrDashboard.pendingVisaDocuments}</strong> visa
-                    document(s) waiting for approval
-                  </p>
+                    document(s) waiting for approval (Click to view)
+                  </div>
                 )}
               </div>
             }
@@ -508,6 +400,13 @@ function HomePage() {
 
     // Approved - Check OPT document status
     if (applicationStatus === "Approved") {
+      if (!profile) return null;
+
+      const visaType = profile.visaInformation?.visaType || "";
+      if (!visaType.startsWith("F1")) {
+        return null;
+      }
+
       const optReceiptStatus = profile?.visaDocuments?.optReceipt?.status;
       const optEadStatus = profile?.visaDocuments?.optEad?.status;
 

@@ -183,13 +183,20 @@ function ApplicationReview() {
 
   return (
     <div>
-      <Button
-        icon={<ArrowLeftOutlined />}
+      <div 
         onClick={() => navigate("/hr/hiring_management")}
-        style={{ marginBottom: 16 }}
+        style={{ 
+            cursor: "pointer", 
+            display: "inline-flex", 
+            alignItems: "center", 
+            marginBottom: 16, 
+            fontSize: '16px',
+            color: '#1890ff',
+            fontWeight: '500'
+        }}
       >
-        Back to List
-      </Button>
+        <ArrowLeftOutlined style={{ marginRight: 8 }} /> Back to List
+      </div>
 
       <Card
         title={
@@ -480,7 +487,6 @@ function ApplicationReview() {
             <Space size="large">
               <Button
                 danger
-                size="large"
                 icon={<CloseOutlined />}
                 onClick={() => setActionType("reject")}
               >
@@ -488,7 +494,6 @@ function ApplicationReview() {
               </Button>
               <Button
                 type="primary"
-                size="large"
                 icon={<CheckOutlined />}
                 onClick={() => setActionType("approve")}
               >
