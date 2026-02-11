@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Spin, Typography, Row, Col, Descriptions, Tag, Button, Space, message, Divider, Grid, Empty } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, PhoneOutlined, MailOutlined, HomeOutlined, SafetyOutlined } from '@ant-design/icons';
+import { Card, Spin, Typography, Row, Col, Descriptions, Tag, Button, Space, message, Divider, Grid, Empty, List } from 'antd';
+import { ArrowLeftOutlined, UserOutlined, PhoneOutlined, MailOutlined, HomeOutlined, SafetyOutlined, FileTextOutlined } from '@ant-design/icons';
 import api from '../../services/api';
 
 const { Title, Text } = Typography;
@@ -14,6 +14,7 @@ function EmployeeDetail() {
   const [loading, setLoading] = useState(false);
   const [employee, setEmployee] = useState(null);
   const [application, setApplication] = useState(null);
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     fetchEmployeeDetail();
@@ -25,7 +26,7 @@ function EmployeeDetail() {
       
       // Fetch onboarding application (contains all employee info)
       const response = await api.get(`/hr/employees/${id}`);
-      const { application, user } = response.data;
+      const { application, user, profile } = response.data;
       
       // Set employee basic info from user object
       setEmployee({
@@ -37,7 +38,10 @@ function EmployeeDetail() {
       });
       
       // Set complete application data
+      console.log('Application Documents:', application?.documents);
+      console.log('Profile Visa Documents:', profile?.visaDocuments);
       setApplication(application);
+      setProfile(profile);
       
     } catch (err) {
       console.error('Error fetching employee detail:', err);
@@ -261,34 +265,119 @@ function EmployeeDetail() {
           </Card>
 
           {/* Documents */}
-          <Card title="📄 Uploaded Documents">
+          <Card 
+            title={<><FileTextOutlined /> Uploaded Documents</>}
+          >
+            {/* Onboarding Documents */}
+            <Title level={5} style={{ marginTop: 0 }}>Onboarding Documents</Title>
             {application.documents &&
             Object.values(application.documents).some((value) => !!value) ? (
-              <Descriptions column={screens.md ? 2 : 1} bordered size="small">
-                {application.documents.driverLicense && (
-                  <Descriptions.Item label="Driver License">
-                    <a href={`http://localhost:5000${application.documents.driverLicense}`} target="_blank" rel="noopener noreferrer">
-                      View Document
-                    </a>
-                  </Descriptions.Item>
+              <List
+                size="small"
+                bordered
+                dataSource={[
+                  { name: 'Driver License', url: application.documents.driverLicense },
+                  { name: 'Work Authorization', url: application.documents.workAuthorization },
+                  { name: 'Other Document', url: application.documents.other }
+                ].filter(doc => !!doc.url)}
+                renderItem={item => (
+                  <List.Item
+                    actions={[
+                      <a 
+                        href={`http://localhost:5000${item.url.startsWith('/') ? '' : '/'}${item.url}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        style={{ fontWeight: 'bold' }}
+                      >
+                        View
+                      </a>
+                    ]}
+                  >
+                    <List.Item.Meta
+                      avatar={<FileTextOutlined style={{ fontSize: '20px', color: '#1890ff' }} />}
+                      title={item.name}
+                      description={item.url.split('/').pop()}
+                    />
+                  </List.Item>
                 )}
-                {application.documents.workAuthorization && (
-                  <Descriptions.Item label="Work Authorization">
-                    <a href={`http://localhost:5000${application.documents.workAuthorization}`} target="_blank" rel="noopener noreferrer">
-                      View Document
-                    </a>
-                  </Descriptions.Item>
-                )}
-                {application.documents.other && (
-                  <Descriptions.Item label="Other Document">
-                    <a href={`http://localhost:5000${application.documents.other}`} target="_blank" rel="noopener noreferrer">
-                      View Document
-                    </a>
-                  </Descriptions.Item>
-                )}
-              </Descriptions>
+              />
             ) : (
-              <Text type="secondary">No Documents Uploaded</Text>
+              <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>No onboarding documents uploaded.</Text>
+            )}
+
+            {/* Visa Documents */}
+            {profile?.visaDocuments && (
+              <>
+                <Title level={5} style={{ marginTop: 24 }}>Visa Documents</Title>
+            {/* Visa Documents */}
+            {profile?.visaDocuments && (
+              <>
+                <Title level={5} style={{ marginTop: 24 }}>Visa Documents</Title>
+                <List
+                  size="small"
+                  bordered
+                  dataSource={[
+                    { 
+                      name: 'OPT Receipt', 
+                      doc: profile.visaDocuments.optReceipt,
+                      url: profile.documents?.optReceipt 
+                    },
+                    { 
+                      name: 'OPT EAD', 
+                      doc: profile.visaDocuments.optEad,
+                      url: profile.documents?.optEad 
+                    },
+                    { 
+                      name: 'I-983', 
+                      doc: profile.visaDocuments.i983,
+                      url: profile.documents?.i983 
+                    },
+                    { 
+                      name: 'I-20', 
+                      doc: profile.visaDocuments.i20,
+                      url: profile.documents?.i20 
+                    }
+                  ].filter(item => item.url)} // Only show if URL exists
+                  renderItem={item => (
+                    <List.Item
+                      actions={[
+                        <Tag color={
+                          item.doc?.status === 'approved' ? 'success' :
+                          item.doc?.status === 'rejected' ? 'error' :
+                          item.doc?.status === 'pending' ? 'processing' : 
+                          item.doc?.status === 'Not Uploaded' ? 'default' : 'default'
+                        }>
+                          {item.doc?.status ? item.doc.status.toUpperCase() : 'N/A'}
+                        </Tag>,
+                        <a 
+                          href={`http://localhost:5000${item.url.startsWith('/') ? '' : '/'}${item.url}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ fontWeight: 'bold' }}
+                        >
+                          View
+                        </a>
+                      ]}
+                    >
+                      <List.Item.Meta
+                        avatar={<SafetyOutlined style={{ fontSize: '20px', color: '#52c41a' }} />}
+                        title={item.name}
+                        description={item.url.split('/').pop()}
+                      />
+                    </List.Item>
+                  )}
+                />
+                {[
+                  profile.documents?.optReceipt,
+                  profile.documents?.optEad,
+                  profile.documents?.i983,
+                  profile.documents?.i20
+                ].every(url => !url) && (
+                  <Text type="secondary">No visa documents uploaded.</Text>
+                )}
+              </>
+            )}
+              </>
             )}
           </Card>
         </Col>

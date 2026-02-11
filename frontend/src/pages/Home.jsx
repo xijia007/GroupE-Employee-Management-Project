@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Typography, Button, Alert, Spin, List, Avatar, Tag } from 'antd';
+import { Card, Typography, Button, Alert, Spin, List, Avatar, Tag, Tooltip } from 'antd';
+import { 
+  FileTextOutlined, 
+  SafetyCertificateOutlined, 
+  CheckCircleOutlined, 
+  CloseCircleOutlined, 
+  ClockCircleOutlined,
+  UserOutlined 
+} from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { selectUser } from '../features/auth/authSlice';
 import api from '../services/api';
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 function HomePage() {
   const user = useSelector(selectUser);
@@ -261,31 +269,60 @@ function HomePage() {
         {/* Recent Activity */}
         <div style={{ marginTop: 24 }}>
           <Title level={4}>🕒 Recent Activity</Title>
-          <Card style={{ marginTop: 16 }}>
+          <Card style={{ marginTop: 16 }} bodyStyle={{ padding: '0 12px' }}>
             {recentActivities.length > 0 ? (
               <List
                 itemLayout="horizontal"
                 dataSource={recentActivities}
                 renderItem={item => (
-                  <List.Item>
+                  <List.Item
+                    key={item.id}
+                    style={{ padding: '16px 8px' }}
+                  >
                     <List.Item.Meta
                       avatar={
-                        <Avatar 
-                          style={{ backgroundColor: item.status === 'Approved' ? '#52c41a' : '#f5222d' }}
-                        >
-                          {item.type === 'Application' ? 'A' : 'V'}
-                        </Avatar>
+                        <Tooltip title={item.type === 'Application' ? 'Onboarding Application' : 'Visa Document'}>
+                          <Avatar 
+                            size={48} 
+                            shape="square" 
+                            style={{ 
+                              backgroundColor: item.status === 'Approved' ? '#f6ffed' : '#fff1f0', 
+                              color: item.status === 'Approved' ? '#52c41a' : '#ff4d4f',
+                              borderRadius: '12px',
+                              border: `1px solid ${item.status === 'Approved' ? '#b7eb8f' : '#ffa39e'}`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            icon={
+                              item.type === 'Application' 
+                                ? <FileTextOutlined style={{ fontSize: 24 }} /> 
+                                : <SafetyCertificateOutlined style={{ fontSize: 24 }} />
+                            }
+                          />
+                        </Tooltip>
                       }
                       title={
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ fontWeight: 'bold' }}>{item.user}</span>
-                          <span style={{ fontSize: '12px', color: '#999' }}>{item.date.toLocaleString()}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
+                          <Text strong style={{ fontSize: '16px', lineHeight: '1.2' }}>{item.user}</Text>
+                          <div style={{ display: 'flex', alignItems: 'center', fontSize: '12px', color: '#8c8c8c' }}>
+                            <ClockCircleOutlined style={{ marginRight: 4 }} />
+                            {item.date.toLocaleDateString()}
+                          </div>
                         </div>
                       }
                       description={
-                        <div style={{ marginTop: 4 }}>
-                          <Tag color={item.status === 'Approved' ? 'success' : 'error'}>{item.status}</Tag>
-                          <span>{item.details}</span>
+                        <div style={{ marginTop: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Text>{item.details}</Text>
+                          </div>
+                          <Tag 
+                            color={item.status === 'Approved' ? 'success' : 'error'} 
+                            icon={item.status === 'Approved' ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                            style={{ margin: 0, borderRadius: '6px', padding: '0 8px' }}
+                          >
+                            {item.status.toUpperCase()}
+                          </Tag>
                         </div>
                       }
                     />
@@ -293,8 +330,9 @@ function HomePage() {
                 )}
               />
             ) : (
-              <div style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
-                No recent activity found
+              <div style={{ textAlign: 'center', color: '#999', padding: '32px' }}>
+                <ClockCircleOutlined style={{ fontSize: '24px', marginBottom: '8px', color: '#d9d9d9' }} />
+                <div>No recent activity found</div>
               </div>
             )}
           </Card>

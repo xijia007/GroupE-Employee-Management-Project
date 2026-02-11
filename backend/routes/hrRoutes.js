@@ -21,7 +21,7 @@ const router = express.Router();
 // Request Body: { email: string, name: string }
 // Response: { message: string, token: object }
 // ============================================
-router.post("/generate-token", verifyToken, generateToken);
+router.post("/generate-token", verifyToken, requireHR, generateToken);
 
 // ============================================
 // Route 2: GET /api/hr/tokens

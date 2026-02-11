@@ -584,6 +584,7 @@ export const getEmployeeById = async (req, res) => {
     }
 
     const application = await OnboardingApplication.findOne({ userId: id });
+    const profile = await Profile.findOne({ user: id });
 
     res.status(200).json({
       application: application
@@ -593,6 +594,7 @@ export const getEmployeeById = async (req, res) => {
         ...user.toObject(),
         onboardingStatus: normalizeStatusValue(user.onboardingStatus),
       },
+      profile: profile ? profile.toObject() : null
     });
   } catch (err) {
     console.error("Get employee detail error:", err);
