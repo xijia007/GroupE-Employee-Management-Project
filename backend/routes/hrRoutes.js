@@ -12,6 +12,9 @@ import {
 } from '../controllers/hrController.js';
 import { verifyToken, requireHR } from '../middleware/authMiddleware.js';
 
+import { validateRequest } from '../middleware/validationMiddleware.js';
+import { generateTokenSchema, reviewApplicationSchema } from '../schemas/zodSchemas.js';
+
 const router = express.Router();
 
 // ============================================
@@ -21,7 +24,7 @@ const router = express.Router();
 // Request Body: { email: string, name: string }
 // Response: { message: string, token: object }
 // ============================================
-router.post("/generate-token", verifyToken, requireHR, generateToken);
+router.post("/generate-token", verifyToken, requireHR, validateRequest(generateTokenSchema), generateToken);
 
 // ============================================
 // Route 2: GET /api/hr/tokens
@@ -57,7 +60,7 @@ router.get("/applications/:id", verifyToken, getApplicationById);
 // Request Body: { status: "Approved"|"Rejected", feedback: string }
 // Response: { message: string, application: object }
 // ============================================
-router.patch("/applications/:id/review", verifyToken, reviewApplication);
+router.patch("/applications/:id/review", verifyToken, validateRequest(reviewApplicationSchema), reviewApplication);
 
 router.get("/onboarding-applications", verifyToken, getAllApplications);
 
@@ -66,6 +69,7 @@ router.get("/onboarding-applications/:id", verifyToken, getApplicationById);
 router.patch(
   "/onboarding-applications/:id/review",
   verifyToken,
+  validateRequest(reviewApplicationSchema),
   reviewApplication,
 );
 
