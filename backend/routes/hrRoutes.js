@@ -1,19 +1,23 @@
 import express from "express";
 import {
-    generateToken,
-    getAllTokens,
-    getAllApplications,
-    getApplicationById,
-    reviewApplication,
-    getAllEmployees,
-    getEmployeeById,
-    getVisaStatusList,
-    reviewVisaDocument,
-} from '../controllers/hrController.js';
-import { verifyToken, requireHR } from '../middleware/authMiddleware.js';
+  generateToken,
+  getAllTokens,
+  getAllApplications,
+  getApplicationById,
+  reviewApplication,
+  getAllEmployees,
+  getEmployeeById,
+  getVisaStatusList,
+  reviewVisaDocument,
+  sendVisaStatusReminder,
+} from "../controllers/hrController.js";
+import { verifyToken, requireHR } from "../middleware/authMiddleware.js";
 
-import { validateRequest } from '../middleware/validationMiddleware.js';
-import { generateTokenSchema, reviewApplicationSchema } from '../schemas/zodSchemas.js';
+import { validateRequest } from "../middleware/validationMiddleware.js";
+import {
+  generateTokenSchema,
+  reviewApplicationSchema,
+} from "../schemas/zodSchemas.js";
 
 const router = express.Router();
 
@@ -24,7 +28,13 @@ const router = express.Router();
 // Request Body: { email: string, name: string }
 // Response: { message: string, token: object }
 // ============================================
-router.post("/generate-token", verifyToken, requireHR, validateRequest(generateTokenSchema), generateToken);
+router.post(
+  "/generate-token",
+  verifyToken,
+  requireHR,
+  validateRequest(generateTokenSchema),
+  generateToken,
+);
 
 // ============================================
 // Route 2: GET /api/hr/tokens
@@ -60,7 +70,12 @@ router.get("/applications/:id", verifyToken, getApplicationById);
 // Request Body: { status: "Approved"|"Rejected", feedback: string }
 // Response: { message: string, application: object }
 // ============================================
-router.patch("/applications/:id/review", verifyToken, validateRequest(reviewApplicationSchema), reviewApplication);
+router.patch(
+  "/applications/:id/review",
+  verifyToken,
+  validateRequest(reviewApplicationSchema),
+  reviewApplication,
+);
 
 router.get("/onboarding-applications", verifyToken, getAllApplications);
 
@@ -73,8 +88,8 @@ router.patch(
   reviewApplication,
 );
 
-router.get('/employees', verifyToken, getAllEmployees);
-router.get('/employees/:id', verifyToken, getEmployeeById);
+router.get("/employees", verifyToken, getAllEmployees);
+router.get("/employees/:id", verifyToken, getEmployeeById);
 
 // Visa Status Review (OPT documents)
 router.get("/visa-status", verifyToken, requireHR, getVisaStatusList);
@@ -83,6 +98,13 @@ router.patch(
   verifyToken,
   requireHR,
   reviewVisaDocument,
+);
+
+router.post(
+  "/visa-status/:userId/notify",
+  verifyToken,
+  requireHR,
+  sendVisaStatusReminder,
 );
 
 export default router;

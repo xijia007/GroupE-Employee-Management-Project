@@ -17,15 +17,22 @@ import {
 } from "antd";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../features/auth/authSlice";
-import { UploadOutlined, MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  UploadOutlined,
+  MinusCircleOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 
 const config = {
   rules: [{ type: "object", required: true, message: "Please select time!" }],
 };
 
-function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }) {
-
+function OnboardingForm({
+  initialData = null,
+  onSubmit,
+  isResubmission = false,
+}) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const user = useSelector(selectUser); // Get current user for email
@@ -33,16 +40,12 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
   const [fileList, setFileList] = useState({
     driverLicense: [],
     workAuthorization: [],
-    driverLicense: [],
-    workAuthorization: [],
-    driverLicense: [],
-    workAuthorization: [],
     other: [],
     profilePicture: [],
-    optReceipt: []
+    optReceipt: [],
   });
 
-  const [profileType, setProfileType] = useState('default'); // 'default' or 'upload'
+  const [profileType, setProfileType] = useState("default"); // 'default' or 'upload'
 
   const profileUrl = Form.useWatch("profilePicture", form);
   const isUSResident = Form.useWatch("isUSResident", form);
@@ -51,15 +54,18 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
 
   // Pre-fill email from user account on mount
   useEffect(() => {
-    console.log('Onboarding Form - User object:', user);
-    console.log('Onboarding Form - User object keys:', Object.keys(user || {}));
-    console.log('Onboarding Form - User email:', user?.email);
-    console.log('Onboarding Form - localStorage user:', JSON.parse(localStorage.getItem('user') || '{}'));
+    console.log("Onboarding Form - User object:", user);
+    console.log("Onboarding Form - User object keys:", Object.keys(user || {}));
+    console.log("Onboarding Form - User email:", user?.email);
+    console.log(
+      "Onboarding Form - localStorage user:",
+      JSON.parse(localStorage.getItem("user") || "{}"),
+    );
     if (user?.email) {
       form.setFieldsValue({ email: user.email });
-      console.log('Onboarding Form - Email set to:', user.email);
+      console.log("Onboarding Form - Email set to:", user.email);
     } else {
-      console.warn('Onboarding Form - No email found in user object');
+      console.warn("Onboarding Form - No email found in user object");
     }
   }, [user, form]);
 
@@ -67,12 +73,19 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
     if (initialData) {
       const formData = {
         ...initialData,
-        dateOfBirth: initialData.dateOfBirth ? dayjs(initialData.dateOfBirth) : null,
-        visaStartDate: initialData.visaStartDate ? dayjs(initialData.visaStartDate) : null,
-        visaEndDate: initialData.visaEndDate ? dayjs(initialData.visaEndDate) : null,
-        workAuthRange: initialData.visaStartDate && initialData.visaEndDate
-          ? [dayjs(initialData.visaStartDate), dayjs(initialData.visaEndDate)]
+        dateOfBirth: initialData.dateOfBirth
+          ? dayjs(initialData.dateOfBirth)
           : null,
+        visaStartDate: initialData.visaStartDate
+          ? dayjs(initialData.visaStartDate)
+          : null,
+        visaEndDate: initialData.visaEndDate
+          ? dayjs(initialData.visaEndDate)
+          : null,
+        workAuthRange:
+          initialData.visaStartDate && initialData.visaEndDate
+            ? [dayjs(initialData.visaStartDate), dayjs(initialData.visaEndDate)]
+            : null,
       };
       form.setFieldsValue(formData);
     }
@@ -84,40 +97,45 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
 
       const formData = new FormData();
 
-      Object.keys(values).forEach(key => {
-        if (key === 'dateOfBirth') {
+      Object.keys(values).forEach((key) => {
+        if (key === "dateOfBirth") {
           if (values[key]) {
             formData.append(key, values[key].toISOString());
-          } 
-        } else if (key === 'workAuthRange') {
-            if (values[key] && values[key].length === 2) {
-              formData.append('visaStartDate', values[key][0].toISOString());
-              formData.append('visaEndDate', values[key][1].toISOString());
-            }
-        } else if (key === 'currentAddress') {
+          }
+        } else if (key === "workAuthRange") {
+          if (values[key] && values[key].length === 2) {
+            formData.append("visaStartDate", values[key][0].toISOString());
+            formData.append("visaEndDate", values[key][1].toISOString());
+          }
+        } else if (key === "currentAddress") {
           formData.append(key, JSON.stringify(values[key]));
-        } else if (key === 'emergencyContacts') {
+        } else if (key === "emergencyContacts") {
           formData.append(key, JSON.stringify(values[key]));
-        } else if (key === 'reference') {
+        } else if (key === "reference") {
           // Reference is a single object, not an array
           const referenceData = {
-            firstName: values.reference?.firstName || '',
-            middleName: values.reference?.middleName || '',
-            lastName: values.reference?.lastName || '',
-            phone: values.reference?.phone || '',
-            email: values.reference?.email || '',
-            relationship: values.reference?.relationship || ''
+            firstName: values.reference?.firstName || "",
+            middleName: values.reference?.middleName || "",
+            lastName: values.reference?.lastName || "",
+            phone: values.reference?.phone || "",
+            email: values.reference?.email || "",
+            relationship: values.reference?.relationship || "",
           };
-          formData.append('reference', JSON.stringify(referenceData));
-        } else if (key === 'isUSResident') {
-            // Skip, handled by logic below
-        } else if (key === 'usResidentType') {
-           // Skip, handled by logic below
-        } else if (key === 'workAuthType') {
-           // Skip, handled by logic below
-        } else if (key === 'otherVisaTitle') {
-           // Skip, handled by logic below 
-        } else if (key !== 'size' && key !== 'profilePicture' && key !== 'optReceipt' && key !== 'IsReference') {
+          formData.append("reference", JSON.stringify(referenceData));
+        } else if (key === "isUSResident") {
+          // Skip, handled by logic below
+        } else if (key === "usResidentType") {
+          // Skip, handled by logic below
+        } else if (key === "workAuthType") {
+          // Skip, handled by logic below
+        } else if (key === "otherVisaTitle") {
+          // Skip, handled by logic below
+        } else if (
+          key !== "size" &&
+          key !== "profilePicture" &&
+          key !== "optReceipt" &&
+          key !== "IsReference"
+        ) {
           if (values[key] !== undefined && values[key] !== null) {
             formData.append(key, values[key]);
           }
@@ -125,52 +143,65 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
       });
 
       // Handle Residency Mapping
-      if (values.isUSResident === 'yes') {
-          if (values.usResidentType === 'citizen') {
-              formData.append('usResident', 'usCitizen');
-          } else {
-              formData.append('usResident', 'greenCard');
-          }
+      if (values.isUSResident === "yes") {
+        if (values.usResidentType === "citizen") {
+          formData.append("usResident", "usCitizen");
+        } else {
+          formData.append("usResident", "greenCard");
+        }
       } else {
-          formData.append('usResident', 'workAuth');
-          // Handle Visa Title
-          if (values.workAuthType === 'Other') {
-               formData.append('visaTitle', values.otherVisaTitle);
-          } else {
-               formData.append('visaTitle', values.workAuthType);
-          }
+        formData.append("usResident", "workAuth");
+        // Handle Visa Title
+        if (values.workAuthType === "Other") {
+          formData.append("visaTitle", values.otherVisaTitle);
+        } else {
+          formData.append("visaTitle", values.workAuthType);
+        }
       }
 
       if (fileList.driverLicense && fileList.driverLicense.length > 0) {
-        formData.append('driverLicense', fileList.driverLicense[0].originFileObj);
+        formData.append(
+          "driverLicense",
+          fileList.driverLicense[0].originFileObj,
+        );
       }
       if (fileList.workAuthorization && fileList.workAuthorization.length > 0) {
-        formData.append('workAuthorization', fileList.workAuthorization[0].originFileObj);
+        formData.append(
+          "workAuthorization",
+          fileList.workAuthorization[0].originFileObj,
+        );
       }
       if (fileList.other && fileList.other.length > 0) {
-        formData.append('other', fileList.other[0].originFileObj);
+        formData.append("other", fileList.other[0].originFileObj);
       }
       if (fileList.optReceipt && fileList.optReceipt.length > 0) {
-        formData.append('optReceipt', fileList.optReceipt[0].originFileObj);
+        formData.append("optReceipt", fileList.optReceipt[0].originFileObj);
       }
 
-      if (profileType === 'upload' && fileList.profilePicture && fileList.profilePicture.length > 0) {
-        formData.append('profilePicture', fileList.profilePicture[0].originFileObj);
-      } else if (profileType === 'default' && values.profilePicture) {
-          formData.append('profilePicture', values.profilePicture);
+      if (
+        profileType === "upload" &&
+        fileList.profilePicture &&
+        fileList.profilePicture.length > 0
+      ) {
+        formData.append(
+          "profilePicture",
+          fileList.profilePicture[0].originFileObj,
+        );
+      } else if (profileType === "default" && values.profilePicture) {
+        formData.append("profilePicture", values.profilePicture);
       }
 
       if (onSubmit) {
         await onSubmit(formData);
-        message.success(isResubmission 
-          ? 'Application resubmitted successfully!' 
-          : 'Application submitted successfully!');
+        message.success(
+          isResubmission
+            ? "Application resubmitted successfully!"
+            : "Application submitted successfully!",
+        );
       }
-
     } catch (err) {
-      console.error('Form submission error:', err);
-      message.error('Submission failed. Please check your form and try again.');
-
+      console.error("Form submission error:", err);
+      message.error("Submission failed. Please check your form and try again.");
     } finally {
       setLoading(false);
     }
@@ -179,16 +210,16 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
   const beforeUpload = (file) => {
     const isLt5M = file.size / 1024 / 1024 < 5;
     if (!isLt5M) {
-      message.error('File must be smaller than 5MB!');
+      message.error("File must be smaller than 5MB!");
       return false;
     }
     return false;
   };
 
   const handleFileChange = (type) => (info) => {
-    setFileList(prev => ({
+    setFileList((prev) => ({
       ...prev,
-      [type]: info.fileList
+      [type]: info.fileList,
     }));
   };
 
@@ -206,18 +237,14 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
         layout="vertical"
         onFinish={handleSubmit}
         size="default"
-        style={{ maxWidth: 1200, width: '100%' }}
+        style={{ maxWidth: 1200, width: "100%" }}
       >
-        <Form.Item 
-          label="Name" 
-          required
-          style={{ marginBottom: 24 }}
-        >
+        <Form.Item label="Name" required style={{ marginBottom: 24 }}>
           <Row gutter={16}>
             <Col span={8}>
-              <Form.Item 
-                name="firstName" 
-                rules={[{ required: true, message: 'First name is required'}]}
+              <Form.Item
+                name="firstName"
+                rules={[{ required: true, message: "First name is required" }]}
                 style={{ marginBottom: 0 }}
               >
                 <Input placeholder="First Name" />
@@ -225,18 +252,15 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
             </Col>
 
             <Col span={8}>
-              <Form.Item 
-                name="middleName" 
-                style={{ marginBottom: 0 }}
-              >
+              <Form.Item name="middleName" style={{ marginBottom: 0 }}>
                 <Input placeholder="Middle Name (Optional)" />
               </Form.Item>
             </Col>
 
             <Col span={8}>
-              <Form.Item 
-                name="lastName" 
-                rules={[{ required: true, message: 'Last name is required'}]}
+              <Form.Item
+                name="lastName"
+                rules={[{ required: true, message: "Last name is required" }]}
                 style={{ marginBottom: 0 }}
               >
                 <Input placeholder="Last Name" />
@@ -250,139 +274,168 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
         </Form.Item>
 
         <Form.Item label="Profile Picture" style={{ marginBottom: 24 }}>
-          <div style={{ background: '#f9f9f9', padding: '20px', borderRadius: '8px', border: '1px solid #eee' }}>
-            <Radio.Group 
-              value={profileType} 
+          <div
+            style={{
+              background: "#f9f9f9",
+              padding: "20px",
+              borderRadius: "8px",
+              border: "1px solid #eee",
+            }}
+          >
+            <Radio.Group
+              value={profileType}
               onChange={(e) => {
-                  setProfileType(e.target.value);
-                  form.setFieldsValue({ profilePicture: null });
-                  setFileList(prev => ({ ...prev, profilePicture: [] }));
+                setProfileType(e.target.value);
+                form.setFieldsValue({ profilePicture: null });
+                setFileList((prev) => ({ ...prev, profilePicture: [] }));
               }}
-              style={{ marginBottom: 16, display: 'flex', gap: '20px' }}
+              style={{ marginBottom: 16, display: "flex", gap: "20px" }}
             >
               <Radio value="default">Choose from Defaults</Radio>
               <Radio value="upload">Upload Custom Photo</Radio>
             </Radio.Group>
 
-            {profileType === 'default' ? (
+            {profileType === "default" ? (
               <Form.Item name="profilePicture" noStyle>
-                <Radio.Group style={{ width: '100%' }}>
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', 
-                    gap: '12px' 
-                  }}>
+                <Radio.Group style={{ width: "100%" }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fill, minmax(80px, 1fr))",
+                      gap: "12px",
+                    }}
+                  >
                     {[
-                      'https://cdn-icons-png.flaticon.com/512/4140/4140048.png',
-                      'https://cdn-icons-png.flaticon.com/512/4140/4140047.png',
-                      'https://cdn-icons-png.flaticon.com/512/4140/4140037.png',
-                      'https://cdn-icons-png.flaticon.com/512/4140/4140051.png',
-                      'https://cdn-icons-png.flaticon.com/512/4140/4140040.png',
-                      'https://cdn-icons-png.flaticon.com/512/4140/4140052.png',
-                      'https://cdn-icons-png.flaticon.com/512/4140/4140046.png',
-                      'https://cdn-icons-png.flaticon.com/512/4140/4140039.png',
-                      'https://cdn-icons-png.flaticon.com/512/6858/6858504.png',
-                      'https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png'
+                      "https://cdn-icons-png.flaticon.com/512/4140/4140048.png",
+                      "https://cdn-icons-png.flaticon.com/512/4140/4140047.png",
+                      "https://cdn-icons-png.flaticon.com/512/4140/4140037.png",
+                      "https://cdn-icons-png.flaticon.com/512/4140/4140051.png",
+                      "https://cdn-icons-png.flaticon.com/512/4140/4140040.png",
+                      "https://cdn-icons-png.flaticon.com/512/4140/4140052.png",
+                      "https://cdn-icons-png.flaticon.com/512/4140/4140046.png",
+                      "https://cdn-icons-png.flaticon.com/512/4140/4140039.png",
+                      "https://cdn-icons-png.flaticon.com/512/6858/6858504.png",
+                      "https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png",
                     ].map((url, index) => (
-                      <label key={index} style={{ cursor: 'pointer', textAlign: 'center' }}>
-                         <Radio value={url} style={{ display: 'none' }} />
-                         <div style={{
-                           border: profileUrl === url ? '2px solid #1890ff' : '2px solid transparent',
-                           borderRadius: '50%',
-                           padding: '2px',
-                           transition: 'all 0.3s'
-                         }}>
-                           <img 
-                             src={url} 
-                             alt={`Avatar ${index + 1}`} 
-                             style={{ 
-                               width: '100%', 
-                               borderRadius: '50%',
-                               opacity: profileUrl === url ? 1 : 0.7,
-                               transform: profileUrl === url ? 'scale(1.05)' : 'scale(1)'
-                             }} 
-                           />
-                         </div>
+                      <label
+                        key={index}
+                        style={{ cursor: "pointer", textAlign: "center" }}
+                      >
+                        <Radio value={url} style={{ display: "none" }} />
+                        <div
+                          style={{
+                            border:
+                              profileUrl === url
+                                ? "2px solid #1890ff"
+                                : "2px solid transparent",
+                            borderRadius: "50%",
+                            padding: "2px",
+                            transition: "all 0.3s",
+                          }}
+                        >
+                          <img
+                            src={url}
+                            alt={`Avatar ${index + 1}`}
+                            style={{
+                              width: "100%",
+                              borderRadius: "50%",
+                              opacity: profileUrl === url ? 1 : 0.7,
+                              transform:
+                                profileUrl === url ? "scale(1.05)" : "scale(1)",
+                            }}
+                          />
+                        </div>
                       </label>
                     ))}
                   </div>
                 </Radio.Group>
               </Form.Item>
             ) : (
-                <div style={{ textAlign: 'center', padding: '20px', background: '#fff', borderRadius: '8px', border: '1px dashed #d9d9d9' }}>
-                   <Upload
-                      fileList={fileList.profilePicture}
-                      beforeUpload={beforeUpload}
-                      onChange={handleFileChange('profilePicture')}
-                      maxCount={1}
-                      listType="picture-card"
-                      accept="image/*"
-                      showUploadList={{ showPreviewIcon: false }}
-                    >
-                      {fileList.profilePicture.length >= 1 ? null : (
-                        <div>
-                          <PlusOutlined />
-                          <div style={{ marginTop: 8 }}>Upload</div>
-                        </div>
-                      )}
-                    </Upload>
-                </div>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "20px",
+                  background: "#fff",
+                  borderRadius: "8px",
+                  border: "1px dashed #d9d9d9",
+                }}
+              >
+                <Upload
+                  fileList={fileList.profilePicture}
+                  beforeUpload={beforeUpload}
+                  onChange={handleFileChange("profilePicture")}
+                  maxCount={1}
+                  listType="picture-card"
+                  accept="image/*"
+                  showUploadList={{ showPreviewIcon: false }}
+                >
+                  {fileList.profilePicture.length >= 1 ? null : (
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>Upload</div>
+                    </div>
+                  )}
+                </Upload>
+              </div>
             )}
           </div>
         </Form.Item>
 
         <Row gutter={24}>
           <Col span={12}>
-            <Form.Item 
+            <Form.Item
               label="Email"
-              name='email'
+              name="email"
               required
               rules={[
-                { required: true, message: 'Email is required'},
-                { type: 'email', message: 'Please enter a valid email'}
+                { required: true, message: "Email is required" },
+                { type: "email", message: "Please enter a valid email" },
               ]}
               tooltip="Email is pre-filled from your registration and cannot be changed"
             >
-              <Input 
-                placeholder="your.email@example.com" 
+              <Input
+                placeholder="your.email@example.com"
                 disabled
-                style={{ backgroundColor: '#f5f5f5', color: '#000' }}
+                style={{ backgroundColor: "#f5f5f5", color: "#000" }}
               />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item 
+            <Form.Item
               label="SSN"
-              name='ssn'
+              name="ssn"
               required
               validateTrigger="onBlur"
               rules={[
-                { required: true, message: 'SSN is required'},
-                { 
+                { required: true, message: "SSN is required" },
+                {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
-                    const cleanSSN = value.replace(/\D/g, '');
+                    const cleanSSN = value.replace(/\D/g, "");
                     if (cleanSSN.length !== 9) {
-                      return Promise.reject(new Error('SSN must be exactly 9 digits'));
+                      return Promise.reject(
+                        new Error("SSN must be exactly 9 digits"),
+                      );
                     }
                     return Promise.resolve();
-                  }
-                }
+                  },
+                },
               ]}
             >
-              <Input 
-                placeholder="XXX-XX-XXXX" 
-                maxLength={11} 
+              <Input
+                placeholder="XXX-XX-XXXX"
+                maxLength={11}
                 onChange={(e) => {
-                   let val = e.target.value.replace(/\D/g, '');
-                   if (val.length > 9) val = val.slice(0, 9);
-                   
-                   if (val.length > 5) {
-                       val = `${val.slice(0,3)}-${val.slice(3,5)}-${val.slice(5)}`;
-                   } else if (val.length > 3) {
-                       val = `${val.slice(0,3)}-${val.slice(3)}`;
-                   }
-                   form.setFieldsValue({ ssn: val });
+                  let val = e.target.value.replace(/\D/g, "");
+                  if (val.length > 9) val = val.slice(0, 9);
+
+                  if (val.length > 5) {
+                    val = `${val.slice(0, 3)}-${val.slice(3, 5)}-${val.slice(5)}`;
+                  } else if (val.length > 3) {
+                    val = `${val.slice(0, 3)}-${val.slice(3)}`;
+                  }
+                  form.setFieldsValue({ ssn: val });
                 }}
               />
             </Form.Item>
@@ -392,81 +445,88 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
         <Row gutter={24}>
           <Col span={12}>
             <Form.Item
-              name='dateOfBirth'
-              label='Date of Birth'
+              name="dateOfBirth"
+              label="Date of Birth"
               required
-              rules={[{ required: true, message: 'Date of birth is required'}]}
+              rules={[{ required: true, message: "Date of birth is required" }]}
             >
-              <DatePicker style={{ width: '100%'}} format='YYYY-MM-DD'/>
+              <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item 
-              label="Gender" 
-              name='gender' 
+            <Form.Item
+              label="Gender"
+              name="gender"
               required
-              rules={[{ required: true, message: 'Gender is required'}]}
+              rules={[{ required: true, message: "Gender is required" }]}
             >
               <Select
-                placeholder='Select Gender'
+                placeholder="Select Gender"
                 options={[
                   { label: "Male", value: "Male" },
                   { label: "Female", value: "Female" },
-                  { label: "I do not wish to answer", value: "I do not wish to answer" },
+                  {
+                    label: "I do not wish to answer",
+                    value: "I do not wish to answer",
+                  },
                 ]}
               />
             </Form.Item>
           </Col>
         </Row>
 
-        <Form.Item label='Current Address' required style={{ marginBottom: 24}}>
+        <Form.Item
+          label="Current Address"
+          required
+          style={{ marginBottom: 24 }}
+        >
           <Form.Item
-            name={['currentAddress', 'building']}
-            rules={[{ required: true, message: 'Building/Apt is required' }]}
+            name={["currentAddress", "building"]}
+            rules={[{ required: true, message: "Building/Apt is required" }]}
             style={{ marginBottom: 12 }}
           >
-            <Input placeholder="Building/Apartment Number"/>
+            <Input placeholder="Building/Apartment Number" />
           </Form.Item>
 
           <Form.Item
-            name={['currentAddress', 'street']}
-            rules={[{ required: true, message: 'Street is required' }]}
+            name={["currentAddress", "street"]}
+            rules={[{ required: true, message: "Street is required" }]}
             style={{ marginBottom: 12 }}
           >
-            <Input placeholder="Street Address"/>
+            <Input placeholder="Street Address" />
           </Form.Item>
 
           <Row gutter={16} style={{ marginBottom: 0 }}>
             <Col span={8}>
               <Form.Item
-                name={['currentAddress', 'city']}
-                rules={[{ required: true, message: 'City required'}]}
+                name={["currentAddress", "city"]}
+                rules={[{ required: true, message: "City required" }]}
                 style={{ marginBottom: 0 }}
               >
-                <Input placeholder="City"/>
+                <Input placeholder="City" />
               </Form.Item>
             </Col>
 
             <Col span={8}>
               <Form.Item
-                name={['currentAddress', 'state']}
-                rules={[{ required: true, message: 'State required'}]}
+                name={["currentAddress", "state"]}
+                rules={[{ required: true, message: "State required" }]}
                 style={{ marginBottom: 0 }}
               >
-                <Input placeholder="State"/>
+                <Input placeholder="State" />
               </Form.Item>
             </Col>
 
             <Col span={8}>
               <Form.Item
-                name={['currentAddress', 'zip']}
+                name={["currentAddress", "zip"]}
                 rules={[
-                  { required: true, message: 'Zip required'},
-                  { pattern: /^\d{5}$/, message: '5 digits'}
+                  { required: true, message: "Zip required" },
+                  { pattern: /^\d{5}$/, message: "5 digits" },
                 ]}
                 style={{ marginBottom: 0 }}
               >
-                <Input placeholder="Zip Code"/>
+                <Input placeholder="Zip Code" />
               </Form.Item>
             </Col>
           </Row>
@@ -475,72 +535,76 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
         <Row gutter={24}>
           <Col span={12}>
             <Form.Item
-              label='Cell Phone'
-              name='cellPhone'
+              label="Cell Phone"
+              name="cellPhone"
               required
               validateTrigger="onBlur"
               rules={[
-                {required: true, message: 'Cell phone is required'},
-                { 
+                { required: true, message: "Cell phone is required" },
+                {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
-                    const cleanPhone = value.replace(/\D/g, '');
+                    const cleanPhone = value.replace(/\D/g, "");
                     if (cleanPhone.length !== 10) {
-                      return Promise.reject(new Error('Phone must be exactly 10 digits'));
+                      return Promise.reject(
+                        new Error("Phone must be exactly 10 digits"),
+                      );
                     }
                     return Promise.resolve();
-                  }
-                }
+                  },
+                },
               ]}
             >
-              <Input 
-                placeholder="XXX-XXX-XXXX" 
+              <Input
+                placeholder="XXX-XXX-XXXX"
                 maxLength={12}
                 onChange={(e) => {
-                   let val = e.target.value.replace(/\D/g, '');
-                   if (val.length > 10) val = val.slice(0, 10);
-                   
-                   if (val.length > 6) {
-                       val = `${val.slice(0,3)}-${val.slice(3,6)}-${val.slice(6)}`;
-                   } else if (val.length > 3) {
-                       val = `${val.slice(0,3)}-${val.slice(3)}`;
-                   }
-                   form.setFieldsValue({ cellPhone: val });
+                  let val = e.target.value.replace(/\D/g, "");
+                  if (val.length > 10) val = val.slice(0, 10);
+
+                  if (val.length > 6) {
+                    val = `${val.slice(0, 3)}-${val.slice(3, 6)}-${val.slice(6)}`;
+                  } else if (val.length > 3) {
+                    val = `${val.slice(0, 3)}-${val.slice(3)}`;
+                  }
+                  form.setFieldsValue({ cellPhone: val });
                 }}
               />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              label='Work Phone'
-              name='workPhone'
+              label="Work Phone"
+              name="workPhone"
               validateTrigger="onBlur"
               rules={[
-                 { 
+                {
                   validator: (_, value) => {
                     if (!value) return Promise.resolve();
-                    const cleanPhone = value.replace(/\D/g, '');
+                    const cleanPhone = value.replace(/\D/g, "");
                     if (cleanPhone.length !== 10) {
-                      return Promise.reject(new Error('Phone must be exactly 10 digits'));
+                      return Promise.reject(
+                        new Error("Phone must be exactly 10 digits"),
+                      );
                     }
                     return Promise.resolve();
-                  }
-                }
+                  },
+                },
               ]}
             >
-              <Input 
-                placeholder="XXX-XXX-XXXX (Optional)" 
+              <Input
+                placeholder="XXX-XXX-XXXX (Optional)"
                 maxLength={12}
                 onChange={(e) => {
-                   let val = e.target.value.replace(/\D/g, '');
-                   if (val.length > 10) val = val.slice(0, 10);
-                   
-                   if (val.length > 6) {
-                       val = `${val.slice(0,3)}-${val.slice(3,6)}-${val.slice(6)}`;
-                   } else if (val.length > 3) {
-                       val = `${val.slice(0,3)}-${val.slice(3)}`;
-                   }
-                   form.setFieldsValue({ workPhone: val });
+                  let val = e.target.value.replace(/\D/g, "");
+                  if (val.length > 10) val = val.slice(0, 10);
+
+                  if (val.length > 6) {
+                    val = `${val.slice(0, 3)}-${val.slice(3, 6)}-${val.slice(6)}`;
+                  } else if (val.length > 3) {
+                    val = `${val.slice(0, 3)}-${val.slice(3)}`;
+                  }
+                  form.setFieldsValue({ workPhone: val });
                 }}
               />
             </Form.Item>
@@ -562,84 +626,106 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
 
         {/* If Yes: Select Citizen or Green Card */}
         {isUSResident === "yes" && (
-            <Form.Item
-              name="usResidentType"
-              label="Select Status"
-              required
-              rules={[{ required: true, message: "Please select your status" }]}
-            >
-              <Select
-                placeholder="Select"
-                options={[
-                  { label: "Green Card", value: "greenCard" },
-                  { label: "Citizen", value: "citizen" },
-                ]}
-              />
-            </Form.Item>
+          <Form.Item
+            name="usResidentType"
+            label="Select Status"
+            required
+            rules={[{ required: true, message: "Please select your status" }]}
+          >
+            <Select
+              placeholder="Select"
+              options={[
+                { label: "Green Card", value: "greenCard" },
+                { label: "Citizen", value: "citizen" },
+              ]}
+            />
+          </Form.Item>
         )}
 
         {/* If No: Work Authorization Logic */}
         {isUSResident === "no" && (
-          <div style={{ border: '1px solid #eee', padding: '16px', borderRadius: '8px', background: '#fafafa', marginBottom: '24px' }}>
+          <div
+            style={{
+              border: "1px solid #eee",
+              padding: "16px",
+              borderRadius: "8px",
+              background: "#fafafa",
+              marginBottom: "24px",
+            }}
+          >
             <Form.Item
               name="workAuthType"
               label="What is your work authorization?"
               required
-              rules={[{ required: true, message: 'Work authorization type is required'}]}
+              rules={[
+                {
+                  required: true,
+                  message: "Work authorization type is required",
+                },
+              ]}
             >
-              <Select 
-                placeholder='Select Visa Type'
+              <Select
+                placeholder="Select Visa Type"
                 options={[
-                  { label: 'H1-B', value: 'H1-B'},
-                  { label: 'L2', value: 'L2'},
-                  { label: 'F1(CPT/OPT)', value: 'F1(CPT/OPT)'},
-                  { label: 'H4', value: 'H4'},
-                  { label: 'Other', value: 'Other'}
+                  { label: "H1-B", value: "H1-B" },
+                  { label: "L2", value: "L2" },
+                  { label: "F1(CPT/OPT)", value: "F1(CPT/OPT)" },
+                  { label: "H4", value: "H4" },
+                  { label: "Other", value: "Other" },
                 ]}
               />
             </Form.Item>
 
             {/* If Other: Specify Title */}
             {workAuthType === "Other" && (
-                <Form.Item
-                  name="otherVisaTitle"
-                  label="Specify Visa Title"
-                  required
-                  rules={[{ required: true, message: "Please specify your visa title" }]}
-                >
-                  <Input placeholder="Enter visa title" />
-                </Form.Item>
+              <Form.Item
+                name="otherVisaTitle"
+                label="Specify Visa Title"
+                required
+                rules={[
+                  { required: true, message: "Please specify your visa title" },
+                ]}
+              >
+                <Input placeholder="Enter visa title" />
+              </Form.Item>
             )}
 
             {/* If F1: Upload OPT Receipt */}
             {workAuthType === "F1(CPT/OPT)" && (
-                 <Form.Item label="Upload OPT Receipt" required>
-                      <Upload
-                        fileList={fileList.optReceipt}
-                        beforeUpload={beforeUpload}
-                        onChange={handleFileChange('optReceipt')}
-                        maxCount={1}
-                      >
-                        <Button icon={<UploadOutlined />}>Click to Upload</Button>
-                      </Upload>
-                      <div style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>Please upload your OPT Receipt (PDF)</div>
-                 </Form.Item>
+              <Form.Item label="Upload OPT Receipt" required>
+                <Upload
+                  fileList={fileList.optReceipt}
+                  beforeUpload={beforeUpload}
+                  onChange={handleFileChange("optReceipt")}
+                  maxCount={1}
+                >
+                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                </Upload>
+                <div
+                  style={{ fontSize: "12px", color: "#888", marginTop: "4px" }}
+                >
+                  Please upload your OPT Receipt (PDF)
+                </div>
+              </Form.Item>
             )}
 
             {/* Start and End Date for ALL Work Auth types */}
             <Form.Item
-              name='workAuthRange'
-              label='Start and End Date'
+              name="workAuthRange"
+              label="Start and End Date"
               required
               rules={[
                 {
-                  type: 'array',
-                  required: true, 
-                  message: 'Please select validity period'
-                }
+                  type: "array",
+                  required: true,
+                  message: "Please select validity period",
+                },
               ]}
             >
-              <DatePicker.RangePicker style={{ width: '100%' }} format='YYYY-MM-DD' />
+              <DatePicker.RangePicker
+                style={{ width: "100%" }}
+                format="YYYY-MM-DD"
+              />
             </Form.Item>
 
             {/* Work Authorization Upload moved to bottom section */}
@@ -650,7 +736,12 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
           name="IsReference"
           label="Reference"
           required
-          rules={[{ required: true, message: "Please specify if you have a reference" }]}
+          rules={[
+            {
+              required: true,
+              message: "Please specify if you have a reference",
+            },
+          ]}
           tooltip="Who referred you to this company?"
         >
           <Select
@@ -725,42 +816,45 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
                     name={["reference", "phone"]}
                     validateTrigger="onBlur"
                     rules={[
-                        { required: true, message: "Phone required" },
-                        { 
-                          validator: (_, value) => {
-                            if (!value) return Promise.resolve();
-                            const cleanPhone = value.replace(/\D/g, '');
-                            if (cleanPhone.length !== 10) {
-                              return Promise.reject(new Error('Phone must be exactly 10 digits'));
-                            }
-                            return Promise.resolve();
+                      { required: true, message: "Phone required" },
+                      {
+                        validator: (_, value) => {
+                          if (!value) return Promise.resolve();
+                          const cleanPhone = value.replace(/\D/g, "");
+                          if (cleanPhone.length !== 10) {
+                            return Promise.reject(
+                              new Error("Phone must be exactly 10 digits"),
+                            );
                           }
-                        }
+                          return Promise.resolve();
+                        },
+                      },
                     ]}
                     style={{ marginBottom: 0 }}
                   >
-                    <Input 
-                        placeholder="Phone Number" 
-                        maxLength={12}
-                        onChange={(e) => {
-                           let val = e.target.value.replace(/\D/g, '');
-                           if (val.length > 10) val = val.slice(0, 10);
-                           
-                           if (val.length > 6) {
-                               val = `${val.slice(0,3)}-${val.slice(3,6)}-${val.slice(6)}`;
-                           } else if (val.length > 3) {
-                               val = `${val.slice(0,3)}-${val.slice(3)}`;
-                           }
-                           
-                           // Specifically handle updating nested form value
-                           const currentReference = form.getFieldValue("reference") || {};
-                           form.setFieldsValue({ 
-                               reference: {
-                                   ...currentReference,
-                                   phone: val
-                               }
-                           });
-                        }}
+                    <Input
+                      placeholder="Phone Number"
+                      maxLength={12}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/\D/g, "");
+                        if (val.length > 10) val = val.slice(0, 10);
+
+                        if (val.length > 6) {
+                          val = `${val.slice(0, 3)}-${val.slice(3, 6)}-${val.slice(6)}`;
+                        } else if (val.length > 3) {
+                          val = `${val.slice(0, 3)}-${val.slice(3)}`;
+                        }
+
+                        // Specifically handle updating nested form value
+                        const currentReference =
+                          form.getFieldValue("reference") || {};
+                        form.setFieldsValue({
+                          reference: {
+                            ...currentReference,
+                            phone: val,
+                          },
+                        });
+                      }}
                     />
                   </Form.Item>
                 </Col>
@@ -783,12 +877,12 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
         )}
 
         {/* Emergency Contacts Section */}
-        <Form.Item 
-          label="Emergency Contacts" 
+        <Form.Item
+          label="Emergency Contacts"
           required
           style={{ marginBottom: 8 }}
         >
-          <div style={{ marginBottom: 12, color: '#666' }}>
+          <div style={{ marginBottom: 12, color: "#666" }}>
             Add at least one emergency contact
           </div>
         </Form.Item>
@@ -799,7 +893,9 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
             {
               validator: async (_, emergencyContacts) => {
                 if (!emergencyContacts || emergencyContacts.length < 1) {
-                  return Promise.reject(new Error('At least 1 emergency contact is required'));
+                  return Promise.reject(
+                    new Error("At least 1 emergency contact is required"),
+                  );
                 }
               },
             },
@@ -845,7 +941,9 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
                         <Form.Item
                           {...field}
                           name={[field.name, "firstName"]}
-                          rules={[{ required: true, message: "First name required" }]}
+                          rules={[
+                            { required: true, message: "First name required" },
+                          ]}
                           style={{ marginBottom: 12 }}
                         >
                           <Input placeholder="First Name" />
@@ -866,7 +964,9 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
                         <Form.Item
                           {...field}
                           name={[field.name, "lastName"]}
-                          rules={[{ required: true, message: "Last name required" }]}
+                          rules={[
+                            { required: true, message: "Last name required" },
+                          ]}
                           style={{ marginBottom: 12 }}
                         >
                           <Input placeholder="Last Name" />
@@ -879,7 +979,12 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
                         <Form.Item
                           {...field}
                           name={[field.name, "relationship"]}
-                          rules={[{ required: true, message: "Relationship required" }]}
+                          rules={[
+                            {
+                              required: true,
+                              message: "Relationship required",
+                            },
+                          ]}
                           style={{ marginBottom: 0 }}
                         >
                           <Input placeholder="Relationship" />
@@ -892,42 +997,49 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
                           name={[field.name, "phone"]}
                           validateTrigger="onBlur"
                           rules={[
-                              { required: true, message: "Phone required" },
-                              { 
-                                validator: (_, value) => {
-                                  if (!value) return Promise.resolve();
-                                  const cleanPhone = value.replace(/\D/g, '');
-                                  if (cleanPhone.length !== 10) {
-                                    return Promise.reject(new Error('Phone must be exactly 10 digits'));
-                                  }
-                                  return Promise.resolve();
+                            { required: true, message: "Phone required" },
+                            {
+                              validator: (_, value) => {
+                                if (!value) return Promise.resolve();
+                                const cleanPhone = value.replace(/\D/g, "");
+                                if (cleanPhone.length !== 10) {
+                                  return Promise.reject(
+                                    new Error(
+                                      "Phone must be exactly 10 digits",
+                                    ),
+                                  );
                                 }
-                              }
+                                return Promise.resolve();
+                              },
+                            },
                           ]}
                           style={{ marginBottom: 0 }}
                         >
-                          <Input 
-                              placeholder="Phone Number" 
-                              maxLength={12}
-                              onChange={(e) => {
-                                 let val = e.target.value.replace(/\D/g, '');
-                                 if (val.length > 10) val = val.slice(0, 10);
-                                 
-                                 if (val.length > 6) {
-                                     val = `${val.slice(0,3)}-${val.slice(3,6)}-${val.slice(6)}`;
-                                 } else if (val.length > 3) {
-                                     val = `${val.slice(0,3)}-${val.slice(3)}`;
-                                 }
+                          <Input
+                            placeholder="Phone Number"
+                            maxLength={12}
+                            onChange={(e) => {
+                              let val = e.target.value.replace(/\D/g, "");
+                              if (val.length > 10) val = val.slice(0, 10);
 
-                                 // Update specific item in the array
-                                 const contacts = form.getFieldValue("emergencyContacts");
-                                 const updatedContacts = [...contacts];
-                                 updatedContacts[index] = {
-                                     ...updatedContacts[index],
-                                     phone: val
-                                 };
-                                 form.setFieldsValue({ emergencyContacts: updatedContacts });
-                              }}
+                              if (val.length > 6) {
+                                val = `${val.slice(0, 3)}-${val.slice(3, 6)}-${val.slice(6)}`;
+                              } else if (val.length > 3) {
+                                val = `${val.slice(0, 3)}-${val.slice(3)}`;
+                              }
+
+                              // Update specific item in the array
+                              const contacts =
+                                form.getFieldValue("emergencyContacts");
+                              const updatedContacts = [...contacts];
+                              updatedContacts[index] = {
+                                ...updatedContacts[index],
+                                phone: val,
+                              };
+                              form.setFieldsValue({
+                                emergencyContacts: updatedContacts,
+                              });
+                            }}
                           />
                         </Form.Item>
                       </Col>
@@ -966,50 +1078,56 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
           )}
         </Form.List>
 
-
-        <Form.Item label='Driver License'>
+        <Form.Item label="Driver License">
           <Upload
             fileList={fileList.driverLicense}
             beforeUpload={beforeUpload}
-            onChange={handleFileChange('driverLicense')}
+            onChange={handleFileChange("driverLicense")}
             maxCount={1}
           >
             <Button icon={<UploadOutlined />}>Upload Driver License</Button>
           </Upload>
         </Form.Item>
 
-        <Form.Item 
-            label='Work Authorization Document'
-            required={ isUSResident === "no" && workAuthType !== "F1(CPT/OPT)" }
-            rules={[
-                {
-                    validator: async () => {
-                        // Logic: Required if NOT citizen/GC AND NOT F1
-                        const isRequired = isUSResident === "no" && workAuthType !== "F1(CPT/OPT)";
-                        
-                        if (isRequired && (!fileList.workAuthorization || fileList.workAuthorization.length === 0)) {
-                             return Promise.reject(new Error('Please upload your Work Authorization Document'));
-                        }
-                        return Promise.resolve();
-                    }
+        <Form.Item
+          label="Work Authorization Document"
+          required={isUSResident === "no" && workAuthType !== "F1(CPT/OPT)"}
+          rules={[
+            {
+              validator: async () => {
+                // Logic: Required if NOT citizen/GC AND NOT F1
+                const isRequired =
+                  isUSResident === "no" && workAuthType !== "F1(CPT/OPT)";
+
+                if (
+                  isRequired &&
+                  (!fileList.workAuthorization ||
+                    fileList.workAuthorization.length === 0)
+                ) {
+                  return Promise.reject(
+                    new Error("Please upload your Work Authorization Document"),
+                  );
                 }
-            ]}
+                return Promise.resolve();
+              },
+            },
+          ]}
         >
           <Upload
             fileList={fileList.workAuthorization}
             beforeUpload={beforeUpload}
-            onChange={handleFileChange('workAuthorization')}
+            onChange={handleFileChange("workAuthorization")}
             maxCount={1}
           >
             <Button icon={<UploadOutlined />}>Upload Work Authorization</Button>
           </Upload>
         </Form.Item>
 
-        <Form.Item label='Other Documents'>
+        <Form.Item label="Other Documents">
           <Upload
             fileList={fileList.other}
             beforeUpload={beforeUpload}
-            onChange={handleFileChange('other')}
+            onChange={handleFileChange("other")}
             maxCount={1}
           >
             <Button icon={<UploadOutlined />}>Upload Other Documents</Button>
@@ -1018,12 +1136,12 @@ function OnboardingForm({ initialData = null, onSubmit, isResubmission = false }
 
         <Form.Item wrapperCol={{ span: 14, offset: 4 }}>
           <Button
-            type='primary'
+            type="primary"
             htmlType="submit"
             loading={loading}
             size="large"
           >
-            {isResubmission ? 'Resubmit Application' : 'Submit Application'}
+            {isResubmission ? "Resubmit Application" : "Submit Application"}
           </Button>
         </Form.Item>
       </Form>

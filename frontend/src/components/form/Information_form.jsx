@@ -340,49 +340,54 @@ function PersonInformation({ userId, onboardingApplicationId }) {
         padding: "24px 16px",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: 12,
-          right: 16,
-          marginBottom: 0,
-          zIndex: 10,
-        }}
-      >
-        <Radio.Group
-          onChange={(e) => setComponentSize(e.target.value)}
-          value={componentSize}
+      <div style={{ maxWidth: 1200, width: "100%" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginBottom: 16,
+          }}
         >
-          <Radio.Button value="small">Small</Radio.Button>
-          <Radio.Button value="default">Default</Radio.Button>
-          <Radio.Button value="large">Large</Radio.Button>
-        </Radio.Group>
+          <Radio.Group
+            onChange={(e) => setComponentSize(e.target.value)}
+            value={componentSize}
+          >
+            <Radio.Button value="small">Small</Radio.Button>
+            <Radio.Button value="default">Default</Radio.Button>
+            <Radio.Button value="large">Large</Radio.Button>
+          </Radio.Group>
+        </div>
+
+        <Form
+          form={form}
+          labelWrap
+          labelCol={{ span: 4 }}
+          wrapperCol={{ span: 14 }}
+          layout="horizontal"
+          initialValues={{ size: componentSize }}
+          onValuesChange={onFormLayoutChange}
+          onFinish={handleSubmit}
+          size={componentSize}
+          style={{ width: "100%" }}
+        >
+          <NameSection sectionButtonProps={getSectionButtonProps("name")} />
+          <AddressSection
+            sectionButtonProps={getSectionButtonProps("address")}
+          />
+          <ContactSection
+            sectionButtonProps={getSectionButtonProps("contact")}
+          />
+          <VisaInformationSection
+            sectionButtonProps={getSectionButtonProps("visa")}
+          />
+          <EmergencySection
+            sectionButtonProps={getSectionButtonProps("emergency")}
+          />
+          <UploadDocument
+            sectionButtonProps={getSectionButtonProps("documents")}
+          />
+        </Form>
       </div>
-      <Form
-        form={form}
-        labelWrap
-        labelCol={{ span: 4 }}
-        wrapperCol={{ span: 14 }}
-        layout="horizontal"
-        initialValues={{ size: componentSize }}
-        onValuesChange={onFormLayoutChange}
-        onFinish={handleSubmit}
-        size={componentSize}
-        style={{ maxWidth: 1200, paddingTop: 50 }}
-      >
-        <NameSection sectionButtonProps={getSectionButtonProps("name")} />
-        <AddressSection sectionButtonProps={getSectionButtonProps("address")} />
-        <ContactSection sectionButtonProps={getSectionButtonProps("contact")} />
-        <VisaInformationSection
-          sectionButtonProps={getSectionButtonProps("visa")}
-        />
-        <EmergencySection
-          sectionButtonProps={getSectionButtonProps("emergency")}
-        />
-        <UploadDocument
-          sectionButtonProps={getSectionButtonProps("documents")}
-        />
-      </Form>
     </div>
   );
 }

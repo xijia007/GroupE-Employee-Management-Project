@@ -25,25 +25,34 @@ export default function UploadDocument({ sectionButtonProps }) {
 
   return (
     <Card title="Documents" variant="borderless" style={{ marginBottom: 24 }}>
-      <Row gutter={16}>
-        <Col span={8}>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={8}>
           <Form.Item
             name={["documents", "driverLicense"]}
             label="Driver License"
+            labelCol={{ span: 24 }}
+            wrapperCol={{ span: 24 }}
           >
             <Input placeholder="Driver License URL" disabled={!isEditing} />
           </Form.Item>
         </Col>
-        <Col span={8}>
+        <Col xs={24} md={8}>
           <Form.Item
             name={["documents", "workAuthorization"]}
             label="Work Authorization"
+            labelCol={{ span: 24 }}
+            wrapperCol={{ span: 24 }}
           >
             <Input placeholder="Work Authorization URL" disabled={!isEditing} />
           </Form.Item>
         </Col>
-        <Col span={8}>
-          <Form.Item name={["documents", "other"]} label="Other Documents">
+        <Col xs={24} md={8}>
+          <Form.Item
+            name={["documents", "other"]}
+            label="Other Documents"
+            labelCol={{ span: 24 }}
+            wrapperCol={{ span: 24 }}
+          >
             <Input placeholder="Other Documents URL" disabled={!isEditing} />
           </Form.Item>
         </Col>

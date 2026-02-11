@@ -12,10 +12,14 @@ import RegistrationToken from "../models/RegistrationToken.js";
 import OnboardingApplication from "../models/OnboardingApplication.js";
 import User from "../models/User.js";
 import Profile from "../models/Profile.js";
-import { normalizeStatusKey, normalizeStatusValue } from "../utils/statusUtils.js";
+import {
+  normalizeStatusKey,
+  normalizeStatusValue,
+} from "../utils/statusUtils.js";
 import {
   sendRegistrationEmail,
   sendApplicationStatusEmail,
+  sendVisaStatusReminderEmail,
 } from "../utils/emailService.js";
 import crypto, { subtle } from "crypto";
 
@@ -379,13 +383,14 @@ export const reviewApplication = async (req, res) => {
             driverLicense: application.documents?.driverLicense || "",
             workAuthorization: application.documents?.workAuthorization || "",
             other: application.documents?.other || "",
+            optReceipt: application.documents?.optReceipt || "",
           },
         };
 
         // Upsert Profile: update if exists, create if not
         const updatedProfile = await Profile.findOneAndUpdate(
           { user: application.userId },
-          profileData,
+          { $set: profileData },
           {
             upsert: true, // Create if doesn't exist
             new: true, // Return updated document
@@ -442,41 +447,48 @@ export const getAllEmployees = async (req, res) => {
       .select("username email onboardingStatus createdAt")
       .sort({ createdAt: -1 });
 
-  const employeesWithDetails = await Promise.all(
+    const employeesWithDetails = await Promise.all(
       users.map(async (user) => {
         const application = await OnboardingApplication.findOne({
-          userId: user._id
-        }).select('firstName lastName middleName preferredName ssn cellPhone visaTitle usResident status submittedAt reviewedAt visaStartDate visaEndDate');
-        
+          userId: user._id,
+        }).select(
+          "firstName lastName middleName preferredName ssn cellPhone visaTitle usResident status submittedAt reviewedAt visaStartDate visaEndDate",
+        );
+
         const profile = await Profile.findOne({
-          user: user._id
-        }).select('firstName lastName middleName preferredName ssn contactInfo visaInformation address emergencyContacts documents');
+          user: user._id,
+        }).select(
+          "firstName lastName middleName preferredName ssn contactInfo visaInformation address emergencyContacts documents",
+        );
 
         // Prefer Profile data, fallback to Application data
         // For name:
-        const firstName = profile?.firstName || application?.firstName || '';
-        const lastName = profile?.lastName || application?.lastName || '';
-        const middleName = profile?.middleName || application?.middleName || '';
-        const preferredName = profile?.preferredName || application?.preferredName || '';
-        
+        const firstName = profile?.firstName || application?.firstName || "";
+        const lastName = profile?.lastName || application?.lastName || "";
+        const middleName = profile?.middleName || application?.middleName || "";
+        const preferredName =
+          profile?.preferredName || application?.preferredName || "";
+
         // For SSN:
-        const ssn = profile?.ssn || application?.ssn || 'N/A';
-        
+        const ssn = profile?.ssn || application?.ssn || "N/A";
+
         // For Phone: Profile has cellPhone in contactInfo
-        const phone = profile?.contactInfo?.cellPhone || application?.cellPhone || 'N/A';
-        
+        const phone =
+          profile?.contactInfo?.cellPhone || application?.cellPhone || "N/A";
+
         // For Visa Title:
         // Profile has visaInformation.visaType. Application has usResident + visaTitle logic.
         // We should replicate the logic or use the profile's explicit visaType if set.
-        let visaTitle = 'N/A';
+        let visaTitle = "N/A";
         if (profile?.visaInformation?.visaType) {
-             visaTitle = profile.visaInformation.visaType;
+          visaTitle = profile.visaInformation.visaType;
         } else if (application) {
-             visaTitle = (application.usResident === 'greenCard'
-              ? 'Green Card'
-              : application.usResident === 'usCitizen'
-                ? 'US Citizen'
-                : application.visaTitle) || 'N/A';
+          visaTitle =
+            (application.usResident === "greenCard"
+              ? "Green Card"
+              : application.usResident === "usCitizen"
+                ? "US Citizen"
+                : application.visaTitle) || "N/A";
         }
 
         return {
@@ -487,19 +499,24 @@ export const getAllEmployees = async (req, res) => {
           middleName,
           lastName,
           preferredName,
-          fullName: `${firstName} ${middleName} ${lastName}`.replace(/\s+/g, ' ').trim() || 'N/A',
+          fullName:
+            `${firstName} ${middleName} ${lastName}`
+              .replace(/\s+/g, " ")
+              .trim() || "N/A",
           ssn,
           phone,
           visaTitle,
           onboardingStatus: normalizeStatusValue(user.onboardingStatus),
           createdAt: user.createdAt,
-          application: application ? {
-            firstName: application.firstName,
-            lastName: application.lastName,
-            status: normalizeStatusValue(application.status),
-            submittedAt: application.submittedAt,
-            reviewedAt: application.reviewedAt
-          } : null
+          application: application
+            ? {
+                firstName: application.firstName,
+                lastName: application.lastName,
+                status: normalizeStatusValue(application.status),
+                submittedAt: application.submittedAt,
+                reviewedAt: application.reviewedAt,
+              }
+            : null,
         };
       }),
     );
@@ -509,14 +526,17 @@ export const getAllEmployees = async (req, res) => {
 
     const normalizedStatus = normalizeStatusKey(status);
 
-    if (status && normalizedStatus !== 'all') {
-      if (normalizedStatus === 'notstarted') {
+    if (status && normalizedStatus !== "all") {
+      if (normalizedStatus === "notstarted") {
         filteredEmployees = employeesWithDetails.filter(
-          emp => !emp.application || normalizeStatusKey(emp.onboardingStatus) === 'neversubmitted'
+          (emp) =>
+            !emp.application ||
+            normalizeStatusKey(emp.onboardingStatus) === "neversubmitted",
         );
       } else {
         filteredEmployees = employeesWithDetails.filter(
-          emp => normalizeStatusKey(emp.onboardingStatus) === normalizedStatus
+          (emp) =>
+            normalizeStatusKey(emp.onboardingStatus) === normalizedStatus,
         );
       }
     }
@@ -524,19 +544,23 @@ export const getAllEmployees = async (req, res) => {
     // Filter by search keyword if provided
     if (search && search.trim()) {
       const keyword = search.trim().toLowerCase();
-      filteredEmployees = filteredEmployees.filter(emp => {
-        const firstName = (emp.firstName || '').toLowerCase();
-        const lastName = (emp.lastName || '').toLowerCase();
-        const preferredName = (emp.preferredName || '').toLowerCase();
+      filteredEmployees = filteredEmployees.filter((emp) => {
+        const firstName = (emp.firstName || "").toLowerCase();
+        const lastName = (emp.lastName || "").toLowerCase();
+        const preferredName = (emp.preferredName || "").toLowerCase();
 
-        return firstName.includes(keyword) || lastName.includes(keyword) || preferredName.includes(keyword);
+        return (
+          firstName.includes(keyword) ||
+          lastName.includes(keyword) ||
+          preferredName.includes(keyword)
+        );
       });
     }
 
     // Sort by lastName alphabetically (A-Z)
-    filteredEmployees.sort((a,b) => {
-      const lastNameA = a.lastName.toLowerCase() || '';
-      const lastNameB = b.lastName.toLowerCase() || '';
+    filteredEmployees.sort((a, b) => {
+      const lastNameA = a.lastName.toLowerCase() || "";
+      const lastNameB = b.lastName.toLowerCase() || "";
       return lastNameA.localeCompare(lastNameB);
     });
 
@@ -596,8 +620,6 @@ export const getVisaStatusList = async (req, res) => {
   }
 };
 
-
-
 // ============================================
 // getEmployeeById:
 // Function: Get a single employee's application by userId
@@ -609,7 +631,9 @@ export const getEmployeeById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const user = await User.findById(id).select("username email role onboardingStatus");
+    const user = await User.findById(id).select(
+      "username email role onboardingStatus",
+    );
 
     if (!user) {
       return res.status(404).json({
@@ -622,13 +646,16 @@ export const getEmployeeById = async (req, res) => {
 
     res.status(200).json({
       application: application
-        ? { ...application.toObject(), status: normalizeStatusValue(application.status) }
+        ? {
+            ...application.toObject(),
+            status: normalizeStatusValue(application.status),
+          }
         : null,
       user: {
         ...user.toObject(),
         onboardingStatus: normalizeStatusValue(user.onboardingStatus),
       },
-      profile: profile ? profile.toObject() : null
+      profile: profile ? profile.toObject() : null,
     });
   } catch (err) {
     console.error("Get employee detail error:", err);
@@ -696,6 +723,38 @@ export const reviewVisaDocument = async (req, res) => {
   }
 };
 
+// ============================================
+// sendVisaStatusReminder:
+// Function: Sends an email reminder to employee about next step
+// Route: POST /api/hr/visa-status/:userId/notify
+// Body: { nextStep: string }
+// ============================================
+export const sendVisaStatusReminder = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { nextStep } = req.body || {};
+
+    const user = await User.findById(userId).select("email username");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const profile = await Profile.findOne({ user: userId }).select(
+      "firstName lastName preferredName",
+    );
+
+    const name =
+      `${profile?.preferredName || profile?.firstName || ""} ${profile?.lastName || ""}`.trim() ||
+      user.username ||
+      "";
+
+    await sendVisaStatusReminderEmail(user.email, name, String(nextStep || ""));
+
+    res.status(200).json({ message: "Notification sent" });
+  } catch (err) {
+    console.error("Send visa reminder error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
 export default {
   generateToken,
   getAllTokens,
@@ -706,4 +765,5 @@ export default {
   getEmployeeById,
   getVisaStatusList,
   reviewVisaDocument,
+  sendVisaStatusReminder,
 };

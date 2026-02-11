@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
-  Badge,
   Button,
   Card,
+  Grid,
   Space,
   Steps,
   Tag,
@@ -103,6 +103,9 @@ async function fetchFileBlob(urlOrPath) {
 }
 
 function VisaStatusManagementPage({ isOPTUser = true }) {
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+
   const [docs, setDocs] = useState({
     optReceipt: { status: "Not Uploaded", file: null, feedback: "" },
     optEad: { status: "locked", file: null, feedback: "" },
@@ -202,8 +205,19 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
 
   if (!isOPTUser) {
     return (
-      <div style={{ maxWidth: 1000, margin: "0 auto", padding: 24 }}>
-        <Title level={3}>Visa Status Management</Title>
+      <div
+        style={{
+          maxWidth: 1000,
+          margin: "0 auto",
+          padding: isMobile ? 16 : 24,
+        }}
+      >
+        <Title
+          level={3}
+          style={{ marginTop: 0, marginBottom: isMobile ? 8 : 12 }}
+        >
+          Visa Status Management
+        </Title>
         <Alert
           type="info"
           message="No work authorization documents required"
@@ -426,18 +440,8 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
       </Button>
     );
 
-    // I-983 模板下载（这里先放 placeholder，后续换成你真实文件 URL）
-    const i983Templates =
-      key === "i983" ? (
-        <Space>
-          <Button icon={<DownloadOutlined />}>Empty Template (PDF)</Button>
-          <Button icon={<DownloadOutlined />}>Sample Template (PDF)</Button>
-        </Space>
-      ) : null;
-
     return (
-      <Space wrap>
-        {i983Templates}
+      <Space wrap size={6}>
         {uploadBtn}
         {previewBtn}
         {downloadBtn}
@@ -446,17 +450,39 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
   };
 
   return (
-    <div style={{ maxWidth: 1000, margin: "0 auto", padding: 24 }}>
-      <Title level={3}>Visa Status Management</Title>
-      <Text type="secondary">
-        Track your OPT work authorization documents and complete the required
-        steps in order.
-      </Text>
+    <div
+      style={{
+        maxWidth: 1000,
+        margin: "0 auto",
+        padding: isMobile ? 16 : 24,
+      }}
+    >
+      <Title
+        level={3}
+        style={{ marginTop: 0, marginBottom: isMobile ? 8 : 12 }}
+      >
+        Visa Status Management
+      </Title>
+      <div style={{ marginBottom: 8 }}>
+        <Text
+          type="secondary"
+          style={{
+            display: "block",
+            margin: 0,
+            lineHeight: 1.4,
+            whiteSpace: "normal",
+          }}
+        >
+          Track your OPT work authorization documents and complete the required
+          steps in order.
+        </Text>
+      </div>
 
-      <Divider />
+      <Divider style={{ margin: isMobile ? "6px 0" : "12px 0" }} />
 
       <Steps
         current={currentStep}
+        size={isMobile ? "small" : "default"}
         items={[
           { title: "OPT Receipt" },
           { title: "OPT EAD" },
@@ -464,10 +490,11 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
           { title: "I-20" },
         ]}
       />
-
-      <Divider />
-
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Space
+        direction="vertical"
+        size={isMobile ? 8 : 12}
+        style={{ width: "100%" }}
+      >
         {[
           { key: "optReceipt", title: "OPT Receipt" },
           { key: "optEad", title: "OPT EAD" },
@@ -476,6 +503,7 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
         ].map((step) => (
           <Card
             key={step.key}
+            bodyStyle={{ padding: isMobile ? 16 : 24 }}
             title={
               <Space>
                 <Text strong>{step.title}</Text>
@@ -488,7 +516,9 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
             }
           >
             {renderMessage(step.key)}
-            <div style={{ marginTop: 12 }}>{renderActions(step.key)}</div>
+            <div style={{ marginTop: isMobile ? 4 : 6 }}>
+              {renderActions(step.key)}
+            </div>
           </Card>
         ))}
       </Space>

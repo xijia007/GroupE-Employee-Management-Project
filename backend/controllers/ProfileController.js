@@ -22,19 +22,23 @@ const getUserProfile = async (req, res) => {
     // Self-healing: If profile missing but user is approved, try to create it from application
     if (!profile) {
       console.log("Profile not found. Checking for approved application...");
-      // Dynamic import or ensure top-level import. Since we are in module, top-level is better, but local here is fine for now to avoid messing largely with top of file if not needed. 
-      // Actually, I'll use dynamic import to be safe with existing code structure or just rely on what I have? 
+      // Dynamic import or ensure top-level import. Since we are in module, top-level is better, but local here is fine for now to avoid messing largely with top of file if not needed.
+      // Actually, I'll use dynamic import to be safe with existing code structure or just rely on what I have?
       // The error was "OnboardingApplication is not defined".
       // I will import it here.
-      const OnboardingApplication = (await import("../models/OnboardingApplication.js")).default;
+      const OnboardingApplication = (
+        await import("../models/OnboardingApplication.js")
+      ).default;
       const User = (await import("../models/User.js")).default;
 
-      const application = await OnboardingApplication.findOne({ userId }).select("+ssn");
+      const application = await OnboardingApplication.findOne({
+        userId,
+      }).select("+ssn");
       // Note: User model might not be needed if we trust the token userId, but good for validation.
-      
+
       if (application && application.status === "Approved") {
         console.log("Found approved application. Auto-creating profile...");
-        
+
         const profileData = {
           user: userId,
           firstName: application.firstName,
@@ -73,16 +77,45 @@ const getUserProfile = async (req, res) => {
             driverLicense: application.documents?.driverLicense || "",
             workAuthorization: application.documents?.workAuthorization || "",
             other: application.documents?.other || "",
+            optReceipt: application.documents?.optReceipt || "",
           },
         };
 
         try {
-           profile = await Profile.create(profileData);
-           console.log("Profile auto-created successfully.");
+          profile = await Profile.create(profileData);
+          console.log("Profile auto-created successfully.");
         } catch (createErr) {
-           console.error("Auto-create profile failed:", createErr);
-           // Fall through to 404 if creation fails
+          console.error("Auto-create profile failed:", createErr);
+          // Fall through to 404 if creation fails
         }
+      }
+    }
+
+    // Self-healing: If profile exists but OPT receipt was uploaded during onboarding,
+    // copy it over so the visa status flow doesn't ask for a re-upload.
+    if (profile && !profile?.documents?.optReceipt) {
+      try {
+        const OnboardingApplication = (
+          await import("../models/OnboardingApplication.js")
+        ).default;
+
+        const application = await OnboardingApplication.findOne({
+          userId,
+        }).select("status documents.optReceipt");
+
+        const optReceipt = application?.documents?.optReceipt;
+        if (application?.status === "Approved" && optReceipt) {
+          profile = await Profile.findOneAndUpdate(
+            { user: new mongoose.Types.ObjectId(userId) },
+            { $set: { "documents.optReceipt": optReceipt } },
+            { new: true, runValidators: true },
+          ).select("+ssn");
+        }
+      } catch (syncErr) {
+        console.error(
+          "Failed to sync onboarding optReceipt to profile:",
+          syncErr,
+        );
       }
     }
 
@@ -102,13 +135,13 @@ const UpdateUserProfile = async (req, res) => {
   try {
     const userId = req.userId; // From verifyToken middleware
     const updateData = req.body;
-    
-    // Use $set to ensure fields are updated, and handle potential dot notation if needed by frontend, 
-    // though usually frontend sends object. 
+
+    // Use $set to ensure fields are updated, and handle potential dot notation if needed by frontend,
+    // though usually frontend sends object.
     // Explicitly using $set is safer to avoid accidental replacement of root document if something is malformed,
     // although Mongoose treats top-level keys as $set by default.
     // However, for consistency and ensuring we are doing an update:
-    
+
     const profile = await Profile.findOneAndUpdate(
       { user: new mongoose.Types.ObjectId(userId) },
       { $set: updateData },
@@ -118,7 +151,7 @@ const UpdateUserProfile = async (req, res) => {
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
     }
-    
+
     console.log("Profile updated successfully for user:", userId);
     res.status(200).json(profile);
   } catch (err) {

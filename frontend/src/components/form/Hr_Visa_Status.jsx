@@ -11,17 +11,16 @@ import {
   Avatar,
   Typography,
   Tooltip,
+  Grid,
   Dropdown,
-  Menu,
+  Divider,
+  message,
 } from "antd";
 import {
   SearchOutlined,
   EyeOutlined,
   CheckOutlined,
   CloseOutlined,
-  EditOutlined,
-  BellOutlined,
-  DownloadOutlined,
   EllipsisOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -302,13 +301,91 @@ async function fetchVisaList({ page, pageSize, filters }) {
   const startIdx = (page - 1) * pageSize;
   const paged = items.slice(startIdx, startIdx + pageSize);
 
-  return { items: paged, total };
+  // Return both paged rows (existing table) and the filtered full list (for In Progress)
+  return { items: paged, total, allItems: items };
+}
+
+function computeNextStep(profile) {
+  const docs = profile?.documents || {};
+  const visaDocs = profile?.visaDocuments || {};
+
+  // 1) If any uploaded doc is rejected, employee should re-upload that doc.
+  const rejected = DOCS.find((d) => {
+    if (!docs[d.key]) return false;
+    const st = String(visaDocs?.[d.key]?.status || "").toLowerCase();
+    return st === "rejected";
+  });
+  if (rejected) {
+    return {
+      type: "employee_upload",
+      docType: rejected.key,
+      label: `Re-upload ${rejected.label}`,
+    };
+  }
+
+  // 2) If an uploaded doc is pending review, next step is waiting HR approval.
+  const pending = DOCS.find((d) => {
+    if (!docs[d.key]) return false;
+    const st = String(visaDocs?.[d.key]?.status || "").toLowerCase();
+    return !st || st === "pending" || st === "locked" || st === "not uploaded";
+  });
+  if (pending) {
+    return {
+      type: "waiting_hr",
+      docType: pending.key,
+      label: `Wait for HR approval: ${pending.label}`,
+    };
+  }
+
+  // 3) Otherwise, determine next required upload based on approvals in sequence.
+  for (let i = 0; i < DOCS.length; i++) {
+    const current = DOCS[i];
+    const previous = i > 0 ? DOCS[i - 1] : null;
+
+    if (!docs[current.key]) {
+      if (!previous) {
+        return {
+          type: "employee_upload",
+          docType: current.key,
+          label: `Upload ${current.label}`,
+        };
+      }
+
+      const prevStatus = String(
+        visaDocs?.[previous.key]?.status || "",
+      ).toLowerCase();
+      if (prevStatus === "approved") {
+        return {
+          type: "employee_upload",
+          docType: current.key,
+          label: `Upload ${current.label}`,
+        };
+      }
+
+      return {
+        type: "employee_upload",
+        docType: previous.key,
+        label: `Complete previous step: ${previous.label}`,
+      };
+    }
+  }
+
+  if (allDocumentsApproved(profile)) {
+    return { type: "done", label: "All documents approved" };
+  }
+
+  return { type: "unknown", label: "—" };
 }
 
 export default function HrVisaStatusPage() {
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
+  const [allRows, setAllRows] = useState([]);
   const [total, setTotal] = useState(0);
+  const [notifyLoading, setNotifyLoading] = useState({});
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -332,6 +409,7 @@ export default function HrVisaStatusPage() {
           filters: nextFilters,
         });
         setRows(res.items || []);
+        setAllRows(res.allItems || []);
         setTotal(res.total || 0);
       } finally {
         setLoading(false);
@@ -370,12 +448,34 @@ export default function HrVisaStatusPage() {
     }
   }, []);
 
+  const handleSendNotification = React.useCallback(async (r) => {
+    const userId = r?.userId;
+    if (!userId) return;
+
+    const next = computeNextStep(r?.profile);
+    if (next?.type !== "employee_upload") return;
+
+    setNotifyLoading((p) => ({ ...p, [userId]: true }));
+    try {
+      await api.post(`/hr/visa-status/${userId}/notify`, {
+        nextStep: next.label,
+      });
+      message.success("Notification sent");
+    } catch (e) {
+      console.error("Failed to send notification", e);
+      message.error("Failed to send notification");
+    } finally {
+      setNotifyLoading((p) => ({ ...p, [userId]: false }));
+    }
+  }, []);
+
   const columns = useMemo(() => {
     return [
       {
         title: "Name",
         dataIndex: "name",
         key: "name",
+        width: 220,
         render: (_, r) => {
           const fullName =
             `${r.firstName || ""} ${r.lastName || ""}`.trim() || "—";
@@ -398,6 +498,8 @@ export default function HrVisaStatusPage() {
         title: "Email",
         dataIndex: "email",
         key: "email",
+        width: 240,
+        ellipsis: true,
         render: (v) => <Text>{v || "—"}</Text>,
       },
       {
@@ -405,42 +507,50 @@ export default function HrVisaStatusPage() {
         dataIndex: "createdAt",
         key: "createdAt",
         sorter: true,
+        width: 140,
         render: (v) => (v ? dayjs(v).format("DD/MM/YYYY") : "—"),
       },
       {
         title: "Role",
         dataIndex: "role",
         key: "role",
+        width: 110,
         render: (v) => roleTag(v),
       },
       {
         title: "Visa Type",
         dataIndex: "visaTitle",
         key: "visaTitle",
+        width: 140,
         render: (v) => visaTypeTag(v),
       },
       {
         title: "Visa Start",
         dataIndex: "visaStartDate",
         key: "visaStartDate",
+        width: 140,
         render: (v) => (v ? dayjs(v).format("DD/MM/YYYY") : "—"),
       },
       {
         title: "Visa End",
         dataIndex: "visaEndDate",
         key: "visaEndDate",
+        width: 140,
         render: (v) => (v ? dayjs(v).format("DD/MM/YYYY") : "—"),
       },
       {
         title: "Days Left",
         dataIndex: "visaEndDate",
         key: "daysLeft",
+        width: 110,
         render: (v) => daysLeftTag(v),
       },
       {
         title: "Current Status File",
         dataIndex: "currStatusDoc",
         key: "currStatusFile",
+        width: 190,
+        ellipsis: true,
         render: (v) => {
           const label = v?.label || "—";
           if (label === "—") return <Text type="secondary">{label}</Text>;
@@ -451,17 +561,19 @@ export default function HrVisaStatusPage() {
         title: "Status",
         dataIndex: "status",
         key: "status",
+        width: 170,
         render: (_, r) =>
           r.allDocsApproved ? (
             <Tag color="green">All Documents Approved</Tag>
           ) : (
-            statusTag(r.status)
+            <Tag color="blue">In Progress</Tag>
           ),
       },
       {
         title: "",
         key: "actions",
         align: "right",
+        width: 110,
         render: (_, r) => {
           const profile = r.profile || {};
           const docs = profile.documents || {};
@@ -531,56 +643,6 @@ export default function HrVisaStatusPage() {
             <Space>
               <Tooltip
                 title={
-                  currentPendingDocType
-                    ? `Approve ${DOCS.find((d) => d.key === currentPendingDocType)?.label || ""}`
-                    : "No pending document"
-                }
-              >
-                <Button
-                  type="primary"
-                  icon={<CheckOutlined />}
-                  disabled={!currentPendingDocType}
-                  onClick={async () => {
-                    if (!currentPendingDocType) return;
-                    await handleReview({
-                      userId: r.userId,
-                      docType: currentPendingDocType,
-                      status: "approved",
-                      feedback: "",
-                    });
-                  }}
-                />
-              </Tooltip>
-
-              <Tooltip
-                title={
-                  currentPendingDocType
-                    ? `Reject ${DOCS.find((d) => d.key === currentPendingDocType)?.label || ""}`
-                    : "No pending document"
-                }
-              >
-                <Button
-                  danger
-                  icon={<CloseOutlined />}
-                  disabled={!currentPendingDocType}
-                  onClick={async () => {
-                    if (!currentPendingDocType) return;
-                    const feedback =
-                      window.prompt("Rejection feedback (required):", "") || "";
-                    if (!String(feedback).trim()) return;
-
-                    await handleReview({
-                      userId: r.userId,
-                      docType: currentPendingDocType,
-                      status: "rejected",
-                      feedback,
-                    });
-                  }}
-                />
-              </Tooltip>
-
-              <Tooltip
-                title={
                   reviewDocType
                     ? `Review ${DOCS.find((d) => d.key === reviewDocType)?.label || ""}`
                     : "No document to review"
@@ -605,7 +667,258 @@ export default function HrVisaStatusPage() {
         },
       },
     ];
-  }, [handlePreview, handleReview]);
+  }, [handlePreview]);
+
+  const inProgressRows = useMemo(() => {
+    return (allRows || [])
+      .filter((r) => !r.allDocsApproved)
+      .map((r) => ({ ...r, nextStep: computeNextStep(r.profile) }));
+  }, [allRows]);
+
+  const inProgressColumns = useMemo(() => {
+    return [
+      {
+        title: "Name (legal full name)",
+        key: "name",
+        width: 240,
+        render: (_, r) => {
+          const fullName =
+            `${r.firstName || ""} ${r.lastName || ""}`.trim() || "—";
+          return (
+            <Space>
+              <Avatar src={r.avatarUrl} alt={fullName}>
+                {fullName?.[0] || "U"}
+              </Avatar>
+              <div style={{ lineHeight: 1.1 }}>
+                <div style={{ fontWeight: 600 }}>{fullName}</div>
+              </div>
+            </Space>
+          );
+        },
+      },
+      {
+        title: "Work Authorization",
+        key: "workAuth",
+        width: 220,
+        render: (_, r) => (
+          <div style={{ lineHeight: 1.2 }}>
+            <div>{visaTypeTag(r.visaTitle)}</div>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {(r.visaStartDate
+                ? dayjs(r.visaStartDate).format("DD/MM/YYYY")
+                : "—") +
+                " - " +
+                (r.visaEndDate
+                  ? dayjs(r.visaEndDate).format("DD/MM/YYYY")
+                  : "—")}
+            </Text>
+          </div>
+        ),
+      },
+      {
+        title: "Number of Days Remaining",
+        dataIndex: "visaEndDate",
+        key: "daysRemaining",
+        width: 200,
+        render: (v) => daysLeftTag(v),
+      },
+      {
+        title: "Next steps",
+        key: "nextSteps",
+        width: 380,
+        render: (_, r) => <Text>{r?.nextStep?.label || "—"}</Text>,
+      },
+      {
+        title: "Action",
+        key: "action",
+        width: 520,
+        render: (_, r) => {
+          const profile = r.profile || {};
+          const docs = profile.documents || {};
+          const visaDocs = profile.visaDocuments || {};
+
+          const currentPendingDocType = DOCS.find((d) => {
+            if (!docs[d.key]) return false;
+            const st = String(visaDocs?.[d.key]?.status || "").toLowerCase();
+            return !st || st === "pending" || st === "locked";
+          })?.key;
+
+          if (currentPendingDocType) {
+            const pendingDocPath = docs?.[currentPendingDocType];
+            const pendingDocLabel =
+              DOCS.find((d) => d.key === currentPendingDocType)?.label ||
+              currentPendingDocType;
+
+            return (
+              <Space
+                wrap
+                size={isMobile ? 6 : 8}
+                align={isMobile ? "start" : "center"}
+              >
+                {statusTag(r.status)}
+                <Tooltip
+                  title={
+                    currentPendingDocType
+                      ? `Approve ${DOCS.find((d) => d.key === currentPendingDocType)?.label || ""}`
+                      : "No pending document"
+                  }
+                >
+                  <Button
+                    type="primary"
+                    size={isMobile ? "small" : "middle"}
+                    icon={<CheckOutlined />}
+                    onClick={async () => {
+                      await handleReview({
+                        userId: r.userId,
+                        docType: currentPendingDocType,
+                        status: "approved",
+                        feedback: "",
+                      });
+                    }}
+                  />
+                </Tooltip>
+
+                <Tooltip
+                  title={
+                    currentPendingDocType
+                      ? `Reject ${DOCS.find((d) => d.key === currentPendingDocType)?.label || ""}`
+                      : "No pending document"
+                  }
+                >
+                  <Button
+                    danger
+                    size={isMobile ? "small" : "middle"}
+                    icon={<CloseOutlined />}
+                    onClick={async () => {
+                      const feedback =
+                        window.prompt("Rejection feedback (required):", "") ||
+                        "";
+                      if (!String(feedback).trim()) return;
+                      await handleReview({
+                        userId: r.userId,
+                        docType: currentPendingDocType,
+                        status: "rejected",
+                        feedback,
+                      });
+                    }}
+                  />
+                </Tooltip>
+
+                <Tooltip
+                  title={
+                    pendingDocPath
+                      ? `Preview ${pendingDocLabel}`
+                      : "No document to preview"
+                  }
+                >
+                  <Button
+                    icon={<EyeOutlined />}
+                    size={isMobile ? "small" : "middle"}
+                    disabled={!pendingDocPath}
+                    onClick={() => handlePreview(pendingDocPath)}
+                  />
+                </Tooltip>
+              </Space>
+            );
+          }
+
+          const next = r?.nextStep;
+
+          if (next?.type === "waiting_hr") {
+            const docType = next.docType;
+            const docPath = docs?.[docType];
+            const docLabel =
+              DOCS.find((d) => d.key === docType)?.label || docType;
+
+            return (
+              <Space
+                wrap
+                size={isMobile ? 6 : 8}
+                align={isMobile ? "start" : "center"}
+              >
+                {statusTag(r.status)}
+                <Tooltip
+                  title={
+                    docPath ? `Preview ${docLabel}` : "No document to preview"
+                  }
+                >
+                  <Button
+                    icon={<EyeOutlined />}
+                    size={isMobile ? "small" : "middle"}
+                    disabled={!docPath}
+                    onClick={() => handlePreview(docPath)}
+                  >
+                    {isMobile ? null : `Preview ${docLabel}`}
+                  </Button>
+                </Tooltip>
+
+                <Tooltip title={`Approve ${docLabel}`}>
+                  <Button
+                    type="primary"
+                    icon={<CheckOutlined />}
+                    size={isMobile ? "small" : "middle"}
+                    onClick={async () => {
+                      await handleReview({
+                        userId: r.userId,
+                        docType,
+                        status: "approved",
+                        feedback: "",
+                      });
+                    }}
+                  >
+                    {isMobile ? null : "Approve"}
+                  </Button>
+                </Tooltip>
+
+                <Tooltip title={`Reject ${docLabel}`}>
+                  <Button
+                    danger
+                    icon={<CloseOutlined />}
+                    size={isMobile ? "small" : "middle"}
+                    onClick={async () => {
+                      const feedback =
+                        window.prompt("Rejection feedback (required):", "") ||
+                        "";
+                      if (!String(feedback).trim()) return;
+                      await handleReview({
+                        userId: r.userId,
+                        docType,
+                        status: "rejected",
+                        feedback,
+                      });
+                    }}
+                  >
+                    {isMobile ? null : "Reject"}
+                  </Button>
+                </Tooltip>
+              </Space>
+            );
+          }
+
+          if (next?.type === "employee_upload") {
+            return (
+              <Space align="center">
+                <Button
+                  onClick={() => handleSendNotification(r)}
+                  loading={!!notifyLoading?.[r.userId]}
+                >
+                  Send Notification
+                </Button>
+              </Space>
+            );
+          }
+
+          return <Text type="secondary">—</Text>;
+        },
+      },
+    ];
+  }, [
+    handlePreview,
+    handleReview,
+    handleSendNotification,
+    isMobile,
+    notifyLoading,
+  ]);
 
   // initial load (simple; if you prefer useEffect, add it)
   React.useEffect(() => {
@@ -672,7 +985,7 @@ export default function HrVisaStatusPage() {
 
         <Input
           allowClear
-          style={{ width: 280 }}
+          style={{ width: isMobile ? "100%" : 280 }}
           prefix={<SearchOutlined />}
           placeholder="Search name or email"
           value={filters.search}
@@ -684,25 +997,47 @@ export default function HrVisaStatusPage() {
       </div>
 
       {/* Table */}
-      <Table
-        rowKey={(r) => r._id || r.userId}
-        loading={loading}
-        columns={columns}
-        dataSource={rows}
-        pagination={{
-          current: page,
-          pageSize,
-          total,
-          showSizeChanger: true,
-          pageSizeOptions: [10, 20, 50],
-          showTotal: (t) => `Showing ${rows.length} of ${t} entries`,
-          onChange: async (p, ps) => {
-            setPage(p);
-            setPageSize(ps);
-            await load(p, ps, filters);
-          },
-        }}
-      />
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <Table
+          rowKey={(r) => r._id || r.userId}
+          loading={loading}
+          size={isMobile ? "small" : "middle"}
+          columns={columns}
+          dataSource={rows}
+          scroll={{ x: "max-content" }}
+          pagination={{
+            current: page,
+            pageSize,
+            total,
+            showSizeChanger: true,
+            pageSizeOptions: [10, 20, 50],
+            showTotal: (t) => `Showing ${rows.length} of ${t} entries`,
+            onChange: async (p, ps) => {
+              setPage(p);
+              setPageSize(ps);
+              await load(p, ps, filters);
+            },
+          }}
+        />
+      </div>
+
+      <Divider style={{ margin: "12px 0" }} />
+
+      {/* In Progress List (minimal add) */}
+      <div>
+        <div style={{ fontWeight: 700, marginBottom: 8 }}>In Progress</div>
+        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <Table
+            rowKey={(r) => r._id || r.userId}
+            size="small"
+            loading={loading}
+            columns={inProgressColumns}
+            dataSource={inProgressRows}
+            scroll={{ x: "max-content" }}
+            pagination={false}
+          />
+        </div>
+      </div>
     </Card>
   );
 }

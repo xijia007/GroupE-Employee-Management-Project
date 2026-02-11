@@ -44,7 +44,11 @@ export default function NameSection({ sectionButtonProps }) {
       <Form.Item label="Name" style={{ marginBottom: 24 }}>
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="firstName" style={{ marginBottom: 0 }}>
+            <Form.Item
+              name="firstName"
+              rules={[{ required: true, message: "First name is required" }]}
+              style={{ marginBottom: 0 }}
+            >
               <Input placeholder="First Name" disabled={!isEditing} />
             </Form.Item>
           </Col>
@@ -56,7 +60,11 @@ export default function NameSection({ sectionButtonProps }) {
           </Col>
 
           <Col span={8}>
-            <Form.Item name="lastName" style={{ marginBottom: 0 }}>
+            <Form.Item
+              name="lastName"
+              rules={[{ required: true, message: "Last name is required" }]}
+              style={{ marginBottom: 0 }}
+            >
               <Input placeholder="Last Name" disabled={!isEditing} />
             </Form.Item>
           </Col>
@@ -75,15 +83,32 @@ export default function NameSection({ sectionButtonProps }) {
         <Input placeholder="http://" disabled={!isEditing} />
       </Form.Item>
 
-      <Form.Item name="email" label="Email">
+      <Form.Item
+        name="email"
+        label="Email"
+        rules={[
+          { required: true, message: "Email is required" },
+          { type: "email", message: "Please enter a valid email" },
+        ]}
+      >
         <Input disabled={!isEditing} />
       </Form.Item>
 
       <Form.Item label="Social Security Number">
         <Row gutter={16}>
           <Col span={16}>
-            <Form.Item name="ssn" noStyle>
-              <Input placeholder="SSN" disabled={!isEditing} />
+            <Form.Item
+              name="ssn"
+              rules={[
+                { required: true, message: "SSN is required" },
+                {
+                  pattern: /^\d{3}-\d{2}-\d{4}$/,
+                  message: "Format: XXX-XX-XXXX",
+                },
+              ]}
+              style={{ marginBottom: 0 }}
+            >
+              <Input placeholder="XXX-XX-XXXX" disabled={!isEditing} />
             </Form.Item>
           </Col>
         </Row>
@@ -101,7 +126,11 @@ export default function NameSection({ sectionButtonProps }) {
       <Form.Item label="Gender">
         <Row gutter={16}>
           <Col span={8}>
-            <Form.Item name="gender" noStyle>
+            <Form.Item
+              name="gender"
+              noStyle
+              rules={[{ required: true, message: "Gender is required" }]}
+            >
               <Select
                 disabled={!isEditing}
                 options={[

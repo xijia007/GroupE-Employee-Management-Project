@@ -9,6 +9,6 @@ const footerStyle = {
 };
 
 function FooterComponent() {
-  return <Footer style={footerStyle}>Footer</Footer>;
+  return <Footer style={footerStyle}>Zhenjia Li & Xi Jia ©2024</Footer>;
 }
 export default FooterComponent;

@@ -63,6 +63,7 @@ export default function EmergencySection({ sectionButtonProps }) {
               <Col span={8}>
                 <Form.Item
                   name={["emergencyContacts", 0, "firstName"]}
+                  rules={[{ required: true, message: "First name required" }]}
                   style={{ marginBottom: 16 }}
                 >
                   <Input
@@ -89,6 +90,7 @@ export default function EmergencySection({ sectionButtonProps }) {
               <Col span={8}>
                 <Form.Item
                   name={["emergencyContacts", 0, "lastName"]}
+                  rules={[{ required: true, message: "Last name required" }]}
                   style={{ marginBottom: 16 }}
                 >
                   <Input
@@ -105,6 +107,7 @@ export default function EmergencySection({ sectionButtonProps }) {
               <Col span={8}>
                 <Form.Item
                   name={["emergencyContacts", 0, "relationship"]}
+                  rules={[{ required: true, message: "Relationship required" }]}
                   style={{ marginBottom: 0 }}
                 >
                   <Input
@@ -118,6 +121,13 @@ export default function EmergencySection({ sectionButtonProps }) {
               <Col span={8}>
                 <Form.Item
                   name={["emergencyContacts", 0, "phone"]}
+                  rules={[
+                    { required: true, message: "Phone required" },
+                    {
+                      pattern: /^\d{3}-\d{3}-\d{4}$/,
+                      message: "Format: XXX-XXX-XXXX",
+                    },
+                  ]}
                   style={{ marginBottom: 0 }}
                 >
                   <Input
@@ -131,7 +141,10 @@ export default function EmergencySection({ sectionButtonProps }) {
               <Col span={8}>
                 <Form.Item
                   name={["emergencyContacts", 0, "email"]}
-                  rules={[{ type: "email", message: "Invalid email" }]}
+                  rules={[
+                    { required: true, message: "Email required" },
+                    { type: "email", message: "Invalid email" },
+                  ]}
                   style={{ marginBottom: 0 }}
                 >
                   <Input

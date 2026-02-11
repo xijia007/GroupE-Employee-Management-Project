@@ -32,6 +32,13 @@ export default function ContactSection({ sectionButtonProps }) {
           <Col span={12}>
             <Form.Item
               name={["contactInfo", "cellPhone"]}
+              rules={[
+                { required: true, message: "Cell phone is required" },
+                {
+                  pattern: /^\d{3}-\d{3}-\d{4}$/,
+                  message: "Format: XXX-XXX-XXXX",
+                },
+              ]}
               style={{ marginBottom: 0 }}
             >
               <Input placeholder="Cell Phone" disabled={!isEditing} />
@@ -40,6 +47,12 @@ export default function ContactSection({ sectionButtonProps }) {
           <Col span={12}>
             <Form.Item
               name={["contactInfo", "workPhone"]}
+              rules={[
+                {
+                  pattern: /^\d{3}-\d{3}-\d{4}$/,
+                  message: "Format: XXX-XXX-XXXX",
+                },
+              ]}
               style={{ marginBottom: 0 }}
             >
               <Input placeholder="Work Phone" disabled={!isEditing} />
