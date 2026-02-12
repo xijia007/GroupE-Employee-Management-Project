@@ -41,13 +41,12 @@ function OnboardingForm({
     driverLicense: [],
     workAuthorization: [],
     other: [],
-    profilePicture: [],
     optReceipt: [],
   });
 
-  const [profileType, setProfileType] = useState("default"); // 'default' or 'upload'
 
-  const profileUrl = Form.useWatch("profilePicture", form);
+
+
   const isUSResident = Form.useWatch("isUSResident", form);
   const workAuthType = Form.useWatch("workAuthType", form);
   const IsReference = Form.useWatch("IsReference", form);
@@ -132,7 +131,6 @@ function OnboardingForm({
           // Skip, handled by logic below
         } else if (
           key !== "size" &&
-          key !== "profilePicture" &&
           key !== "optReceipt" &&
           key !== "IsReference"
         ) {
@@ -178,18 +176,7 @@ function OnboardingForm({
         formData.append("optReceipt", fileList.optReceipt[0].originFileObj);
       }
 
-      if (
-        profileType === "upload" &&
-        fileList.profilePicture &&
-        fileList.profilePicture.length > 0
-      ) {
-        formData.append(
-          "profilePicture",
-          fileList.profilePicture[0].originFileObj,
-        );
-      } else if (profileType === "default" && values.profilePicture) {
-        formData.append("profilePicture", values.profilePicture);
-      }
+
 
       if (onSubmit) {
         await onSubmit(formData);
@@ -273,114 +260,7 @@ function OnboardingForm({
           <Input placeholder="Optional" />
         </Form.Item>
 
-        <Form.Item label="Profile Picture" style={{ marginBottom: 24 }}>
-          <div
-            style={{
-              background: "#f9f9f9",
-              padding: "20px",
-              borderRadius: "8px",
-              border: "1px solid #eee",
-            }}
-          >
-            <Radio.Group
-              value={profileType}
-              onChange={(e) => {
-                setProfileType(e.target.value);
-                form.setFieldsValue({ profilePicture: null });
-                setFileList((prev) => ({ ...prev, profilePicture: [] }));
-              }}
-              style={{ marginBottom: 16, display: "flex", gap: "20px" }}
-            >
-              <Radio value="default">Choose from Defaults</Radio>
-              <Radio value="upload">Upload Custom Photo</Radio>
-            </Radio.Group>
 
-            {profileType === "default" ? (
-              <Form.Item name="profilePicture" noStyle>
-                <Radio.Group style={{ width: "100%" }}>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fill, minmax(80px, 1fr))",
-                      gap: "12px",
-                    }}
-                  >
-                    {[
-                      "https://cdn-icons-png.flaticon.com/512/4140/4140048.png",
-                      "https://cdn-icons-png.flaticon.com/512/4140/4140047.png",
-                      "https://cdn-icons-png.flaticon.com/512/4140/4140037.png",
-                      "https://cdn-icons-png.flaticon.com/512/4140/4140051.png",
-                      "https://cdn-icons-png.flaticon.com/512/4140/4140040.png",
-                      "https://cdn-icons-png.flaticon.com/512/4140/4140052.png",
-                      "https://cdn-icons-png.flaticon.com/512/4140/4140046.png",
-                      "https://cdn-icons-png.flaticon.com/512/4140/4140039.png",
-                      "https://cdn-icons-png.flaticon.com/512/6858/6858504.png",
-                      "https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png",
-                    ].map((url, index) => (
-                      <label
-                        key={index}
-                        style={{ cursor: "pointer", textAlign: "center" }}
-                      >
-                        <Radio value={url} style={{ display: "none" }} />
-                        <div
-                          style={{
-                            border:
-                              profileUrl === url
-                                ? "2px solid #1890ff"
-                                : "2px solid transparent",
-                            borderRadius: "50%",
-                            padding: "2px",
-                            transition: "all 0.3s",
-                          }}
-                        >
-                          <img
-                            src={url}
-                            alt={`Avatar ${index + 1}`}
-                            style={{
-                              width: "100%",
-                              borderRadius: "50%",
-                              opacity: profileUrl === url ? 1 : 0.7,
-                              transform:
-                                profileUrl === url ? "scale(1.05)" : "scale(1)",
-                            }}
-                          />
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </Radio.Group>
-              </Form.Item>
-            ) : (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "20px",
-                  background: "#fff",
-                  borderRadius: "8px",
-                  border: "1px dashed #d9d9d9",
-                }}
-              >
-                <Upload
-                  fileList={fileList.profilePicture}
-                  beforeUpload={beforeUpload}
-                  onChange={handleFileChange("profilePicture")}
-                  maxCount={1}
-                  listType="picture-card"
-                  accept="image/*"
-                  showUploadList={{ showPreviewIcon: false }}
-                >
-                  {fileList.profilePicture.length >= 1 ? null : (
-                    <div>
-                      <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>Upload</div>
-                    </div>
-                  )}
-                </Upload>
-              </div>
-            )}
-          </div>
-        </Form.Item>
 
         <Row gutter={24}>
           <Col span={12}>

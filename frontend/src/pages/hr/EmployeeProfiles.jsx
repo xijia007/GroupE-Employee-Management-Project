@@ -80,23 +80,23 @@ function EmployeeProfilesPage() {
       pending: 0,
       approved: 0,
       rejected: 0,
-      notStarted: 0,
     };
     employees.forEach((emp) => {
-      switch (normalizeStatus(emp.onboardingStatus)) {
-        case 'pending':
+      const authTitle = emp.workAuthorizationTitle;
+      
+      // Pending: Form Pending OR Visa Pending
+      if (authTitle === 'Onboarding Review Needed' || authTitle === 'Visa Status Management') {
           counts.pending++;
-          break;
-        case 'approved':
+      }
+      
+      // Approved: Must be fully Active
+      if (authTitle === 'Active' || authTitle === 'Active (Citizen/GC)') {
           counts.approved++;
-          break;
-        case 'rejected':
+      }
+      
+      // Rejected
+      if (authTitle === 'Onboarding Rejected') {
           counts.rejected++;
-          break;
-        case 'notstarted':
-        case 'neversubmitted':
-          counts.notStarted++;
-          break;
       }
     });
     return counts;
@@ -141,9 +141,9 @@ function EmployeeProfilesPage() {
         if (ssn && ssn !== 'N/A' && ssn.length >= 4) {
           return `XXX-XX-${ssn.slice(-4)}`;
         }
-        return <Text type="secondary">{ssn}</Text>;
       },
     },
+
     {
       title: 'Work Authorization',
       dataIndex: 'visaTitle',
@@ -161,55 +161,7 @@ function EmployeeProfilesPage() {
       dataIndex: 'email',
       key: 'email',
     },
-    {
-      title: 'Onboarding Status',
-      dataIndex: 'onboardingStatus',
-      key: 'onboardingStatus',
-      render: (status) => {
-        let color = 'default';
-        let text = status || 'N/A';
 
-        switch (normalizeStatus(status)) {
-          case 'pending':
-            color = 'orange';
-            text = 'Under Review';
-            break;
-          case 'approved':
-            color = 'green';
-            text = 'Approved';
-            break;          
-          case 'rejected':
-            color = 'red';
-            text = 'Rejected';
-            break;          
-          case 'notstarted':
-          case 'neversubmitted':
-            color = 'gray';
-            text = 'Not Started';
-            break;  
-          default:
-            color = 'default';       
-        }
-
-        return <Tag color={color}>{text}</Tag>
-      }
-    },
-    {
-      title: 'Submitted At',
-      key: 'submittedAt',
-      render: (_, record) => {
-        if (record.application?.submittedAt) {
-          return new Date(record.application.submittedAt).toLocaleDateString();
-        }
-        return <Text type='secondary'>-</Text>
-      },
-    },
-    {
-      title: 'Registered At',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date) => new Date(date).toLocaleDateString(),
-    },
   ];
 
   // Render search results status
@@ -284,7 +236,7 @@ function EmployeeProfilesPage() {
       </div>
       {/* Statistics Cards */}
       <Row gutter={[16, 16]} style={{ marginTop: 16, marginBottom: 16 }}>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8}>
           <Card>
             <Statistic
               title="Total Employees"
@@ -293,7 +245,7 @@ function EmployeeProfilesPage() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8}>
           <Card>
             <Statistic
               title="Pending Review"
@@ -302,21 +254,12 @@ function EmployeeProfilesPage() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8}>
           <Card>
             <Statistic
               title="Approved"
               value={statusCounts.approved}
               valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Not Started"
-              value={statusCounts.notStarted}
-              valueStyle={{ color: '#8c8c8c' }}
             />
           </Card>
         </Col>

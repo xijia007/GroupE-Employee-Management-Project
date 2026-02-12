@@ -102,11 +102,24 @@ const HiringManagement = () => {
             key: 'name',
         },
         {
+            title: 'Status',
+            key: 'status',
+            render: (_, record) => {
+                const info = getTokenStatusInfo(record);
+                return <Tag color={info.color}>{info.text}</Tag>;
+            }
+        },
+        {
             title: 'Registration Link',
             dataIndex: 'registrationLink',
             key: 'registrationLink',
-            render: (link) => (
-                link ? (
+            render: (link, record) => {
+                const info = getTokenStatusInfo(record);
+                // Only show link if not expired and not submitted (or maybe HR wants to see it anyway? User said "History", usually link implies usability)
+                // Let's keep showing it but visual cue it might be useless if expired
+                if (!link) return '-';
+                
+                return (
                     <Tooltip title="Copy link">
                         <Button
                             type="link"
@@ -115,28 +128,20 @@ const HiringManagement = () => {
                                 await navigator.clipboard.writeText(link);
                                 message.success('Registration link copied');
                             }}
+                            disabled={info.text === 'Expired' || info.text ==='Submitted'} // Optional: disable copy if expired? No, requirements say "show link", let's keep it copyable just in case.
+                            style={{ color: info.text === 'Expired' ? 'gray' : undefined }}
                         >
                             Copy
                         </Button>
                     </Tooltip>
-                ) : '-'
-            )
-        },
-        {
-            title: 'Onboarding Submitted',
-            dataIndex: 'onboardingSubmitted',
-            key: 'onboardingSubmitted',
-            render: (submitted) => (
-                <Tag color={tokenSubmittedColor(submitted)}>
-                    {submitted ? 'Submitted' : 'Not Submitted'}
-                </Tag>
-            )
+                );
+            }
         },
         {
             title: 'Expires At',
             dataIndex: 'expiresAt',
             key: 'expiresAt',
-            render: (date) => new Date(date).toLocaleDateString()
+            render: (date) => new Date(date).toLocaleString()
         },
         {
             title: 'Created At',
@@ -146,7 +151,22 @@ const HiringManagement = () => {
         },
     ];
 
-    const tokenSubmittedColor = (submitted) => (submitted ? 'green' : 'default');
+    const getTokenStatusInfo = (record) => {
+        const now = new Date();
+        const expiresAt = new Date(record.expiresAt);
+        // Add a small buffer or strict comparison. 
+        // Note: record.expiresAt from DB is ISO string.
+        const isExpired = now > expiresAt;
+
+        // Check explicit status first if available, otherwise infer
+        if (record.status === 'Submitted' || record.onboardingSubmitted) {
+            return { text: 'Submitted', color: 'green' };
+        }
+        if (isExpired) {
+            return { text: 'Expired', color: 'red' };
+        }
+        return { text: 'Sent (Active)', color: 'blue' };
+    };
 
     const applicationColumns = [
         {
