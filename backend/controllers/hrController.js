@@ -385,6 +385,17 @@ export const reviewApplication = async (req, res) => {
             other: application.documents?.other || "",
             optReceipt: application.documents?.optReceipt || "",
           },
+          
+          // Initialize Visa Document Status if OPT Receipt is provided
+          ...(application.documents?.optReceipt ? {
+            visaDocuments: {
+              optReceipt: {
+                status: "pending", // Set as pending so HR can review in Visa Management
+                reviewedAt: null,
+                feedback: ""
+              }
+            }
+          } : {}),
         };
 
         // Upsert Profile: update if exists, create if not
@@ -502,11 +513,24 @@ export const getAllEmployees = async (req, res) => {
           fullName:
             `${firstName} ${middleName} ${lastName}`
               .replace(/\s+/g, " ")
-              .trim() || "N/A",
+              .trim() || "N/A", // Reverted: Only show real name or N/A
           ssn,
           phone,
           visaTitle,
           onboardingStatus: normalizeStatusValue(user.onboardingStatus),
+          workAuthorizationTitle: (() => {
+               const status = normalizeStatusValue(user.onboardingStatus);
+               if (status === 'Pending') return 'Onboarding Review Needed';
+               if (status === 'Rejected') return 'Onboarding Rejected';
+               if (status === 'Not Started' || status === 'Never Submitted') return 'Not Started';
+               if (status === 'Approved') {
+                   // Check Visa Type
+                   if (visaTitle === 'US Citizen' || visaTitle === 'Green Card') return 'Active (Citizen/GC)';
+                   if (visaTitle && (visaTitle.startsWith('F1') || visaTitle === 'H1-B' || visaTitle === 'L2' || visaTitle === 'H4' || visaTitle === 'Other')) return 'Visa Status Management';
+                   return 'Active';
+               }
+               return 'Unknown';
+          })(),
           createdAt: user.createdAt,
           application: application
             ? {
