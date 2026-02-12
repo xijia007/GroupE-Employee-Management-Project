@@ -12,6 +12,7 @@ import {
 } from "antd";
 import { DownloadOutlined, EyeOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { selectUser } from "../features/auth/authSlice";
 import api from "../services/api";
 import dayjs from "dayjs";
@@ -45,10 +46,17 @@ const statusToStep = {
 
 function OnboardingApplication() {
   const user = useSelector(selectUser);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [applicationData, setApplicationData] = useState(null);
   const [applicationStatus, setApplicationStatus] = useState("Never Submitted");
   const [feedback, setFeedback] = useState("");
+
+  useEffect(() => {
+    if (!loading && applicationStatus === "Approved") {
+      navigate("/home", { replace: true });
+    }
+  }, [applicationStatus, loading, navigate]);
 
   useEffect(() => {
     const fetchApplication = async () => {

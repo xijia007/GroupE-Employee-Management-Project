@@ -256,7 +256,7 @@ function OnboardingForm({
           </Row>
         </Form.Item>
 
-        <Form.Item label="Preferred Name">
+        <Form.Item label="Preferred Name" name="preferredName">
           <Input placeholder="Optional" />
         </Form.Item>
 

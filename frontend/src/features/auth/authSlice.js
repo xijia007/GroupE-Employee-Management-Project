@@ -62,6 +62,7 @@ export const getAvatar = createAsyncThunk(
     try {
       const { user } = getState().auth;
       if (!user) throw new Error("User not authenticated");
+      if (user.role !== "Employee") return null;
       const response = await axios.get(`${API_URL}/info/profile`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -74,6 +75,9 @@ export const getAvatar = createAsyncThunk(
         return null; // No avatar found
       }
     } catch (err) {
+      if (err.response?.status === 404) {
+        return null;
+      }
       const message = err.response?.data?.message || "Failed to fetch avatar";
       return rejectWithValue(message);
     }

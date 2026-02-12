@@ -20,6 +20,10 @@ const onboardingApplicationSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    preferredName: {
+        type: String,
+        default: ""
+    },
     email: {
         type: String,
         required: true
@@ -88,7 +92,7 @@ const onboardingApplicationSchema = new mongoose.Schema({
     // Employment / Visa Information (Required only if usResident is 'workAuth')
     visaTitle: {
         type: String,
-        enum: ['H1-B', 'L2', 'F1(CPT/OPT)', 'H4', 'Other'],
+        trim: true,
         required: function() {
             // Only required if user needs work authorization
             return this.usResident === 'workAuth';
