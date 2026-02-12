@@ -312,6 +312,28 @@ export const reviewApplication = async (req, res) => {
       });
     }
 
+    if (status === "Approved") {
+      const isWorkAuth = application.usResident === "workAuth";
+      const visaTitle = String(application.visaTitle || "").trim();
+      const isF1 = /^f1/i.test(visaTitle);
+
+      // Onboarding approval should only enforce onboarding-stage required docs.
+      // Later OPT documents (EAD/I-983/I-20) belong to Visa Status workflow.
+      if (isWorkAuth && isF1 && !application.documents?.optReceipt) {
+        return res.status(400).json({
+          message:
+            "Cannot approve onboarding for F1 employee without OPT Receipt.",
+        });
+      }
+
+      if (isWorkAuth && !isF1 && !application.documents?.workAuthorization) {
+        return res.status(400).json({
+          message:
+            "Cannot approve onboarding without work authorization document.",
+        });
+      }
+    }
+
     // Update application status
     application.status = status; // 'Approved' or 'Rejected'
     application.feedback = feedback || ""; // HR feedback(optional)
@@ -469,7 +491,7 @@ export const getAllEmployees = async (req, res) => {
         const profile = await Profile.findOne({
           user: user._id,
         }).select(
-          "firstName lastName middleName preferredName ssn contactInfo visaInformation address emergencyContacts documents",
+          "firstName lastName middleName preferredName ssn contactInfo visaInformation address emergencyContacts documents visaDocuments",
         );
 
         // Prefer Profile data, fallback to Application data
@@ -524,9 +546,21 @@ export const getAllEmployees = async (req, res) => {
                if (status === 'Rejected') return 'Onboarding Rejected';
                if (status === 'Not Started' || status === 'Never Submitted') return 'Not Started';
                if (status === 'Approved') {
-                   // Citizen/GC are considered fully active; all other work auth types require visa workflow.
                    if (visaTitle === 'US Citizen' || visaTitle === 'Green Card') return 'Active (Citizen/GC)';
-                   if (visaTitle && visaTitle !== 'N/A') return 'Visa Status Management';
+
+                   const isF1 = String(visaTitle || '').startsWith('F1');
+                   if (isF1) {
+                      const visaDocs = profile?.visaDocuments || {};
+                      const allApproved =
+                        visaDocs?.optReceipt?.status === 'approved' &&
+                        visaDocs?.optEad?.status === 'approved' &&
+                        visaDocs?.i983?.status === 'approved' &&
+                        visaDocs?.i20?.status === 'approved';
+                      return allApproved ? 'Active' : 'Visa Status Management';
+                   }
+
+                   // Non-F1 work authorization does not require OPT pipeline in this project scope.
+                   if (visaTitle && visaTitle !== 'N/A') return 'Active';
                    return 'Active';
                }
                return 'Unknown';

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
     Card, 
     Form, 
@@ -13,7 +12,6 @@ import {
     Divider,
     List,
     Grid,
-    Tooltip
 } from 'antd';
 import { generateRegistrationToken, getAllTokens, getAllApplications } from '../../services/hrService';
 
@@ -23,8 +21,6 @@ const { Title, Text } = Typography; // Title: Heading component， Text: Text co
 const HiringManagement = () => {
     // Form instance for controlling form fields
     const [form] = Form.useForm();
-
-    const navigate = useNavigate();
 
     const [loading, setLoading] = useState(false);
 
@@ -115,39 +111,19 @@ const HiringManagement = () => {
             key: 'registrationLink',
             render: (link, record) => {
                 const info = getTokenStatusInfo(record);
-                // Only show link if not expired and not submitted (or maybe HR wants to see it anyway? User said "History", usually link implies usability)
-                // Let's keep showing it but visual cue it might be useless if expired
                 if (!link) return '-';
                 
                 return (
-                    <Tooltip title="Copy link">
-                        <Button
-                            type="link"
-                            size="small"
-                            onClick={async () => {
-                                await navigator.clipboard.writeText(link);
-                                message.success('Registration link copied');
-                            }}
-                            disabled={info.text === 'Expired' || info.text ==='Submitted'} // Optional: disable copy if expired? No, requirements say "show link", let's keep it copyable just in case.
-                            style={{ color: info.text === 'Expired' ? 'gray' : undefined }}
-                        >
-                            Copy
-                        </Button>
-                    </Tooltip>
+                    <a
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: info.text === 'Expired' ? 'gray' : undefined }}
+                    >
+                        {link}
+                    </a>
                 );
             }
-        },
-        {
-            title: 'Expires At',
-            dataIndex: 'expiresAt',
-            key: 'expiresAt',
-            render: (date) => new Date(date).toLocaleString()
-        },
-        {
-            title: 'Created At',
-            dataIndex: 'createdAt',
-            key: 'createdAt',
-            render: (date) => new Date(date).toLocaleDateString()
         },
     ];
 
@@ -452,19 +428,16 @@ const HiringManagement = () => {
                                         <Text strong>{record.email}</Text>
                                         <Text type="secondary">{record.name}</Text>
                                         {record.registrationLink && (
-                                            <Button
-                                                type="link"
-                                                size="small"
-                                                onClick={async () => {
-                                                    await navigator.clipboard.writeText(record.registrationLink);
-                                                    message.success('Registration link copied');
-                                                }}
+                                            <a
+                                                href={record.registrationLink}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                             >
-                                                Copy link
-                                            </Button>
+                                                {record.registrationLink}
+                                            </a>
                                         )}
-                                        <Tag color={tokenSubmittedColor(record.onboardingSubmitted)}>
-                                            {record.onboardingSubmitted ? 'Submitted' : 'Not Submitted'}
+                                        <Tag color={getTokenStatusInfo(record).color}>
+                                            {getTokenStatusInfo(record).text}
                                         </Tag>
                                     </Space>
                                 </Card>

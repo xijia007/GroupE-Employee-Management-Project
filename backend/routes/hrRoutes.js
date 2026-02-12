@@ -17,6 +17,8 @@ import { validateRequest } from "../middleware/validationMiddleware.js";
 import {
   generateTokenSchema,
   reviewApplicationSchema,
+  reviewVisaDocumentSchema,
+  sendVisaReminderSchema,
 } from "../schemas/zodSchemas.js";
 
 const router = express.Router();
@@ -99,6 +101,7 @@ router.patch(
   "/visa-status/:userId/documents/:docType/review",
   verifyToken,
   requireHR,
+  validateRequest(reviewVisaDocumentSchema),
   reviewVisaDocument,
 );
 
@@ -106,6 +109,7 @@ router.post(
   "/visa-status/:userId/notify",
   verifyToken,
   requireHR,
+  validateRequest(sendVisaReminderSchema),
   sendVisaStatusReminder,
 );
 

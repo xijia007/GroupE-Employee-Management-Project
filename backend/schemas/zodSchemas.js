@@ -42,6 +42,44 @@ export const reviewApplicationSchema = z.object({
   })
 });
 
+export const reviewVisaDocumentSchema = z.object({
+  params: z.object({
+    userId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid User ID"),
+    docType: z.enum(["optReceipt", "optEad", "i983", "i20"], {
+      errorMap: () => ({
+        message: "docType must be one of: optReceipt, optEad, i983, i20",
+      }),
+    }),
+  }),
+  body: z
+    .object({
+      status: z.enum(["approved", "rejected"], {
+        errorMap: () => ({
+          message: "Status must be either 'approved' or 'rejected'",
+        }),
+      }),
+      feedback: z.string().optional(),
+    })
+    .superRefine((value, ctx) => {
+      if (value.status === "rejected" && !String(value.feedback || "").trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["feedback"],
+          message: "Feedback is required when status is rejected",
+        });
+      }
+    }),
+});
+
+export const sendVisaReminderSchema = z.object({
+  params: z.object({
+    userId: z.string().regex(/^[0-9a-fA-F]{24}$/, "Invalid User ID"),
+  }),
+  body: z.object({
+    nextStep: z.string().trim().min(1, "nextStep is required"),
+  }),
+});
+
 // ============================================
 // Onboarding Schemas
 // ============================================

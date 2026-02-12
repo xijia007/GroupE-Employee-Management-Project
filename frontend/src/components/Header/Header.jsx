@@ -10,14 +10,10 @@ import {
   Button,
 } from "antd";
 import {
-  SearchOutlined,
-  BellOutlined,
-  SettingOutlined,
-  UserOutlined,
-  MailOutlined,
   LogoutOutlined,
   DownOutlined,
   MenuOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -52,6 +48,7 @@ function HeaderComponent({ isMobile = false, onMenuClick }) {
   const navigate = useNavigate();
   const user = useSelector(selectUser);
   const avatar = useSelector(selectAvatar);
+  const [avatarLoadFailed, setAvatarLoadFailed] = React.useState(false);
 
   React.useEffect(() => {
     if (!user) return;
@@ -60,7 +57,12 @@ function HeaderComponent({ isMobile = false, onMenuClick }) {
     dispatch(getAvatar());
   }, [dispatch, user, avatar]);
 
+  React.useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [avatar]);
+
   const avatarUrl = avatar || null;
+  const showFallbackAvatar = !avatarUrl || avatarLoadFailed;
 
   const handleLogout = () => {
     dispatch(logoutUser());
@@ -158,9 +160,22 @@ function HeaderComponent({ isMobile = false, onMenuClick }) {
           >
             <Avatar
               size={24}
-              src={avatarUrl || undefined}
-              icon={<UserOutlined />}
-              style={{ backgroundColor: "#667eea" }}
+              src={!showFallbackAvatar ? avatarUrl : undefined}
+              icon={showFallbackAvatar ? <UserOutlined /> : undefined}
+              style={
+                showFallbackAvatar
+                  ? {
+                      background:
+                        "linear-gradient(135deg, #1677ff 0%, #6ea8fe 100%)",
+                      color: "#fff",
+                      fontWeight: 700,
+                    }
+                  : { border: "1px solid #f0f0f0" }
+              }
+              onError={() => {
+                setAvatarLoadFailed(true);
+                return false;
+              }}
             />
             <DownOutlined style={{ fontSize: 10, color: "#999" }} />
           </span>

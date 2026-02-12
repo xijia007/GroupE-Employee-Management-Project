@@ -128,7 +128,7 @@ function OnboardingApplication() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-      } catch (e) {
+      } catch {
         message.error("Failed to download file");
       }
     };
@@ -149,7 +149,7 @@ function OnboardingApplication() {
           return;
         }
         window.open(fileUrl, "_blank", "noopener,noreferrer");
-      } catch (e) {
+      } catch {
         message.error("Failed to preview file");
       }
     };
@@ -317,6 +317,86 @@ function OnboardingApplication() {
               </div>
             )}
 
+            {applicationData.documents?.optReceipt && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "12px",
+                  border: "1px solid #f0f0f0",
+                  borderRadius: 8,
+                }}
+              >
+                <span>
+                  <strong>OPT Receipt:</strong>{" "}
+                  {applicationData.documents.optReceipt.split("/").pop()}
+                </span>
+                <div>
+                  <Button
+                    icon={<EyeOutlined />}
+                    onClick={() =>
+                      handlePreview(applicationData.documents.optReceipt)
+                    }
+                    style={{ marginRight: 8 }}
+                  >
+                    Preview
+                  </Button>
+                  <Button
+                    icon={<DownloadOutlined />}
+                    onClick={() =>
+                      handleDownload(
+                        applicationData.documents.optReceipt,
+                        "opt-receipt.pdf",
+                      )
+                    }
+                  >
+                    Download
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {applicationData.documents?.other && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "12px",
+                  border: "1px solid #f0f0f0",
+                  borderRadius: 8,
+                }}
+              >
+                <span>
+                  <strong>Other Document:</strong>{" "}
+                  {applicationData.documents.other.split("/").pop()}
+                </span>
+                <div>
+                  <Button
+                    icon={<EyeOutlined />}
+                    onClick={() =>
+                      handlePreview(applicationData.documents.other)
+                    }
+                    style={{ marginRight: 8 }}
+                  >
+                    Preview
+                  </Button>
+                  <Button
+                    icon={<DownloadOutlined />}
+                    onClick={() =>
+                      handleDownload(
+                        applicationData.documents.other,
+                        "other-document.pdf",
+                      )
+                    }
+                  >
+                    Download
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {applicationData.profile_picture && (
               <div
                 style={{
@@ -344,6 +424,8 @@ function OnboardingApplication() {
 
             {!applicationData.documents?.driverLicense &&
               !applicationData.documents?.workAuthorization &&
+              !applicationData.documents?.optReceipt &&
+              !applicationData.documents?.other &&
               !applicationData.profile_picture && (
                 <p style={{ color: "#999", textAlign: "center" }}>
                   No documents uploaded

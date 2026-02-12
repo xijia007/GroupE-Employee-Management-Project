@@ -52,7 +52,7 @@ const Login = () => {
                 const status = statusResponse?.data?.status;
 
                 if (status === 'Approved') {
-                    navigate('/home', { replace: true });
+                    navigate('/personInformation', { replace: true });
                     return;
                 }
 
@@ -210,5 +210,4 @@ const Login = () => {
 }
 
 export default Login;
-
 
