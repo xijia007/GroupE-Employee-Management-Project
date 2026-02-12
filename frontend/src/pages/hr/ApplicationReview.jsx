@@ -319,42 +319,7 @@ function ApplicationReview() {
             (key) => application.documents[key],
           ) ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {application.profile_picture && (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "12px",
-                    border: "1px solid #f0f0f0",
-                    borderRadius: 8,
-                  }}
-                >
-                  <div
-                    style={{ display: "flex", alignItems: "center", gap: 12 }}
-                  >
-                    <strong>Profile Picture:</strong>
-                    <Image
-                      src={application.profile_picture}
-                      alt="Profile"
-                      width={80}
-                      height={80}
-                      style={{ objectFit: "cover", borderRadius: 4 }}
-                    />
-                  </div>
-                  <Button
-                    icon={<DownloadOutlined />}
-                    onClick={() =>
-                      handleDownload(
-                        application.profile_picture,
-                        "profile-picture.jpg",
-                      )
-                    }
-                  >
-                    Download
-                  </Button>
-                </div>
-              )}
+
 
               {application.documents.driverLicense && (
                 <div
@@ -427,6 +392,46 @@ function ApplicationReview() {
                         handleDownload(
                           application.documents.workAuthorization,
                           "work-authorization.pdf",
+                        )
+                      }
+                    >
+                      Download
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {application.documents.optReceipt && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "12px",
+                    border: "1px solid #f0f0f0",
+                    borderRadius: 8,
+                  }}
+                >
+                  <span>
+                    <strong>OPT Receipt:</strong>{" "}
+                    {application.documents.optReceipt.split("/").pop()}
+                  </span>
+                  <div>
+                    <Button
+                      icon={<EyeOutlined />}
+                      onClick={() =>
+                        handlePreview(application.documents.optReceipt)
+                      }
+                      style={{ marginRight: 8 }}
+                    >
+                      Preview
+                    </Button>
+                    <Button
+                      icon={<DownloadOutlined />}
+                      onClick={() =>
+                        handleDownload(
+                          application.documents.optReceipt,
+                          "opt-receipt.pdf",
                         )
                       }
                     >

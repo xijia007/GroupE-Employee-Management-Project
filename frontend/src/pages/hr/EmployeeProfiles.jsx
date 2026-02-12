@@ -161,55 +161,7 @@ function EmployeeProfilesPage() {
       dataIndex: 'email',
       key: 'email',
     },
-    {
-      title: 'Onboarding Status',
-      dataIndex: 'onboardingStatus',
-      key: 'onboardingStatus',
-      render: (status) => {
-        let color = 'default';
-        let text = status || 'N/A';
 
-        switch (normalizeStatus(status)) {
-          case 'pending':
-            color = 'orange';
-            text = 'Under Review';
-            break;
-          case 'approved':
-            color = 'green';
-            text = 'Approved';
-            break;          
-          case 'rejected':
-            color = 'red';
-            text = 'Rejected';
-            break;          
-          case 'notstarted':
-          case 'neversubmitted':
-            color = 'gray';
-            text = 'Not Started';
-            break;  
-          default:
-            color = 'default';       
-        }
-
-        return <Tag color={color}>{text}</Tag>
-      }
-    },
-    {
-      title: 'Submitted At',
-      key: 'submittedAt',
-      render: (_, record) => {
-        if (record.application?.submittedAt) {
-          return new Date(record.application.submittedAt).toLocaleDateString();
-        }
-        return <Text type='secondary'>-</Text>
-      },
-    },
-    {
-      title: 'Registered At',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date) => new Date(date).toLocaleDateString(),
-    },
   ];
 
   // Render search results status
