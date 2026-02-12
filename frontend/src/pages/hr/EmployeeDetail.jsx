@@ -15,6 +15,7 @@ import {
   Grid,
   Empty,
   List,
+  Avatar,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -38,6 +39,7 @@ function EmployeeDetail() {
   const [employee, setEmployee] = useState(null);
   const [application, setApplication] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState(null);
 
   useEffect(() => {
     fetchEmployeeDetail();
@@ -128,6 +130,40 @@ function EmployeeDetail() {
     }
   };
 
+  useEffect(() => {
+    let objectUrl = null;
+    let cancelled = false;
+
+    const loadProfilePicture = async () => {
+      const raw = String(application?.profile_picture || "").trim();
+      if (!raw) {
+        setProfilePictureUrl(null);
+        return;
+      }
+
+      try {
+        if (raw.includes("/api/")) {
+          const apiPath = raw.startsWith("/api/") ? raw.slice(4) : raw;
+          const res = await api.get(apiPath, { responseType: "blob" });
+          if (cancelled) return;
+          objectUrl = URL.createObjectURL(res.data);
+          setProfilePictureUrl(objectUrl);
+          return;
+        }
+        setProfilePictureUrl(raw);
+      } catch {
+        setProfilePictureUrl(null);
+      }
+    };
+
+    loadProfilePicture();
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [application?.profile_picture]);
+
   const previewOrDownload = async (
     fileUrl,
     { download = false, filename = "document" } = {},
@@ -168,7 +204,7 @@ function EmployeeDetail() {
       } else {
         window.open(fileUrl, "_blank", "noopener,noreferrer");
       }
-    } catch (e) {
+    } catch {
       message.error(
         download ? "Failed to download file" : "Failed to preview file",
       );
@@ -290,13 +326,31 @@ function EmployeeDetail() {
       {/* Employee Header Card */}
       <Card style={{ marginBottom: 24 }}>
         <Row align="middle" gutter={[16, 12]}>
-          <Col xs={24} md={18}>
+          <Col xs={24} md={3} style={{ display: "flex", justifyContent: screens.md ? "flex-start" : "center" }}>
+            <Avatar
+              size={88}
+              src={profilePictureUrl || undefined}
+              icon={!profilePictureUrl ? <UserOutlined /> : undefined}
+              style={
+                profilePictureUrl
+                  ? { border: "2px solid #f0f0f0" }
+                  : {
+                      background:
+                        "linear-gradient(135deg, #1677ff 0%, #6ea8fe 100%)",
+                      color: "#fff",
+                      fontWeight: 700,
+                      fontSize: 24,
+                    }
+              }
+            />
+          </Col>
+          <Col xs={24} md={15}>
             <Space direction="vertical" size="small" style={{ width: "100%" }}>
               <Title
                 level={2}
                 style={{ margin: 0, fontSize: screens.md ? 24 : 20 }}
               >
-                <UserOutlined /> {application.firstName}{" "}
+                {application.firstName}{" "}
                 {application.middleName || ""} {application.lastName}
               </Title>
               <Space

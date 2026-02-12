@@ -22,6 +22,7 @@ import {
   CheckOutlined,
   CloseOutlined,
   EllipsisOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import api from "../../services/api";
@@ -110,6 +111,38 @@ function toAbsoluteUrl(urlOrPath) {
   const origin = apiBaseUrl.replace(/\/api\/?$/, "");
   const normalizedPath = cleaned.startsWith("/") ? cleaned : `/${cleaned}`;
   return `${origin}${normalizedPath}`;
+}
+
+function SafeProfileAvatar({ avatarUrl, fullName }) {
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  React.useEffect(() => {
+    setLoadFailed(false);
+  }, [avatarUrl]);
+
+  const source = !loadFailed ? toAbsoluteUrl(avatarUrl) : null;
+
+  return (
+    <Avatar
+      src={source || undefined}
+      alt={fullName}
+      icon={!source ? <UserOutlined /> : undefined}
+      style={
+        source
+          ? undefined
+          : {
+              background:
+                "linear-gradient(135deg, #1677ff 0%, #69b1ff 100%)",
+              color: "#fff",
+              fontWeight: 700,
+            }
+      }
+      onError={() => {
+        setLoadFailed(true);
+        return false;
+      }}
+    />
+  );
 }
 
 const DOCS = [
@@ -481,9 +514,7 @@ export default function HrVisaStatusPage() {
             `${r.firstName || ""} ${r.lastName || ""}`.trim() || "—";
           return (
             <Space>
-              <Avatar src={r.avatarUrl} alt={fullName}>
-                {fullName?.[0] || "U"}
-              </Avatar>
+              <SafeProfileAvatar avatarUrl={r.avatarUrl} fullName={fullName} />
               <div style={{ lineHeight: 1.1 }}>
                 <div style={{ fontWeight: 600 }}>{fullName}</div>
                 <Text type="secondary" style={{ fontSize: 12 }}>
@@ -686,9 +717,7 @@ export default function HrVisaStatusPage() {
             `${r.firstName || ""} ${r.lastName || ""}`.trim() || "—";
           return (
             <Space>
-              <Avatar src={r.avatarUrl} alt={fullName}>
-                {fullName?.[0] || "U"}
-              </Avatar>
+              <SafeProfileAvatar avatarUrl={r.avatarUrl} fullName={fullName} />
               <div style={{ lineHeight: 1.1 }}>
                 <div style={{ fontWeight: 600 }}>{fullName}</div>
               </div>
@@ -793,12 +822,15 @@ export default function HrVisaStatusPage() {
                       const feedback =
                         window.prompt("Rejection feedback (required):", "") ||
                         "";
-                      if (!String(feedback).trim()) return;
+                      if (!String(feedback).trim()) {
+                        message.error("Rejection feedback is required.");
+                        return;
+                      }
                       await handleReview({
                         userId: r.userId,
                         docType: currentPendingDocType,
                         status: "rejected",
-                        feedback,
+                        feedback: String(feedback).trim(),
                       });
                     }}
                   />
@@ -879,12 +911,15 @@ export default function HrVisaStatusPage() {
                       const feedback =
                         window.prompt("Rejection feedback (required):", "") ||
                         "";
-                      if (!String(feedback).trim()) return;
+                      if (!String(feedback).trim()) {
+                        message.error("Rejection feedback is required.");
+                        return;
+                      }
                       await handleReview({
                         userId: r.userId,
                         docType,
                         status: "rejected",
-                        feedback,
+                        feedback: String(feedback).trim(),
                       });
                     }}
                   >

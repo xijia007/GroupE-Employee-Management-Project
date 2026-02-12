@@ -24,10 +24,6 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
-const config = {
-  rules: [{ type: "object", required: true, message: "Please select time!" }],
-};
-
 function OnboardingForm({
   initialData = null,
   onSubmit,
@@ -38,6 +34,7 @@ function OnboardingForm({
   const user = useSelector(selectUser); // Get current user for email
 
   const [fileList, setFileList] = useState({
+    profilePicture: [],
     driverLicense: [],
     workAuthorization: [],
     other: [],
@@ -163,6 +160,12 @@ function OnboardingForm({
           fileList.driverLicense[0].originFileObj,
         );
       }
+      if (fileList.profilePicture && fileList.profilePicture.length > 0) {
+        formData.append(
+          "profilePicture",
+          fileList.profilePicture[0].originFileObj,
+        );
+      }
       if (fileList.workAuthorization && fileList.workAuthorization.length > 0) {
         formData.append(
           "workAuthorization",
@@ -188,7 +191,13 @@ function OnboardingForm({
       }
     } catch (err) {
       console.error("Form submission error:", err);
-      message.error("Submission failed. Please check your form and try again.");
+      const firstValidationError = err?.response?.data?.errors?.[0]?.message;
+      const backendMessage = err?.response?.data?.message;
+      message.error(
+        firstValidationError ||
+          backendMessage ||
+          "Submission failed. Please check your form and try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -258,6 +267,51 @@ function OnboardingForm({
 
         <Form.Item label="Preferred Name" name="preferredName">
           <Input placeholder="Optional" />
+        </Form.Item>
+
+        <Form.Item label="Profile Picture">
+          <Upload
+            fileList={fileList.profilePicture}
+            beforeUpload={beforeUpload}
+            onChange={handleFileChange("profilePicture")}
+            maxCount={1}
+            listType="picture"
+          >
+            <Button icon={<UploadOutlined />}>Upload Profile Picture</Button>
+          </Upload>
+          {(!fileList.profilePicture || fileList.profilePicture.length === 0) &&
+            (initialData?.profile_picture ? (
+              <img
+                src={initialData.profile_picture}
+                alt="Current profile"
+                style={{
+                  width: 120,
+                  height: 120,
+                  marginTop: 12,
+                  borderRadius: 8,
+                  objectFit: "cover",
+                  border: "1px solid #f0f0f0",
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 120,
+                  height: 120,
+                  marginTop: 12,
+                  border: "1px dashed #d9d9d9",
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#999",
+                  background: "#fafafa",
+                  fontSize: 12,
+                }}
+              >
+                Default Placeholder
+              </div>
+            ))}
         </Form.Item>
 
 

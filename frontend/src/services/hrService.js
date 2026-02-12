@@ -64,9 +64,9 @@ export const reviewApplication = async (id, status, feedback='') => {
     }
 }
 
-export const getAllEmployees = async (status = 'All')  => {
+export const getAllEmployees = async ()  => {
     try {
-        const response = await api.get(`/hr/employees?status=${status}`);
+        const response = await api.get('/hr/employees');
         return response.data;
     } catch (err) {
         console.error('Get employees error:', err);
