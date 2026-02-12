@@ -39,7 +39,7 @@ function HomePage() {
     pendingVisaDocuments: 0,
     totalEmployees: 0,
   });
-  const [recentActivities, setRecentActivities] = useState([]);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,64 +98,7 @@ function HomePage() {
             totalEmployees: totalEmps,
           });
 
-          // Process Recent Activity
-          // 1. Recent applications
-          const allApplicationsResponse = await api.get("/hr/applications");
-          const allApps = allApplicationsResponse.data.applications || [];
 
-          const appActivities = allApps
-            .filter(
-              (app) =>
-                (app.status === "Approved" || app.status === "Rejected") &&
-                (app.reviewedAt || app.updatedAt),
-            )
-            .map((app) => ({
-              id: `app-${app._id}`,
-              type: "Application",
-              user: `${app.firstName} ${app.lastName}`,
-              status: app.status,
-              date: new Date(app.reviewedAt || app.updatedAt),
-              details: `Onboarding Application`,
-            }));
-
-          // 2. Recent visa documents
-          const docActivities = [];
-          visaEmployees.forEach((emp) => {
-            const docs = emp.profile?.visaDocuments || {};
-            const docTypes = ["optReceipt", "optEad", "i983", "i20"];
-            const docNames = {
-              optReceipt: "OPT Receipt",
-              optEad: "OPT EAD",
-              i983: "I-983",
-              i20: "I-20",
-            };
-
-            docTypes.forEach((type) => {
-              const doc = docs[type];
-              if (
-                doc &&
-                (doc.status === "approved" || doc.status === "rejected") &&
-                doc.reviewedAt
-              ) {
-                docActivities.push({
-                  id: `doc-${emp._id}-${type}`,
-                  type: "Visa",
-                  user: emp.username,
-                  status:
-                    doc.status.charAt(0).toUpperCase() + doc.status.slice(1),
-                  date: new Date(doc.reviewedAt),
-                  details: docNames[type],
-                });
-              }
-            });
-          });
-
-          // Combine and sort
-          const activities = [...appActivities, ...docActivities]
-            .sort((a, b) => b.date - a.date)
-            .slice(0, 10); // Show top 10
-
-          setRecentActivities(activities);
         } catch (error) {
           console.error("Error fetching HR dashboard data:", error);
         } finally {
@@ -213,144 +156,7 @@ function HomePage() {
         )}
 
         {/* Recent Activity */}
-        <div style={{ marginTop: 24 }}>
-          <Title level={4}>🕒 Recent Activity</Title>
-          <Card style={{ marginTop: 16 }} bodyStyle={{ padding: "0 12px" }}>
-            {recentActivities.length > 0 ? (
-              <List
-                itemLayout="horizontal"
-                dataSource={recentActivities}
-                renderItem={(item) => (
-                  <List.Item key={item.id} style={{ padding: "16px 8px" }}>
-                    <List.Item.Meta
-                      avatar={
-                        <Tooltip
-                          title={
-                            item.type === "Application"
-                              ? "Onboarding Application"
-                              : "Visa Document"
-                          }
-                        >
-                          <Avatar
-                            size={48}
-                            shape="square"
-                            style={{
-                              backgroundColor:
-                                item.status === "Approved"
-                                  ? "#f6ffed"
-                                  : "#fff1f0",
-                              color:
-                                item.status === "Approved"
-                                  ? "#52c41a"
-                                  : "#ff4d4f",
-                              borderRadius: "12px",
-                              border: `1px solid ${item.status === "Approved" ? "#b7eb8f" : "#ffa39e"}`,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                            icon={
-                              item.type === "Application" ? (
-                                <FileTextOutlined style={{ fontSize: 24 }} />
-                              ) : (
-                                <SafetyCertificateOutlined
-                                  style={{ fontSize: 24 }}
-                                />
-                              )
-                            }
-                          />
-                        </Tooltip>
-                      }
-                      title={
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "flex-start",
-                            flexWrap: "wrap",
-                            gap: "8px",
-                          }}
-                        >
-                          <Text
-                            strong
-                            style={{ fontSize: "16px", lineHeight: "1.2" }}
-                          >
-                            {item.user}
-                          </Text>
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              fontSize: "12px",
-                              color: "#8c8c8c",
-                            }}
-                          >
-                            <ClockCircleOutlined style={{ marginRight: 4 }} />
-                            {item.date.toLocaleDateString()}
-                          </div>
-                        </div>
-                      }
-                      description={
-                        <div
-                          style={{
-                            marginTop: 6,
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            flexWrap: "wrap",
-                            gap: "8px",
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                            }}
-                          >
-                            <Text>{item.details}</Text>
-                          </div>
-                          <Tag
-                            color={
-                              item.status === "Approved" ? "success" : "error"
-                            }
-                            icon={
-                              item.status === "Approved" ? (
-                                <CheckCircleOutlined />
-                              ) : (
-                                <CloseCircleOutlined />
-                              )
-                            }
-                            style={{
-                              margin: 0,
-                              borderRadius: "6px",
-                              padding: "0 8px",
-                            }}
-                          >
-                            {item.status.toUpperCase()}
-                          </Tag>
-                        </div>
-                      }
-                    />
-                  </List.Item>
-                )}
-              />
-            ) : (
-              <div
-                style={{ textAlign: "center", color: "#999", padding: "32px" }}
-              >
-                <ClockCircleOutlined
-                  style={{
-                    fontSize: "24px",
-                    marginBottom: "8px",
-                    color: "#d9d9d9",
-                  }}
-                />
-                <div>No recent activity found</div>
-              </div>
-            )}
-          </Card>
-        </div>
+
       </div>
     );
   };

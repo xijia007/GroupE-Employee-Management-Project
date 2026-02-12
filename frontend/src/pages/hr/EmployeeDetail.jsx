@@ -134,7 +134,7 @@ function EmployeeDetail() {
   ) => {
     try {
       const s = String(fileUrl || "");
-      if (s.includes("/api/files/")) {
+      if (s.includes("/api/")) {
         const apiPath = s.startsWith("/api/") ? s.slice(4) : s;
         const res = await api.get(apiPath + (download ? "?download=1" : ""), {
           responseType: "blob",
@@ -527,9 +527,11 @@ function EmployeeDetail() {
                   <List.Item
                     actions={[
                       <a
-                        href={`http://localhost:3001${item.url.startsWith("/") ? "" : "/"}${item.url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          previewOrDownload(item.url);
+                        }}
                         style={{ fontWeight: "bold" }}
                       >
                         View
@@ -608,9 +610,11 @@ function EmployeeDetail() {
                             : "N/A"}
                         </Tag>,
                         <a
-                          href={`http://localhost:3001${item.url.startsWith("/") ? "" : "/"}${item.url}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            previewOrDownload(item.url);
+                          }}
                           style={{ fontWeight: "bold" }}
                         >
                           View
