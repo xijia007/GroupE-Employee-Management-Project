@@ -134,7 +134,7 @@ function EmployeeDetail() {
   ) => {
     try {
       const s = String(fileUrl || "");
-      if (s.includes("/api/files/")) {
+      if (s.includes("/api/")) {
         const apiPath = s.startsWith("/api/") ? s.slice(4) : s;
         const res = await api.get(apiPath + (download ? "?download=1" : ""), {
           responseType: "blob",
@@ -214,21 +214,45 @@ function EmployeeDetail() {
   const normalizeStatus = (value) =>
     (value || "").replace(/\s+/g, "").toLowerCase();
 
-  const getStatusTag = (status) => {
+  const getOverallStatusTag = () => {
+    // 1. Get base onboarding status
+    const appStatus = normalizeStatus(application?.status || employee?.onboardingStatus);
+    
+    if (appStatus === 'pending') return <Tag color="blue">Application Pending</Tag>;
+    if (appStatus === 'rejected') return <Tag color="red">Rejected</Tag>;
+    if (appStatus === 'notstarted' || appStatus === 'neversubmitted') return <Tag color="default">Not Started</Tag>;
+
+    if (appStatus === 'approved') {
+        const visaType = profile?.visaInformation?.visaType || application?.visaTitle;
+        const usResident = application?.usResident;
+        
+        const isCitizen = 
+            visaType === 'US Citizen' || 
+            visaType === 'Green Card' || 
+            usResident === 'usCitizen' || 
+            usResident === 'greenCard';
+        
+        if (isCitizen) {
+            return <Tag color="green">Approved</Tag>;
+        }
+
+        return <Tag color="orange">Visa Review</Tag>;
+    }
+    
+    return <Tag>Unknown</Tag>;
+  };
+
+  const getApplicationStatusTag = (status) => {
     const statusConfig = {
-      pending: { color: "orange", text: "Under Review" },
+      pending: { color: "blue", text: "Pending Review" },
       approved: { color: "green", text: "Approved" },
       rejected: { color: "red", text: "Rejected" },
-      notstarted: { color: "gray", text: "Not Started" },
-      neversubmitted: { color: "gray", text: "Not Started" },
+      notstarted: { color: "default", text: "Not Started" },
+      neversubmitted: { color: "default", text: "Not Started" },
     };
-
-    const normalizedStatus = normalizeStatus(status);
-    const config = statusConfig[normalizedStatus] || {
-      color: "default",
-      text: status || "N/A",
-    };
-    return <Tag color={config.color}>{config.text}</Tag>;
+    const ns = normalizeStatus(status);
+    const conf = statusConfig[ns] || { color: "default", text: status || "N/A" };
+    return <Tag color={conf.color}>{conf.text}</Tag>;
   };
 
   const approvedFeedback = "Application approved.";
@@ -295,7 +319,7 @@ function EmployeeDetail() {
               style={{ width: "100%" }}
             >
               <Text strong>Onboarding Status</Text>
-              {getStatusTag(employee.onboardingStatus)}
+              {getOverallStatusTag()}
             </Space>
           </Col>
         </Row>
@@ -527,9 +551,11 @@ function EmployeeDetail() {
                   <List.Item
                     actions={[
                       <a
-                        href={`http://localhost:3001${item.url.startsWith("/") ? "" : "/"}${item.url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          previewOrDownload(item.url);
+                        }}
                         style={{ fontWeight: "bold" }}
                       >
                         View
@@ -608,9 +634,11 @@ function EmployeeDetail() {
                             : "N/A"}
                         </Tag>,
                         <a
-                          href={`http://localhost:3001${item.url.startsWith("/") ? "" : "/"}${item.url}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            previewOrDownload(item.url);
+                          }}
                           style={{ fontWeight: "bold" }}
                         >
                           View
@@ -657,7 +685,7 @@ function EmployeeDetail() {
               contentStyle={{ width: "100%" }}
             >
               <Descriptions.Item label="Status">
-                {getStatusTag(application.status)}
+                {getApplicationStatusTag(application.status)}
               </Descriptions.Item>
               <Descriptions.Item label="Submitted At">
                 {application.submittedAt
