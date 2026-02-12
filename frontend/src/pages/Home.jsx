@@ -118,9 +118,6 @@ function HomePage() {
 
     return (
       <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ marginBottom: 16 }}>
-          📊 Dashboard Overview
-        </Title>
 
         {/* Action Required Alert */}
         {(hrDashboard.pendingApplications > 0 ||
@@ -213,25 +210,40 @@ function HomePage() {
         return null;
       }
 
-      const optReceiptStatus = profile?.visaDocuments?.optReceipt?.status;
-      const optEadStatus = profile?.visaDocuments?.optEad?.status;
+      const docs = profile?.documents || {};
+      const visaDocs = profile?.visaDocuments || {};
 
-      // If OPT Receipt is pending or not uploaded
-      if (!optReceiptStatus || optReceiptStatus === "pending") {
+      const normalizeDocStatus = (key) => {
+        const hasFile = Boolean(docs?.[key]);
+        const raw = visaDocs?.[key]?.status;
+        if (!hasFile) return "Not Uploaded";
+
+        const normalized = String(raw || "").toLowerCase();
+        if (
+          !raw ||
+          normalized === "locked" ||
+          normalized === "not uploaded"
+        ) {
+          return "pending";
+        }
+        return raw;
+      };
+
+      const optReceiptStatus = normalizeDocStatus("optReceipt");
+      const optEadStatus = normalizeDocStatus("optEad");
+      const i983Status = normalizeDocStatus("i983");
+      const i20Status = normalizeDocStatus("i20");
+
+      if (optReceiptStatus === "Not Uploaded") {
         return (
           <Alert
-            message="📄 OPT Receipt Pending"
+            message="📄 Action Required"
             description={
               <div>
-                <p>Waiting for HR to approve your OPT Receipt.</p>
-                {!optReceiptStatus && (
-                  <Button
-                    type="primary"
-                    onClick={() => navigate("/visaStatus")}
-                  >
-                    Upload OPT Receipt
-                  </Button>
-                )}
+                <p>Please upload your OPT Receipt.</p>
+                <Button type="primary" onClick={() => navigate("/visaStatus")}>
+                  Upload OPT Receipt
+                </Button>
               </div>
             }
             type="warning"
@@ -241,38 +253,53 @@ function HomePage() {
         );
       }
 
-      // If OPT Receipt is approved, prompt for OPT EAD
-      if (
-        optReceiptStatus === "approved" &&
-        (!optEadStatus || optEadStatus === "pending")
-      ) {
+      if (optReceiptStatus === "pending") {
         return (
           <Alert
-            message="✅ OPT Receipt Approved"
+            message="📄 OPT Receipt Pending"
             description={
               <div>
-                <p>
-                  Your OPT Receipt has been approved! Please upload a copy of
-                  your OPT EAD.
-                </p>
-                <Button type="primary" onClick={() => navigate("/visaStatus")}>
-                  Upload OPT EAD
-                </Button>
+                <p>Waiting for HR to approve your OPT Receipt.</p>
               </div>
             }
-            type="success"
+            type="warning"
             showIcon
             style={{ marginBottom: 24 }}
           />
         );
       }
 
-      // All documents approved or in review
-      if (optEadStatus === "approved") {
+      if (optReceiptStatus === "rejected") {
         return (
           <Alert
-            message="🎉 All Documents Approved"
-            description="Your OPT documents have been approved. You're all set!"
+            message="❌ OPT Receipt Rejected"
+            description={
+              <div>
+                <p>{visaDocs?.optReceipt?.feedback || "Please review HR feedback and re-upload."}</p>
+                <Button type="primary" onClick={() => navigate("/visaStatus")}>
+                  Go to Visa Status
+                </Button>
+              </div>
+            }
+            type="error"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        );
+      }
+
+      if (optEadStatus === "Not Uploaded") {
+        return (
+          <Alert
+            message="✅ OPT Receipt Approved"
+            description={
+              <div>
+                <p>Your OPT Receipt has been approved. Please upload your OPT EAD.</p>
+                <Button type="primary" onClick={() => navigate("/visaStatus")}>
+                  Upload OPT EAD
+                </Button>
+              </div>
+            }
             type="success"
             showIcon
             style={{ marginBottom: 24 }}
@@ -286,6 +313,142 @@ function HomePage() {
             message="⏳ OPT EAD Under Review"
             description="Your OPT EAD is being reviewed by HR. Please wait for approval."
             type="info"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        );
+      }
+
+      if (optEadStatus === "rejected") {
+        return (
+          <Alert
+            message="❌ OPT EAD Rejected"
+            description={
+              <div>
+                <p>{visaDocs?.optEad?.feedback || "Please review HR feedback and re-upload."}</p>
+                <Button type="primary" onClick={() => navigate("/visaStatus")}>
+                  Go to Visa Status
+                </Button>
+              </div>
+            }
+            type="error"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        );
+      }
+
+      if (i983Status === "Not Uploaded") {
+        return (
+          <Alert
+            message="📝 Next Step: I-983"
+            description={
+              <div>
+                <p>Your OPT EAD has been approved. Please upload your I-983.</p>
+                <Button type="primary" onClick={() => navigate("/visaStatus")}>
+                  Upload I-983
+                </Button>
+              </div>
+            }
+            type="success"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        );
+      }
+
+      if (i983Status === "pending") {
+        return (
+          <Alert
+            message="⏳ I-983 Under Review"
+            description="Your I-983 is being reviewed by HR. Please wait for approval."
+            type="info"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        );
+      }
+
+      if (i983Status === "rejected") {
+        return (
+          <Alert
+            message="❌ I-983 Rejected"
+            description={
+              <div>
+                <p>{visaDocs?.i983?.feedback || "Please review HR feedback and re-upload."}</p>
+                <Button type="primary" onClick={() => navigate("/visaStatus")}>
+                  Go to Visa Status
+                </Button>
+              </div>
+            }
+            type="error"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        );
+      }
+
+      if (i20Status === "Not Uploaded") {
+        return (
+          <Alert
+            message="📝 Next Step: I-20"
+            description={
+              <div>
+                <p>Your I-983 has been approved. Please upload your I-20.</p>
+                <Button type="primary" onClick={() => navigate("/visaStatus")}>
+                  Upload I-20
+                </Button>
+              </div>
+            }
+            type="success"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        );
+      }
+
+      if (i20Status === "pending") {
+        return (
+          <Alert
+            message="⏳ I-20 Under Review"
+            description="Your I-20 is being reviewed by HR. Please wait for approval."
+            type="info"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        );
+      }
+
+      if (i20Status === "rejected") {
+        return (
+          <Alert
+            message="❌ I-20 Rejected"
+            description={
+              <div>
+                <p>{visaDocs?.i20?.feedback || "Please review HR feedback and re-upload."}</p>
+                <Button type="primary" onClick={() => navigate("/visaStatus")}>
+                  Go to Visa Status
+                </Button>
+              </div>
+            }
+            type="error"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        );
+      }
+
+      if (
+        optReceiptStatus === "approved" &&
+        optEadStatus === "approved" &&
+        i983Status === "approved" &&
+        i20Status === "approved"
+      ) {
+        return (
+          <Alert
+            message="🎉 All Documents Approved"
+            description="Your OPT documents have been approved. You're all set!"
+            type="success"
             showIcon
             style={{ marginBottom: 24 }}
           />
@@ -318,7 +481,7 @@ function HomePage() {
 
   return (
     <div style={{ padding: "24px", maxWidth: "800px", margin: "0 auto" }}>
-      <Card>
+      <Card style={{ marginBottom: "50px"}}>
         <Title level={2}>👋 Welcome, {user?.username}!</Title>
         <Paragraph style={{ fontSize: "16px", color: "#666" }}>
           Welcome to the Employee Management System
@@ -332,7 +495,9 @@ function HomePage() {
 
         {!loading && renderHRDashboard()}
         {!loading && renderStatusAlert()}
+      </Card>   
 
+      <Card>
         <div style={{ marginTop: 24 }}>
           <Title level={4}>Quick Links:</Title>
           <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "24px", fontSize: "16px", marginTop: "16px" }}>

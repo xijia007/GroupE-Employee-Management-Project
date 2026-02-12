@@ -55,6 +55,7 @@ function HeaderComponent({ isMobile = false, onMenuClick }) {
 
   React.useEffect(() => {
     if (!user) return;
+    if (user.role !== "Employee") return;
     if (avatar) return;
     dispatch(getAvatar());
   }, [dispatch, user, avatar]);

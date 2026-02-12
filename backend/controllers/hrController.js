@@ -524,9 +524,9 @@ export const getAllEmployees = async (req, res) => {
                if (status === 'Rejected') return 'Onboarding Rejected';
                if (status === 'Not Started' || status === 'Never Submitted') return 'Not Started';
                if (status === 'Approved') {
-                   // Check Visa Type
+                   // Citizen/GC are considered fully active; all other work auth types require visa workflow.
                    if (visaTitle === 'US Citizen' || visaTitle === 'Green Card') return 'Active (Citizen/GC)';
-                   if (visaTitle && (visaTitle.startsWith('F1') || visaTitle === 'H1-B' || visaTitle === 'L2' || visaTitle === 'H4' || visaTitle === 'Other')) return 'Visa Status Management';
+                   if (visaTitle && visaTitle !== 'N/A') return 'Visa Status Management';
                    return 'Active';
                }
                return 'Unknown';

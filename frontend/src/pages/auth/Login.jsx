@@ -12,6 +12,7 @@ import {
 } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { clearError, loginUser, selectAuthError, selectAuthLoading, selectUser } from '../../features/auth/authSlice';
+import api from '../../services/api';
 
 const { Title, Text } = Typography;
 
@@ -36,25 +37,33 @@ const Login = () => {
     // 重要：仅在登录页面时重定向以避免循环
     // ════════════════════════════════════════════════════════
     useEffect(() => {
-        // ────────────────────────────────────────────────────
-        // Check: user exists AND currently on login page
-        // 检查：用户存在且当前在登录页面
-        // ────────────────────────────────────────────────────
-        if (user && window.location.pathname === '/login') {
-            // Show welcome message / 显示欢迎消息
+        if (!user || window.location.pathname !== '/login') return;
+
+        const redirectByStatus = async () => {
             message.success(`Welcome back, ${user.username}!`);
-            
-            // Navigate based on user role / 根据用户角色导航
+
             if (user.role === 'HR') {
-                // HR user → HR management page
-                // HR 用户 → HR 管理页面
-                navigate('/home');
-            } else {
-                // Employee user → Home page
-                // 员工用户 → 首页
-                navigate('/home');
+                navigate('/home', { replace: true });
+                return;
             }
-        }
+
+            try {
+                const statusResponse = await api.get('/onboarding/status');
+                const status = statusResponse?.data?.status;
+
+                if (status === 'Approved') {
+                    navigate('/home', { replace: true });
+                    return;
+                }
+
+                navigate('/onboarding', { replace: true });
+            } catch {
+                // Fallback to onboarding for employee if status lookup fails.
+                navigate('/onboarding', { replace: true });
+            }
+        };
+
+        redirectByStatus();
     }, [user, navigate]);
 
     // Handle form submission
@@ -201,7 +210,5 @@ const Login = () => {
 }
 
 export default Login;
-
-
 
 

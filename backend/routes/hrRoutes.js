@@ -42,7 +42,7 @@ router.post(
 // Permissions: Login required (HR Only)
 // Response: { count: number, tokens: array }
 // ============================================
-router.get("/tokens", verifyToken, getAllTokens);
+router.get("/tokens", verifyToken, requireHR, getAllTokens);
 
 // ============================================
 // Route 3: GET /api/hr/applications
@@ -51,7 +51,7 @@ router.get("/tokens", verifyToken, getAllTokens);
 // Query parameters: ?status=Pending|Approved|Rejected|All
 // Response: { count: number, applications: array }
 // ============================================
-router.get("/applications", verifyToken, getAllApplications);
+router.get("/applications", verifyToken, requireHR, getAllApplications);
 
 // ============================================
 // Route 4: GET /api/hr/applications/:id
@@ -60,7 +60,7 @@ router.get("/applications", verifyToken, getAllApplications);
 // Path parameter: id - MongoDB ObjectId of the application
 // Response: { application: object, user: object }
 // ============================================
-router.get("/applications/:id", verifyToken, getApplicationById);
+router.get("/applications/:id", verifyToken, requireHR, getApplicationById);
 
 // ============================================
 // Route 5: PATCH /api/hr/applications/:id/review
@@ -73,23 +73,25 @@ router.get("/applications/:id", verifyToken, getApplicationById);
 router.patch(
   "/applications/:id/review",
   verifyToken,
+  requireHR,
   validateRequest(reviewApplicationSchema),
   reviewApplication,
 );
 
-router.get("/onboarding-applications", verifyToken, getAllApplications);
+router.get("/onboarding-applications", verifyToken, requireHR, getAllApplications);
 
-router.get("/onboarding-applications/:id", verifyToken, getApplicationById);
+router.get("/onboarding-applications/:id", verifyToken, requireHR, getApplicationById);
 
 router.patch(
   "/onboarding-applications/:id/review",
   verifyToken,
+  requireHR,
   validateRequest(reviewApplicationSchema),
   reviewApplication,
 );
 
-router.get("/employees", verifyToken, getAllEmployees);
-router.get("/employees/:id", verifyToken, getEmployeeById);
+router.get("/employees", verifyToken, requireHR, getAllEmployees);
+router.get("/employees/:id", verifyToken, requireHR, getEmployeeById);
 
 // Visa Status Review (OPT documents)
 router.get("/visa-status", verifyToken, requireHR, getVisaStatusList);
