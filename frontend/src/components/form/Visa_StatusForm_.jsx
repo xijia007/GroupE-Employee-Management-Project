@@ -70,7 +70,7 @@ function toApiRelativePath(urlOrPath) {
     // ignore URL parse issues
   }
 
-  pathname = pathname.replace(/\\/g, "/");
+  pathname = pathname.replace(/\\/g, "/"); // normalize backslashes to forward slashes
 
   // Convert stored link like /api/files/... to axios api baseURL relative (/files/...)
   if (pathname.startsWith("/api/")) return pathname.slice(4);
