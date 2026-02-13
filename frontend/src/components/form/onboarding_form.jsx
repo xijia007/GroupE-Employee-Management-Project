@@ -21,6 +21,7 @@ import {
   UploadOutlined,
   MinusCircleOutlined,
   PlusOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -300,16 +301,18 @@ function OnboardingForm({
                   height: 120,
                   marginTop: 12,
                   border: "1px dashed #d9d9d9",
-                  borderRadius: 8,
+                  borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#999",
-                  background: "#fafafa",
-                  fontSize: 12,
+                  color: "#bfbfbf",
+                  background: "linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)",
+                  flexDirection: "column",
+                  gap: 4,
                 }}
               >
-                Default Placeholder
+                <UserOutlined style={{ fontSize: 40, color: "#bfbfbf" }} />
+                <span style={{ fontSize: 11, color: "#999" }}>No Photo</span>
               </div>
             ))}
         </Form.Item>

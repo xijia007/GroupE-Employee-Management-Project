@@ -12,7 +12,6 @@ import {
 } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { clearError, loginUser, selectAuthError, selectAuthLoading, selectUser } from '../../features/auth/authSlice';
-import api from '../../services/api';
 
 const { Title, Text } = Typography;
 
@@ -39,7 +38,14 @@ const Login = () => {
     useEffect(() => {
         if (!user || window.location.pathname !== '/login') return;
 
-        const redirectByStatus = async () => {
+        // ════════════════════════════════════════════════════════
+        // Redirect based on onboardingStatus from login response
+        // 使用 login 返回的 onboardingStatus 来决定跳转
+        //
+        // This avoids an extra API call that could have timing issues
+        // with the newly-set token.
+        // ════════════════════════════════════════════════════════
+        const redirectByStatus = () => {
             message.success(`Welcome back, ${user.username}!`);
 
             if (user.role === 'HR') {
@@ -47,20 +53,23 @@ const Login = () => {
                 return;
             }
 
-            try {
-                const statusResponse = await api.get('/onboarding/status');
-                const status = statusResponse?.data?.status;
+            const status = user.onboardingStatus;
 
-                if (status === 'Approved') {
-                    navigate('/personInformation', { replace: true });
-                    return;
-                }
-
-                navigate('/onboarding', { replace: true });
-            } catch {
-                // Fallback to onboarding for employee if status lookup fails.
-                navigate('/onboarding', { replace: true });
+            if (status === 'Approved') {
+                // Approved employees go to personal information
+                navigate('/personInformation', { replace: true });
+                return;
             }
+
+            if (status === 'Never Submitted' || status === 'Rejected') {
+                // Need to fill out or revise the onboarding form
+                navigate('/onboarding', { replace: true });
+                return;
+            }
+
+            // Pending → go to home page which shows "Under Review" message
+            // 待审批 → 跳转到首页，显示"审核中"提示
+            navigate('/home', { replace: true });
         };
 
         redirectByStatus();

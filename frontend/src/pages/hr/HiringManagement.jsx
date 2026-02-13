@@ -106,6 +106,18 @@ const HiringManagement = () => {
             }
         },
         {
+            title: 'Created At',
+            dataIndex: 'createdAt',
+            key: 'createdAt',
+            render: (date) => date ? new Date(date).toLocaleString() : '-',
+        },
+        {
+            title: 'Expires At',
+            dataIndex: 'expiresAt',
+            key: 'expiresAt',
+            render: (date) => date ? new Date(date).toLocaleString() : '-',
+        },
+        {
             title: 'Registration Link',
             dataIndex: 'registrationLink',
             key: 'registrationLink',
@@ -427,6 +439,12 @@ const HiringManagement = () => {
                                     <Space direction="vertical" size="small" style={{ width: '100%' }}>
                                         <Text strong>{record.email}</Text>
                                         <Text type="secondary">{record.name}</Text>
+                                        <Text type="secondary">
+                                            Created: {record.createdAt ? new Date(record.createdAt).toLocaleString() : 'N/A'}
+                                        </Text>
+                                        <Text type="secondary">
+                                            Expires: {record.expiresAt ? new Date(record.expiresAt).toLocaleString() : 'N/A'}
+                                        </Text>
                                         {record.registrationLink && (
                                             <a
                                                 href={record.registrationLink}

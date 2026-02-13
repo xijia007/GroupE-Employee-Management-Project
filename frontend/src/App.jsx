@@ -3,9 +3,7 @@ import { Layout } from "antd";
 import HeaderComponent from "./components/Header/Header.jsx";
 import Sider_component from "./components/Sider/Sider_component.jsx";
 import FooterComponent from "./components/Footer/Footer.jsx";
-import DashboardPage from "./pages/Dashborad.jsx";
-import OnboardingApplication from "./pages/Onboarding_Application.jsx";
-import PersonApplication from "./pages/Person_Application.jsx";
+import OnboardingApplication from "./pages/Onboarding_application.jsx";
 import PersonInformation from "./pages/Person_information.jsx";
 import VisaStatusManagement from "./pages/Visa_status.jsx";
 import { Route, Routes, Navigate } from "react-router-dom";
@@ -211,18 +209,6 @@ const App = () => (
           <AppLayout>
             <ApplicationReview />
           </AppLayout>
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/personApplication"
-      element={
-        <ProtectedRoute>
-          <ApprovedOnlyRoute>
-            <AppLayout>
-              <PersonApplication />
-            </AppLayout>
-          </ApprovedOnlyRoute>
         </ProtectedRoute>
       }
     />

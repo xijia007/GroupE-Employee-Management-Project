@@ -94,6 +94,14 @@ export const register = async (req, res) => {
             });
         }
 
+        // Check if the email already exists
+        const existingEmail = await User.findOne({ email: regToken.email });
+        if (existingEmail) {
+            return res.status(400).json({
+                message: 'An account with this email already exists.'
+            });
+        }
+
         // Encrypt the password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -125,6 +133,14 @@ export const register = async (req, res) => {
         });
 
     } catch (err) {
+        // Handle MongoDB duplicate key error (E11000) as a safety net for race conditions
+        if (err.code === 11000) {
+            const field = Object.keys(err.keyPattern)[0];
+            return res.status(400).json({
+                message: `${field === 'email' ? 'Email' : 'Username'} already exists.`
+            });
+        }
+
         console.error('Register Error', err);
         res.status(500).json({
             message: 'Server Error',
@@ -281,10 +297,11 @@ export const logout = async (req, res) => {
     try {
         const isProduction = process.env.NODE_ENV === 'production';
 
+        // The res.clearCookie method is called to remove the refreshToken
         res.clearCookie('refreshToken', {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: 'lax'
+            httpOnly: true, // Prevents client-side JavaScript from accessing the cookie (mitigates XSS attacks)
+            secure: isProduction, // Ensures the cookie is only sent over HTTPS when in production
+            sameSite: 'lax' // Provides a balance between security and usability regarding cross-site requests
         });
 
         res.status(200).json({ message: 'Logged out successfully.' });
