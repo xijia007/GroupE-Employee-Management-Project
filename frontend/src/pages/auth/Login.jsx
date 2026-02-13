@@ -92,29 +92,7 @@ const Login = () => {
         //    OR rejected → set error / 或设置错误
     };
 
-    redirectByStatus();
-  }, [user, navigate]);
 
-  // Handle form submission
-  const handleSubmit = (values) => {
-    // Clear previous error
-    dispatch(clearError());
-
-    // Dispatch login action
-    dispatch(
-      loginUser({
-        username: values.username,
-        password: values.password,
-      }),
-    );
-    // This triggers the async thunk / 这会触发异步 thunk
-    // 1. pending → loading = true
-    // 2. API call → POST /api/auth/login
-    // 3. fulfilled → update user state / 更新用户状态
-    //    OR rejected → set error / 或设置错误
-  };
-
-  // Render
   return (
     <div
       style={{
