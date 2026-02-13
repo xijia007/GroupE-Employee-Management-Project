@@ -12,8 +12,7 @@ function sanitizeFilename(name) {
 
 const getUserProfile = async (req, res) => {
   try {
-    const userId = req.userId; // From verifyToken middleware
-    console.log("Getting profile for userId:", userId);
+    const userId = req.userId;
 
     let profile = await Profile.findOne({
       user: new mongoose.Types.ObjectId(userId),
@@ -22,10 +21,6 @@ const getUserProfile = async (req, res) => {
     // Self-healing: If profile missing but user is approved, try to create it from application
     if (!profile) {
       console.log("Profile not found. Checking for approved application...");
-      // Dynamic import or ensure top-level import. Since we are in module, top-level is better, but local here is fine for now to avoid messing largely with top of file if not needed.
-      // Actually, I'll use dynamic import to be safe with existing code structure or just rely on what I have?
-      // The error was "OnboardingApplication is not defined".
-      // I will import it here.
       const OnboardingApplication = (
         await import("../models/OnboardingApplication.js")
       ).default;
@@ -165,7 +160,13 @@ const uploadProfileDocument = async (req, res) => {
     const userId = req.userId;
     const { docType } = req.params;
 
-    const allowedDocTypes = new Set(["optReceipt", "optEad", "i983", "i20"]);
+    const visaDocTypes = new Set(["optReceipt", "optEad", "i983", "i20"]);
+    const allowedDocTypes = new Set([
+      "driverLicense",
+      "workAuthorization",
+      "other",
+      ...visaDocTypes,
+    ]);
     if (!allowedDocTypes.has(docType)) {
       return res.status(400).json({ message: "Invalid document type" });
     }
@@ -191,16 +192,20 @@ const uploadProfileDocument = async (req, res) => {
 
     const filePath = `/api/files/${fileId}/${encodeURIComponent(safeOriginalName)}`;
 
+    const updateSet = {
+      [`documents.${docType}`]: filePath,
+    };
+
+    // Only visa-status documents participate in the HR review workflow.
+    if (visaDocTypes.has(docType)) {
+      updateSet[`visaDocuments.${docType}.status`] = "pending";
+      updateSet[`visaDocuments.${docType}.feedback`] = "";
+      updateSet[`visaDocuments.${docType}.reviewedAt`] = null;
+    }
+
     const profile = await Profile.findOneAndUpdate(
       { user: new mongoose.Types.ObjectId(userId) },
-      {
-        $set: {
-          [`documents.${docType}`]: filePath,
-          [`visaDocuments.${docType}.status`]: "pending",
-          [`visaDocuments.${docType}.feedback`]: "",
-          [`visaDocuments.${docType}.reviewedAt`]: null,
-        },
-      },
+      { $set: updateSet },
       { new: true, runValidators: true },
     );
 

@@ -20,16 +20,8 @@ function PersonInformation_page() {
   const user = useSelector((state) => state.auth.user);
 
   console.log("Person_information_page - User from Redux:", user);
-  console.log(
-    "Person_information_page - User object keys:",
-    user ? Object.keys(user) : "no user",
-  );
-  console.log("Person_information_page - User ID (_id):", user?._id);
-  console.log("Person_information_page - User ID (id):", user?.id);
-  console.log("Person_information_page - Direct access:", user && user._id);
 
   const userId = user?._id || user?.id;
-  console.log("Person_information_page - Final userId:", userId);
 
   return <PersonInformation userId={userId} />;
 }

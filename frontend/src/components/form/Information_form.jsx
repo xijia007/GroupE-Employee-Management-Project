@@ -1,43 +1,14 @@
-import React from "react";
-import { Steps } from "antd";
 import { useState, useEffect } from "react";
-import { UploadOutlined } from "@ant-design/icons";
-import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import NameSection from "./section/nameSection";
 import AddressSection from "./section/addressSection";
 import ContactSection from "./section/contactSection";
 import VisaInformationSection from "./section/visaInformationSection";
 import EmergencySection from "./section/EmergencySection";
 import UploadDocument from "./section/uploadDocument";
-import {
-  Row,
-  Col,
-  Button,
-  Cascader,
-  DatePicker,
-  Form,
-  Input,
-  InputNumber,
-  Radio,
-  Select,
-  Space,
-  Switch,
-  Table,
-  TreeSelect,
-  Upload,
-  Spin,
-  message,
-} from "antd";
+import { Form, Radio, Spin, message } from "antd";
 import dayjs from "dayjs";
 import api from "../../services/api";
 
-/**
- * PersonInformation Component
- * Displays and allows editing of employee profile information from Profile database
- *
- * @param {string} userId - Current user's ID (for employees viewing their own profile)
- * @param {string} onboardingApplicationId - Application ID (for HR viewing specific employee - currently not used, reads from Profile)
- */
 function PersonInformation({ userId, onboardingApplicationId }) {
   const [componentSize, setComponentSize] = useState("default");
   const [loading, setLoading] = useState(false);
