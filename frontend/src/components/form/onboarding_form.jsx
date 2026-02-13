@@ -21,8 +21,10 @@ import {
   UploadOutlined,
   MinusCircleOutlined,
   PlusOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import api from "../../services/api";
 
 function OnboardingForm({
   initialData = null,
@@ -41,7 +43,36 @@ function OnboardingForm({
     optReceipt: [],
   });
 
+  // Authenticated blob URL for profile picture (GridFS /api/files/ paths)
+  const [profilePicUrl, setProfilePicUrl] = useState(null);
 
+  useEffect(() => {
+    let objectUrl = null;
+    let cancelled = false;
+
+    const load = async () => {
+      const raw = String(initialData?.profile_picture || "").trim();
+      if (!raw) { setProfilePicUrl(null); return; }
+
+      try {
+        if (raw.includes("/api/files/")) {
+          const apiPath = raw.startsWith("/api/") ? raw.slice(4) : raw;
+          const res = await api.get(apiPath, { responseType: "blob" });
+          if (cancelled) return;
+          objectUrl = URL.createObjectURL(res.data);
+          setProfilePicUrl(objectUrl);
+          return;
+        }
+        // Public / legacy URL — use directly
+        setProfilePicUrl(raw);
+      } catch {
+        setProfilePicUrl(null);
+      }
+    };
+
+    load();
+    return () => { cancelled = true; if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [initialData?.profile_picture]);
 
 
   const isUSResident = Form.useWatch("isUSResident", form);
@@ -280,9 +311,9 @@ function OnboardingForm({
             <Button icon={<UploadOutlined />}>Upload Profile Picture</Button>
           </Upload>
           {(!fileList.profilePicture || fileList.profilePicture.length === 0) &&
-            (initialData?.profile_picture ? (
+            (profilePicUrl ? (
               <img
-                src={initialData.profile_picture}
+                src={profilePicUrl}
                 alt="Current profile"
                 style={{
                   width: 120,
@@ -300,16 +331,18 @@ function OnboardingForm({
                   height: 120,
                   marginTop: 12,
                   border: "1px dashed #d9d9d9",
-                  borderRadius: 8,
+                  borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#999",
-                  background: "#fafafa",
-                  fontSize: 12,
+                  color: "#bfbfbf",
+                  background: "linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)",
+                  flexDirection: "column",
+                  gap: 4,
                 }}
               >
-                Default Placeholder
+                <UserOutlined style={{ fontSize: 40, color: "#bfbfbf" }} />
+                <span style={{ fontSize: 11, color: "#999" }}>No Photo</span>
               </div>
             ))}
         </Form.Item>

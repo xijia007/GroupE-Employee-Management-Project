@@ -22,6 +22,7 @@ import {
   SafetyOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import api from '../../services/api';
 
 
@@ -62,6 +63,7 @@ const Register = () => {
 
   // Hooks 
   const navigate = useNavigate(); // Navigate to different pages 
+  const dispatch = useDispatch(); // Dispatch Redux actions
   
   const [searchParams] = useSearchParams(); // Get URL query parameters
   // Example: /register?token=abc123 → searchParams.get('token') = 'abc123'
@@ -156,11 +158,18 @@ const Register = () => {
       // 注册成功！跳转到登录页面...
 
       // ──────────────────────────────────────────────────────
-      // Step 4: Redirect to login page after 2 seconds
-      // 步骤 4: 2 秒后跳转到登录页面
+      // Step 4: Clear any existing auth state, then redirect to login
+      // 步骤 4: 清除旧的登录状态，然后跳转到登录页面
       // ──────────────────────────────────────────────────────
+      // Clear old login session (e.g., if HR was logged in before)
+      // 清除旧的登录会话（例如之前登录的 HR 账号）
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+
       setTimeout(() => {
-        navigate('/login');
+        // Force a full page reload to /login to reset Redux store completely
+        // 强制刷新页面到 /login，完全重置 Redux store
+        window.location.href = '/login';
       }, 2000);
 
     } catch (error) {

@@ -512,15 +512,12 @@ export default function HrVisaStatusPage() {
           const fullName =
             `${r.firstName || ""} ${r.lastName || ""}`.trim() || "—";
           return (
-            <Space>
-              <SafeProfileAvatar avatarUrl={r.avatarUrl} fullName={fullName} />
-              <div style={{ lineHeight: 1.1 }}>
-                <div style={{ fontWeight: 600 }}>{fullName}</div>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {r.employeeId ? `ID: ${r.employeeId}` : ""}
-                </Text>
-              </div>
-            </Space>
+            <div style={{ lineHeight: 1.1 }}>
+              <div style={{ fontWeight: 600 }}>{fullName}</div>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {r.employeeId ? `ID: ${r.employeeId}` : ""}
+              </Text>
+            </div>
           );
         },
       },
@@ -716,12 +713,9 @@ export default function HrVisaStatusPage() {
           const fullName =
             `${r.firstName || ""} ${r.lastName || ""}`.trim() || "—";
           return (
-            <Space>
-              <SafeProfileAvatar avatarUrl={r.avatarUrl} fullName={fullName} />
-              <div style={{ lineHeight: 1.1 }}>
-                <div style={{ fontWeight: 600 }}>{fullName}</div>
-              </div>
-            </Space>
+            <div style={{ lineHeight: 1.1 }}>
+              <div style={{ fontWeight: 600 }}>{fullName}</div>
+            </div>
           );
         },
       },
