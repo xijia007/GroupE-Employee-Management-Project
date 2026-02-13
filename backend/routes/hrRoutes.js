@@ -23,13 +23,7 @@ import {
 
 const router = express.Router();
 
-// ============================================
-// Route 1: POST /api/hr/generate-token
-// Function: Generates a registration token and sends an email.
-// Permissions: Requires login (HR Only)
-// Request Body: { email: string, name: string }
-// Response: { message: string, token: object }
-// ============================================
+// Route 1: Generate registration token and send email
 router.post(
   "/generate-token",
   verifyToken,
@@ -38,54 +32,18 @@ router.post(
   generateToken,
 );
 
-// ============================================
-// Route 2: GET /api/hr/tokens
-// Function: Get all registered token history
-// Permissions: Login required (HR Only)
-// Response: { count: number, tokens: array }
-// ============================================
+// Route 2: Get all registration tokens
 router.get("/tokens", verifyToken, requireHR, getAllTokens);
 
-// ============================================
-// Route 3: GET /api/hr/applications
-// Function: Get all application listings (supports status filtering)
-// Permissions: Login required (HR Only)
-// Query parameters: ?status=Pending|Approved|Rejected|All
-// Response: { count: number, applications: array }
-// ============================================
+// Route 3: Get all applications (supports status filtering)
 router.get("/applications", verifyToken, requireHR, getAllApplications);
 
-// ============================================
-// Route 4: GET /api/hr/applications/:id
-// Function: Get detailed information for a single application
-// Permissions: Login required (HR Only)
-// Path parameter: id - MongoDB ObjectId of the application
-// Response: { application: object, user: object }
-// ============================================
+// Route 4: Get application details by ID
 router.get("/applications/:id", verifyToken, requireHR, getApplicationById);
 
-// ============================================
-// Route 5: PATCH /api/hr/applications/:id/review
-// Function: Review an application (approve or reject)
-// Permissions: Requires login (HR Only)
-// Path Parameters: id - MongoDB ObjectId of the application
-// Request Body: { status: "Approved"|"Rejected", feedback: string }
-// Response: { message: string, application: object }
-// ============================================
+// Route 5: Review application (approve/reject)
 router.patch(
   "/applications/:id/review",
-  verifyToken,
-  requireHR,
-  validateRequest(reviewApplicationSchema),
-  reviewApplication,
-);
-
-router.get("/onboarding-applications", verifyToken, requireHR, getAllApplications);
-
-router.get("/onboarding-applications/:id", verifyToken, requireHR, getApplicationById);
-
-router.patch(
-  "/onboarding-applications/:id/review",
   verifyToken,
   requireHR,
   validateRequest(reviewApplicationSchema),

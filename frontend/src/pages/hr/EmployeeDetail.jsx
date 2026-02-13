@@ -272,7 +272,25 @@ function EmployeeDetail() {
             return <Tag color="green">Approved</Tag>;
         }
 
-        return <Tag color="orange">Visa Review</Tag>;
+        // Check for F1 visa documents status
+        const isF1 = visaType && String(visaType).startsWith('F1');
+        if (isF1) {
+            const docs = profile?.visaDocuments || {};
+            const allApproved = 
+                docs.optReceipt?.status === 'approved' &&
+                docs.optEad?.status === 'approved' &&
+                docs.i983?.status === 'approved' &&
+                docs.i20?.status === 'approved';
+            
+            if (allApproved) {
+                return <Tag color="green">Approved</Tag>;
+            }
+            // F1 status not complete
+            return <Tag color="orange">Visa Review</Tag>;
+        }
+
+        // For other visa types (H1-B, L2, H4, Other), onboarding approval is sufficient
+        return <Tag color="green">Approved</Tag>;
     }
     
     return <Tag>Unknown</Tag>;

@@ -29,6 +29,9 @@ export const submitApplication = async (req, res) => {
         applicationData.emergencyContacts,
       );
     }
+    if (typeof applicationData.reference === "string") {
+      applicationData.reference = JSON.parse(applicationData.reference);
+    }
 
     // Persist uploaded files to MongoDB GridFS and store links
     if (req.files) {
@@ -132,7 +135,27 @@ export const submitApplication = async (req, res) => {
     }
 
     // check if there is an application
+    // Check for existing application
     let application = await OnboardingApplication.findOne({ userId });
+
+    // VALIDATION: Check for Work Authorization Document
+    // Required if usResident is 'workAuth' AND visaTitle is NOT 'F1(CPT/OPT)'
+    const isWorkAuthRequired =
+      req.body.usResident === "workAuth" &&
+      req.body.visaTitle !== "F1(CPT/OPT)";
+
+    if (isWorkAuthRequired) {
+      // Check if new file uploaded (in applicationData) OR existing file present (in DB)
+      const hasNewFile = applicationData.documents?.workAuthorization;
+      const hasExistingFile = application?.documents?.workAuthorization;
+
+      if (!hasNewFile && !hasExistingFile) {
+        return res.status(400).json({
+          message:
+            "Work Authorization Document is required for your visa status.",
+        });
+      }
+    }
 
     if (application) {
       console.log("📝 Updating existing application");
@@ -140,6 +163,7 @@ export const submitApplication = async (req, res) => {
       application.status = "Pending";
       application.submittedAt = new Date();
     } else {
+
       console.log("📝 Creating new application");
       application = new OnboardingApplication({
         userId,

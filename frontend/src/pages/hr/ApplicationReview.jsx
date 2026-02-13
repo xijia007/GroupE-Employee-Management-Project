@@ -38,7 +38,7 @@ function ApplicationReview() {
   const fetchApplicationDetails = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/hr/onboarding-applications/${id}`);
+      const response = await api.get(`/hr/applications/${id}`);
       setApplication(response.data.application);
     } catch (err) {
       console.error("Error fetching application:", err);
@@ -90,7 +90,7 @@ function ApplicationReview() {
   const handleApprove = async () => {
     try {
       setSubmitting(true);
-      await api.patch(`/hr/onboarding-applications/${id}/review`, {
+      await api.patch(`/hr/applications/${id}/review`, {
         status: "Approved",
         feedback: feedback || "Your application has been approved!",
       });
@@ -113,7 +113,7 @@ function ApplicationReview() {
 
     try {
       setSubmitting(true);
-      await api.patch(`/hr/onboarding-applications/${id}/review`, {
+      await api.patch(`/hr/applications/${id}/review`, {
         status: "Rejected",
         feedback: feedback,
       });
@@ -551,7 +551,7 @@ function ApplicationReview() {
           )}
         </Card>
 
-        {/* 审批操作区域 */}
+        {/* Approval Actions */}
         {normalizedStatus === "pending" && !actionType && (
           <div style={{ marginTop: 24, textAlign: "center" }}>
             <Space size="large">
@@ -572,7 +572,7 @@ function ApplicationReview() {
             </Space>
           </div>
         )}
-        {/* 审批表单 */}
+        {/* Approval Form */}
         {actionType && (
           <Card
             style={{ marginTop: 24, backgroundColor: "#f9f9f9" }}
@@ -615,7 +615,7 @@ function ApplicationReview() {
             </Space>
           </Card>
         )}
-        {/* 已审批状态显示 */}
+        {/* Status Display */}
         {normalizedStatus !== "pending" && (
           <Card style={{ marginTop: 24, backgroundColor: "#f0f0f0" }}>
             <p>

@@ -4,6 +4,15 @@ A full-stack web application for managing employee onboarding, personal informat
 
 ---
 
+# Gourp E
+
+## Members:
+
+### Zhenjia Li
+### Xi Jia
+
+---
+
 ## Table of Contents
 
 1. [Tech Stack](#1-tech-stack)

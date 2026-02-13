@@ -1,7 +1,4 @@
-// ============================================
-// Email Service
-// Function: Sends registration emails and application status notification emails.
-// ============================================
+// Email Service: Sends registration and status emails
 
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
@@ -10,10 +7,7 @@ import dotenv from "dotenv";
 // Reads configuration (such as EMAIL_USER, EMAIL_PASS) from the .env file
 dotenv.config();
 
-// ============================================
-// Creating a mail transporter
-// Function: Configures the SMTP connection used for sending emails
-// ============================================
+// Create mail transporter
 const createTransporter = () => {
   return nodemailer.createTransport({
     // Uses Gmail's default configuration
@@ -26,14 +20,7 @@ const createTransporter = () => {
   });
 };
 
-// ============================================
-// Sends a registration token email to a new employee
-// Parameters:
-//   - to (string): Recipient's email address
-//   - name (string): Recipient's name
-//   - token (string): Registration token (64-bit hexadecimal string)
-// Returns: Promise<{ success: boolean, messageId: string }>
-// ============================================
+// Send registration token email
 export const sendRegistrationEmail = async (to, name, token) => {
   try {
     // Create a transmitter instance.
@@ -53,16 +40,12 @@ export const sendRegistrationEmail = async (to, name, token) => {
       // Using inline CSS styles (because email clients do not support external CSS)
       html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <!-- 邮件标题 -->
                     <h2 style="color: #1890ff;">Welcome to Our Company!</h2>
                     
-                    <!-- 问候语 -->
                     <p>Hi ${name},</p>
                     
-                    <!-- 说明文字 -->
                     <p>You have been invited to join our company. Please complete your registration by clicking the link below:</p>
                     
-                    <!-- 注册按钮 -->
                     <div style="margin: 30px 0; text-align: center;">
                         <a href="${registrationLink}" 
                            style="background-color: #1890ff; 
@@ -75,19 +58,15 @@ export const sendRegistrationEmail = async (to, name, token) => {
                         </a>
                     </div>
                     
-                    <!-- 备用链接（如果按钮不工作） -->
                     <p>Or copy and paste this link into your browser:</p>
                     <p style="color: #666; word-break: break-all;">${registrationLink}</p>
                     
-                    <!-- 过期提示 -->
                     <p style="color: #999; font-size: 12px; margin-top: 30px;">
                         This link will expire in 3 hours. If you did not expect this email, please ignore it.
                     </p>
                     
-                    <!-- 分隔线 -->
                     <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
                     
-                    <!-- 签名 -->
                     <p style="color: #999; font-size: 12px;">
                         Best regards,<br>
                         HR Team
@@ -113,15 +92,7 @@ export const sendRegistrationEmail = async (to, name, token) => {
   }
 };
 
-// ============================================
-// Sends an application status notification email (approved/rejected)
-// Parameters:
-//   - to (string): Recipient's email address
-//   - name (string): Recipient's name
-//   - status (string): Application status: "Approved" or "Rejected"
-//   - feedback (string): HR feedback information (optional)
-// Returns: Promise<{ success: boolean, messageId: string }>
-// ============================================
+// Send application status notification email
 export const sendApplicationStatusEmail = async (
   to,
   name,
@@ -190,14 +161,7 @@ export const sendApplicationStatusEmail = async (
   }
 };
 
-// ============================================
-// Sends a visa status reminder email (next step)
-// Parameters:
-//   - to (string): Recipient's email address
-//   - name (string): Recipient's name
-//   - nextStep (string): What the employee should do next
-// Returns: Promise<{ success: boolean, messageId: string }>
-// ============================================
+// Send visa status reminder email
 export const sendVisaStatusReminderEmail = async (to, name, nextStep) => {
   try {
     const transporter = createTransporter();

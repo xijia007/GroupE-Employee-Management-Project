@@ -39,7 +39,7 @@ export default function EmergencySection({ sectionButtonProps }) {
           <div
             style={{
               width: "100%",
-              maxWidth: 1000, // ⭐ 控制整体更宽
+              maxWidth: 1000,
               margin: "0 auto",
               border: "1px solid #d9d9d9",
               borderRadius: 12,
@@ -58,7 +58,7 @@ export default function EmergencySection({ sectionButtonProps }) {
               Emergency Contact Person
             </div>
 
-            {/* 第一行 */}
+            {/* First Row */}
             <Row gutter={20}>
               <Col span={8}>
                 <Form.Item
@@ -102,7 +102,7 @@ export default function EmergencySection({ sectionButtonProps }) {
               </Col>
             </Row>
 
-            {/* 第二行 */}
+            {/* Second Row */}
             <Row gutter={20}>
               <Col span={8}>
                 <Form.Item

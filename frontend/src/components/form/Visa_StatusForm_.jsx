@@ -183,7 +183,7 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
     };
   }, []);
 
-  // 解锁规则：不再把 "locked" 当成后端/状态字段存储，而是 UI 根据流程派生“是否锁定”。
+  // Unlock rule: "locked" is derived from UI flow state, not stored in backend
   const isFlowLocked = useMemo(() => {
     return {
       optReceipt: false,
@@ -193,12 +193,12 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
     };
   }, [docs]);
 
-  // 当前 step index
+  // Current step index
   const currentStep = useMemo(() => {
     const order = ["optReceipt", "optEad", "i983", "i20"];
     for (let i = 0; i < order.length; i++) {
       const s = docs[order[i]].status;
-      if (s !== "approved") return i; // 第一个未 approved 的就是当前
+      if (s !== "approved") return i;
     }
     return 3;
   }, [docs]);
@@ -359,7 +359,7 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
       : [];
 
     const canUpload =
-      !isFlowLocked[key] && status !== "approved" && status !== "pending"; // pending 时避免重复提交；rejected/Not Uploaded 允许上传
+      !isFlowLocked[key] && status !== "approved" && status !== "pending";
     const uploadBtn = (
       <Upload
         customRequest={({ file, onSuccess, onError }) =>
