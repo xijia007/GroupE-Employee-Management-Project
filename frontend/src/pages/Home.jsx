@@ -1,29 +1,11 @@
 import React, { useState, useEffect } from "react";
-import {
-  Card,
-  Typography,
-  Button,
-  Alert,
-  Spin,
-  List,
-  Avatar,
-  Tag,
-  Tooltip,
-} from "antd";
-import {
-  FileTextOutlined,
-  SafetyCertificateOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { Card, Typography, Button, Alert, Spin } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { selectUser } from "../features/auth/authSlice";
 import api from "../services/api";
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Paragraph } = Typography;
 
 function HomePage() {
   const user = useSelector(selectUser);
@@ -40,7 +22,6 @@ function HomePage() {
     totalEmployees: 0,
   });
 
-
   useEffect(() => {
     const fetchData = async () => {
       if (user?.role === "Employee") {
@@ -55,7 +36,7 @@ function HomePage() {
           try {
             const profileResponse = await api.get("/info/profile");
             setProfile(profileResponse.data);
-          } catch (profileError) {
+          } catch {
             console.log("Profile not found, user might not be approved yet");
           }
         } catch (error) {
@@ -97,8 +78,6 @@ function HomePage() {
             pendingVisaDocuments: pendingDocs,
             totalEmployees: totalEmps,
           });
-
-
         } catch (error) {
           console.error("Error fetching HR dashboard data:", error);
         } finally {
@@ -118,7 +97,6 @@ function HomePage() {
 
     return (
       <div style={{ marginBottom: 24 }}>
-
         {/* Action Required Alert */}
         {(hrDashboard.pendingApplications > 0 ||
           hrDashboard.pendingVisaDocuments > 0) && (
@@ -127,18 +105,28 @@ function HomePage() {
             description={
               <div>
                 {hrDashboard.pendingApplications > 0 && (
-                  <div 
+                  <div
                     onClick={() => navigate("/hr/hiring_management")}
-                    style={{ margin: "4px 0", cursor: "pointer", color: '#1890ff', textDecoration: 'underline' }}
+                    style={{
+                      margin: "4px 0",
+                      cursor: "pointer",
+                      color: "#1890ff",
+                      textDecoration: "underline",
+                    }}
                   >
                     • <strong>{hrDashboard.pendingApplications}</strong>{" "}
                     onboarding application(s) waiting for review (Click to view)
                   </div>
                 )}
                 {hrDashboard.pendingVisaDocuments > 0 && (
-                  <div 
+                  <div
                     onClick={() => navigate("/hr/visaStatus")}
-                    style={{ margin: "4px 0", cursor: "pointer", color: '#1890ff', textDecoration: 'underline' }}
+                    style={{
+                      margin: "4px 0",
+                      cursor: "pointer",
+                      color: "#1890ff",
+                      textDecoration: "underline",
+                    }}
                   >
                     • <strong>{hrDashboard.pendingVisaDocuments}</strong> visa
                     document(s) waiting for approval (Click to view)
@@ -153,7 +141,6 @@ function HomePage() {
         )}
 
         {/* Recent Activity */}
-
       </div>
     );
   };
@@ -219,11 +206,7 @@ function HomePage() {
         if (!hasFile) return "Not Uploaded";
 
         const normalized = String(raw || "").toLowerCase();
-        if (
-          !raw ||
-          normalized === "locked" ||
-          normalized === "not uploaded"
-        ) {
+        if (!raw || normalized === "locked" || normalized === "not uploaded") {
           return "pending";
         }
         return raw;
@@ -275,7 +258,10 @@ function HomePage() {
             message="❌ OPT Receipt Rejected"
             description={
               <div>
-                <p>{visaDocs?.optReceipt?.feedback || "Please review HR feedback and re-upload."}</p>
+                <p>
+                  {visaDocs?.optReceipt?.feedback ||
+                    "Please review HR feedback and re-upload."}
+                </p>
                 <Button type="primary" onClick={() => navigate("/visaStatus")}>
                   Go to Visa Status
                 </Button>
@@ -294,7 +280,10 @@ function HomePage() {
             message="✅ OPT Receipt Approved"
             description={
               <div>
-                <p>Your OPT Receipt has been approved. Please upload your OPT EAD.</p>
+                <p>
+                  Your OPT Receipt has been approved. Please upload your OPT
+                  EAD.
+                </p>
                 <Button type="primary" onClick={() => navigate("/visaStatus")}>
                   Upload OPT EAD
                 </Button>
@@ -325,7 +314,10 @@ function HomePage() {
             message="❌ OPT EAD Rejected"
             description={
               <div>
-                <p>{visaDocs?.optEad?.feedback || "Please review HR feedback and re-upload."}</p>
+                <p>
+                  {visaDocs?.optEad?.feedback ||
+                    "Please review HR feedback and re-upload."}
+                </p>
                 <Button type="primary" onClick={() => navigate("/visaStatus")}>
                   Go to Visa Status
                 </Button>
@@ -375,7 +367,10 @@ function HomePage() {
             message="❌ I-983 Rejected"
             description={
               <div>
-                <p>{visaDocs?.i983?.feedback || "Please review HR feedback and re-upload."}</p>
+                <p>
+                  {visaDocs?.i983?.feedback ||
+                    "Please review HR feedback and re-upload."}
+                </p>
                 <Button type="primary" onClick={() => navigate("/visaStatus")}>
                   Go to Visa Status
                 </Button>
@@ -425,7 +420,10 @@ function HomePage() {
             message="❌ I-20 Rejected"
             description={
               <div>
-                <p>{visaDocs?.i20?.feedback || "Please review HR feedback and re-upload."}</p>
+                <p>
+                  {visaDocs?.i20?.feedback ||
+                    "Please review HR feedback and re-upload."}
+                </p>
                 <Button type="primary" onClick={() => navigate("/visaStatus")}>
                   Go to Visa Status
                 </Button>
@@ -481,7 +479,7 @@ function HomePage() {
 
   return (
     <div style={{ padding: "24px", maxWidth: "800px", margin: "0 auto" }}>
-      <Card style={{ marginBottom: "50px"}}>
+      <Card style={{ marginBottom: "50px" }}>
         <Title level={2}>👋 Welcome, {user?.username}!</Title>
         <Paragraph style={{ fontSize: "16px", color: "#666" }}>
           Welcome to the Employee Management System
@@ -495,16 +493,29 @@ function HomePage() {
 
         {!loading && renderHRDashboard()}
         {!loading && renderStatusAlert()}
-      </Card>   
+      </Card>
 
       <Card>
         <div style={{ marginTop: 24 }}>
           <Title level={4}>Quick Links:</Title>
-          <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: "24px", fontSize: "16px", marginTop: "16px" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              flexWrap: "wrap",
+              gap: "24px",
+              fontSize: "16px",
+              marginTop: "16px",
+            }}
+          >
             {user?.role === "Employee" && (
               <>
                 <div style={{ display: "flex", alignItems: "center" }}>
-                  <Button type="link" onClick={() => navigate("/onboarding")} style={{ padding: 0, height: "auto" }}>
+                  <Button
+                    type="link"
+                    onClick={() => navigate("/onboarding")}
+                    style={{ padding: 0, height: "auto" }}
+                  >
                     📝 Complete Onboarding Application
                   </Button>
                 </div>

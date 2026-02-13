@@ -92,131 +92,160 @@ const Login = () => {
         //    OR rejected → set error / 或设置错误
     };
 
-    // Render
-    return (
-        <div style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            padding: '20px'
-        }}>
-            {/* Login Card */}
-            <Card
-                style={{
-                    width: '100%',
-                    maxWidth: '450px',
-                    borderRadius: '16px',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.15)'
-                }}
-                bordered={false}
-            >
-                {/* Title Section */}
-                <div style={{ textAlign: 'center', marginBottom: '32px'}}>
-                    <Title level={2} style={{ marginBottom: '8px', color: '#667eea'}}>
-                        Employee Management
-                    </Title>
-                    <Text>
-                        Sign in to your account
-                    </Text>
-                </div>
-                {/* Error Alert */}
-                {error && (
-                    <Alert
-                        message='Login Failed'
-                        description={error}
-                        type='error'
-                        showIcon
-                        closable
-                        onClose={() => dispatch(clearError())}
-                        style={{ marginBottom: '24px'}}
-                    />
-                )}
+    redirectByStatus();
+  }, [user, navigate]);
 
-                {/* Login Form */}
-                <Form
-                    name='login'
-                    onFinish={handleSubmit}
-                    autoComplete='off'
-                    size='large'
-                    layout='vertical'
-                >
-                    {/* Username Field */}
-                    <Form.Item
-                        name='username'
-                        rules={[
-                            {
-                                required: true,
-                                message: 'Please enter your username'
-                            }
-                        ]}
-                    >
-                        <Input 
-                            prefix={<UserOutlined style={{ color: '#667eea'}} />}   
-                            placeholder='Username'
-                            disabled={loading} 
-                        />
-                    </Form.Item>
-                    {/* Password Field */}
-                    <Form.Item
-                        name='password'
-                        rules={[
-                            {
-                                required: true,
-                                message: 'Please enter your password'
-                            }
-                        ]}
-                    >
-                        <Input.Password 
-                            prefix={<LockOutlined style={{ color: '#667eea'}} />}    
-                            placeholder='Password'
-                            disabled={loading}
-                        />
-                    </Form.Item>
+  // Handle form submission
+  const handleSubmit = (values) => {
+    // Clear previous error
+    dispatch(clearError());
 
-                    {/* Submit Button*/}
-                    <Form.Item style={{ marginBottom: '0'}}>
-                        <Button
-                            type='primary'
-                            htmlType='submit'
-                            loading={loading}
-                            block
-                            style={{
-                                height: '48px',
-                                fontSize: '16px',
-                                fontWeight: '600',
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                border: 'none',
-                                borderRadius: '8px'
-                            }}
-                        >
-                            {loading ? 'Signing in...' : 'Sign In'}
-                        </Button>
-                    </Form.Item>
-                </Form>
-                {process.env.NODE_ENV === 'development' && (
-                    <div style={{ 
-                        marginTop: '24px', 
-                        padding: '16px', 
-                        background: '#f6f8fa', 
-                        borderRadius: '8px' 
-                    }}>
-                        <Text strong style={{ display: 'block', marginBottom: '8px' }}>
-                            Test Accounts:
-                        </Text>
-                        <Text type="secondary" style={{ fontSize: '12px', display: 'block' }}>
-                            HR: hr_admin_1 / HRAdmin123!
-                        </Text>
-                        <Text type="secondary" style={{ fontSize: '12px', display: 'block' }}>
-                            Employee: (Register via HR invitation)
-                        </Text>
-                    </div>
-                )}
-            </Card>
+    // Dispatch login action
+    dispatch(
+      loginUser({
+        username: values.username,
+        password: values.password,
+      }),
+    );
+    // This triggers the async thunk / 这会触发异步 thunk
+    // 1. pending → loading = true
+    // 2. API call → POST /api/auth/login
+    // 3. fulfilled → update user state / 更新用户状态
+    //    OR rejected → set error / 或设置错误
+  };
+
+  // Render
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        padding: "20px",
+      }}
+    >
+      {/* Login Card */}
+      <Card
+        style={{
+          width: "100%",
+          maxWidth: "450px",
+          borderRadius: "16px",
+          boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
+        }}
+        bordered={false}
+      >
+        {/* Title Section */}
+        <div style={{ textAlign: "center", marginBottom: "32px" }}>
+          <Title level={2} style={{ marginBottom: "8px", color: "#667eea" }}>
+            Employee Management
+          </Title>
+          <Text>Sign in to your account</Text>
         </div>
-    )
-}
+        {/* Error Alert */}
+        {error && (
+          <Alert
+            message="Login Failed"
+            description={error}
+            type="error"
+            showIcon
+            closable
+            onClose={() => dispatch(clearError())}
+            style={{ marginBottom: "24px" }}
+          />
+        )}
+
+        {/* Login Form */}
+        <Form
+          name="login"
+          onFinish={handleSubmit}
+          autoComplete="off"
+          size="large"
+          layout="vertical"
+        >
+          {/* Username Field */}
+          <Form.Item
+            name="username"
+            rules={[
+              {
+                required: true,
+                message: "Please enter your username",
+              },
+            ]}
+          >
+            <Input
+              prefix={<UserOutlined style={{ color: "#667eea" }} />}
+              placeholder="Username"
+              disabled={loading}
+            />
+          </Form.Item>
+          {/* Password Field */}
+          <Form.Item
+            name="password"
+            rules={[
+              {
+                required: true,
+                message: "Please enter your password",
+              },
+            ]}
+          >
+            <Input.Password
+              prefix={<LockOutlined style={{ color: "#667eea" }} />}
+              placeholder="Password"
+              disabled={loading}
+            />
+          </Form.Item>
+
+          {/* Submit Button*/}
+          <Form.Item style={{ marginBottom: "0" }}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              block
+              style={{
+                height: "48px",
+                fontSize: "16px",
+                fontWeight: "600",
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                border: "none",
+                borderRadius: "8px",
+              }}
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </Button>
+          </Form.Item>
+        </Form>
+        {import.meta.env.DEV && (
+          <div
+            style={{
+              marginTop: "24px",
+              padding: "16px",
+              background: "#f6f8fa",
+              borderRadius: "8px",
+            }}
+          >
+            <Text strong style={{ display: "block", marginBottom: "8px" }}>
+              Test Accounts:
+            </Text>
+            <Text
+              type="secondary"
+              style={{ fontSize: "12px", display: "block" }}
+            >
+              HR: hr_admin_1 / HRAdmin123!
+            </Text>
+            <Text
+              type="secondary"
+              style={{ fontSize: "12px", display: "block" }}
+            >
+              Employee: (Register via HR invitation)
+            </Text>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+};
 
 export default Login;
-
