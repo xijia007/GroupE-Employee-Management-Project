@@ -101,7 +101,7 @@ function HomePage() {
         {(hrDashboard.pendingApplications > 0 ||
           hrDashboard.pendingVisaDocuments > 0) && (
           <Alert
-            message="⚠️ Action Required"
+            title="⚠️ Action Required"
             description={
               <div>
                 {hrDashboard.pendingApplications > 0 && (
@@ -153,7 +153,7 @@ function HomePage() {
     if (applicationStatus === "Rejected" && feedback) {
       return (
         <Alert
-          message="⚠️ Application Rejected"
+          title="⚠️ Application Rejected"
           description={
             <div>
               <p style={{ marginBottom: 8 }}>
@@ -179,7 +179,7 @@ function HomePage() {
     if (applicationStatus === "Pending") {
       return (
         <Alert
-          message="⏳ Application Under Review"
+          title="⏳ Application Under Review"
           description="Your onboarding application is currently being reviewed by HR. Please wait for approval."
           type="info"
           showIcon
@@ -220,7 +220,7 @@ function HomePage() {
       if (optReceiptStatus === "Not Uploaded") {
         return (
           <Alert
-            message="📄 Action Required"
+            title="📄 Action Required"
             description={
               <div>
                 <p>Please upload your OPT Receipt.</p>
@@ -239,7 +239,7 @@ function HomePage() {
       if (optReceiptStatus === "pending") {
         return (
           <Alert
-            message="📄 OPT Receipt Pending"
+            title="📄 OPT Receipt Pending"
             description={
               <div>
                 <p>Waiting for HR to approve your OPT Receipt.</p>
@@ -255,7 +255,7 @@ function HomePage() {
       if (optReceiptStatus === "rejected") {
         return (
           <Alert
-            message="❌ OPT Receipt Rejected"
+            title="❌ OPT Receipt Rejected"
             description={
               <div>
                 <p>
@@ -277,7 +277,7 @@ function HomePage() {
       if (optEadStatus === "Not Uploaded") {
         return (
           <Alert
-            message="✅ OPT Receipt Approved"
+            title="✅ OPT Receipt Approved"
             description={
               <div>
                 <p>
@@ -299,7 +299,7 @@ function HomePage() {
       if (optEadStatus === "pending") {
         return (
           <Alert
-            message="⏳ OPT EAD Under Review"
+            title="⏳ OPT EAD Under Review"
             description="Your OPT EAD is being reviewed by HR. Please wait for approval."
             type="info"
             showIcon
@@ -311,7 +311,7 @@ function HomePage() {
       if (optEadStatus === "rejected") {
         return (
           <Alert
-            message="❌ OPT EAD Rejected"
+            title="❌ OPT EAD Rejected"
             description={
               <div>
                 <p>
@@ -333,7 +333,7 @@ function HomePage() {
       if (i983Status === "Not Uploaded") {
         return (
           <Alert
-            message="📝 Next Step: I-983"
+            title="📝 Next Step: I-983"
             description={
               <div>
                 <p>Your OPT EAD has been approved. Please upload your I-983.</p>
@@ -352,7 +352,7 @@ function HomePage() {
       if (i983Status === "pending") {
         return (
           <Alert
-            message="⏳ I-983 Under Review"
+            title="⏳ I-983 Under Review"
             description="Your I-983 is being reviewed by HR. Please wait for approval."
             type="info"
             showIcon
@@ -364,7 +364,7 @@ function HomePage() {
       if (i983Status === "rejected") {
         return (
           <Alert
-            message="❌ I-983 Rejected"
+            title="❌ I-983 Rejected"
             description={
               <div>
                 <p>
@@ -386,7 +386,7 @@ function HomePage() {
       if (i20Status === "Not Uploaded") {
         return (
           <Alert
-            message="📝 Next Step: I-20"
+            title="📝 Next Step: I-20"
             description={
               <div>
                 <p>Your I-983 has been approved. Please upload your I-20.</p>
@@ -405,7 +405,7 @@ function HomePage() {
       if (i20Status === "pending") {
         return (
           <Alert
-            message="⏳ I-20 Under Review"
+            title="⏳ I-20 Under Review"
             description="Your I-20 is being reviewed by HR. Please wait for approval."
             type="info"
             showIcon
@@ -417,7 +417,7 @@ function HomePage() {
       if (i20Status === "rejected") {
         return (
           <Alert
-            message="❌ I-20 Rejected"
+            title="❌ I-20 Rejected"
             description={
               <div>
                 <p>
@@ -444,7 +444,7 @@ function HomePage() {
       ) {
         return (
           <Alert
-            message="🎉 All Documents Approved"
+            title="🎉 All Documents Approved"
             description="Your OPT documents have been approved. You're all set!"
             type="success"
             showIcon
@@ -458,7 +458,7 @@ function HomePage() {
     if (applicationStatus === "Never Submitted") {
       return (
         <Alert
-          message="📝 Action Required"
+          title="📝 Action Required"
           description={
             <div>
               <p>You haven't submitted your onboarding application yet.</p>

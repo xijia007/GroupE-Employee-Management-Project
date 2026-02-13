@@ -407,17 +407,19 @@ export const reviewApplication = async (req, res) => {
             other: application.documents?.other || "",
             optReceipt: application.documents?.optReceipt || "",
           },
-          
+
           // Initialize Visa Document Status if OPT Receipt is provided
-          ...(application.documents?.optReceipt ? {
-            visaDocuments: {
-              optReceipt: {
-                status: "pending", // Set as pending so HR can review in Visa Management
-                reviewedAt: null,
-                feedback: ""
+          ...(application.documents?.optReceipt
+            ? {
+                visaDocuments: {
+                  optReceipt: {
+                    status: "pending", // Set as pending so HR can review in Visa Management
+                    reviewedAt: null,
+                    feedback: "",
+                  },
+                },
               }
-            }
-          } : {}),
+            : {}),
         };
 
         // Upsert Profile: update if exists, create if not
@@ -541,29 +543,31 @@ export const getAllEmployees = async (req, res) => {
           visaTitle,
           onboardingStatus: normalizeStatusValue(user.onboardingStatus),
           workAuthorizationTitle: (() => {
-               const status = normalizeStatusValue(user.onboardingStatus);
-               if (status === 'Pending') return 'Onboarding Review Needed';
-               if (status === 'Rejected') return 'Onboarding Rejected';
-               if (status === 'Not Started' || status === 'Never Submitted') return 'Not Started';
-               if (status === 'Approved') {
-                   if (visaTitle === 'US Citizen' || visaTitle === 'Green Card') return 'Active (Citizen/GC)';
+            const status = normalizeStatusValue(user.onboardingStatus);
+            if (status === "Pending") return "Onboarding Review Needed";
+            if (status === "Rejected") return "Onboarding Rejected";
+            if (status === "Not Started" || status === "Never Submitted")
+              return "Not Started";
+            if (status === "Approved") {
+              if (visaTitle === "US Citizen" || visaTitle === "Green Card")
+                return "Active (Citizen/GC)";
 
-                   const isF1 = String(visaTitle || '').startsWith('F1');
-                   if (isF1) {
-                      const visaDocs = profile?.visaDocuments || {};
-                      const allApproved =
-                        visaDocs?.optReceipt?.status === 'approved' &&
-                        visaDocs?.optEad?.status === 'approved' &&
-                        visaDocs?.i983?.status === 'approved' &&
-                        visaDocs?.i20?.status === 'approved';
-                      return allApproved ? 'Active' : 'Visa Status Management';
-                   }
+              const isF1 = String(visaTitle || "").startsWith("F1");
+              if (isF1) {
+                const visaDocs = profile?.visaDocuments || {};
+                const allApproved =
+                  visaDocs?.optReceipt?.status === "approved" &&
+                  visaDocs?.optEad?.status === "approved" &&
+                  visaDocs?.i983?.status === "approved" &&
+                  visaDocs?.i20?.status === "approved";
+                return allApproved ? "Active" : "Visa Status Management";
+              }
 
-                   // Non-F1 work authorization does not require OPT pipeline in this project scope.
-                   if (visaTitle && visaTitle !== 'N/A') return 'Active';
-                   return 'Active';
-               }
-               return 'Unknown';
+              // Non-F1 work authorization does not require OPT pipeline in this project scope.
+              if (visaTitle && visaTitle !== "N/A") return "Active";
+              return "Active";
+            }
+            return "Unknown";
           })(),
           createdAt: user.createdAt,
           application: application

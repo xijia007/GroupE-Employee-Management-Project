@@ -19,8 +19,6 @@ function PersonInformation_page() {
   // Get current user from Redux store
   const user = useSelector((state) => state.auth.user);
 
-  console.log("Person_information_page - User from Redux:", user);
-
   const userId = user?._id || user?.id;
 
   return <PersonInformation userId={userId} />;

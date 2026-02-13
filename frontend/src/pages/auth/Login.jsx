@@ -112,7 +112,7 @@ const Login = () => {
           borderRadius: "16px",
           boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
         }}
-        bordered={false}
+        variant="borderless"
       >
         {/* Title Section */}
         <div style={{ textAlign: "center", marginBottom: "32px" }}>

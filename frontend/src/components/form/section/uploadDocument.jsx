@@ -79,7 +79,7 @@ export default function UploadDocument({ sectionButtonProps }) {
             labelCol={{ span: 24 }}
             wrapperCol={{ span: 24 }}
           >
-            <Space direction="vertical" style={{ width: "100%" }} size={8}>
+            <Space orientation="vertical" style={{ width: "100%" }} size={8}>
               <Form.Item name={["documents", "driverLicense"]} noStyle>
                 <Input placeholder="Driver License URL" disabled={!isEditing} />
               </Form.Item>
@@ -107,7 +107,7 @@ export default function UploadDocument({ sectionButtonProps }) {
             labelCol={{ span: 24 }}
             wrapperCol={{ span: 24 }}
           >
-            <Space direction="vertical" style={{ width: "100%" }} size={8}>
+            <Space orientation="vertical" style={{ width: "100%" }} size={8}>
               <Form.Item name={["documents", "workAuthorization"]} noStyle>
                 <Input
                   placeholder="Work Authorization URL"
@@ -138,7 +138,7 @@ export default function UploadDocument({ sectionButtonProps }) {
             labelCol={{ span: 24 }}
             wrapperCol={{ span: 24 }}
           >
-            <Space direction="vertical" style={{ width: "100%" }} size={8}>
+            <Space orientation="vertical" style={{ width: "100%" }} size={8}>
               <Form.Item name={["documents", "other"]} noStyle>
                 <Input
                   placeholder="Other Documents URL"
