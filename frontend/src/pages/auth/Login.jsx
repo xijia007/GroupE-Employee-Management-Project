@@ -195,33 +195,8 @@ const Login = () => {
             </Button>
           </Form.Item>
         </Form>
-        {import.meta.env.DEV && (
-          <div
-            style={{
-              marginTop: "24px",
-              padding: "16px",
-              background: "#f6f8fa",
-              borderRadius: "8px",
-            }}
-          >
-            <Text strong style={{ display: "block", marginBottom: "8px" }}>
-              Test Accounts:
-            </Text>
-            <Text
-              type="secondary"
-              style={{ fontSize: "12px", display: "block" }}
-            >
-              HR: hr_admin_1 / HRAdmin123!
-            </Text>
-            <Text
-              type="secondary"
-              style={{ fontSize: "12px", display: "block" }}
-            >
-              Employee: (Register via HR invitation)
-            </Text>
-          </div>
-        )}
       </Card>
+
     </div>
   );
 };
