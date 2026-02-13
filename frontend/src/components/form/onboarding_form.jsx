@@ -24,6 +24,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import api from "../../services/api";
 
 function OnboardingForm({
   initialData = null,
@@ -42,7 +43,36 @@ function OnboardingForm({
     optReceipt: [],
   });
 
+  // Authenticated blob URL for profile picture (GridFS /api/files/ paths)
+  const [profilePicUrl, setProfilePicUrl] = useState(null);
 
+  useEffect(() => {
+    let objectUrl = null;
+    let cancelled = false;
+
+    const load = async () => {
+      const raw = String(initialData?.profile_picture || "").trim();
+      if (!raw) { setProfilePicUrl(null); return; }
+
+      try {
+        if (raw.includes("/api/files/")) {
+          const apiPath = raw.startsWith("/api/") ? raw.slice(4) : raw;
+          const res = await api.get(apiPath, { responseType: "blob" });
+          if (cancelled) return;
+          objectUrl = URL.createObjectURL(res.data);
+          setProfilePicUrl(objectUrl);
+          return;
+        }
+        // Public / legacy URL — use directly
+        setProfilePicUrl(raw);
+      } catch {
+        setProfilePicUrl(null);
+      }
+    };
+
+    load();
+    return () => { cancelled = true; if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [initialData?.profile_picture]);
 
 
   const isUSResident = Form.useWatch("isUSResident", form);
@@ -281,9 +311,9 @@ function OnboardingForm({
             <Button icon={<UploadOutlined />}>Upload Profile Picture</Button>
           </Upload>
           {(!fileList.profilePicture || fileList.profilePicture.length === 0) &&
-            (initialData?.profile_picture ? (
+            (profilePicUrl ? (
               <img
-                src={initialData.profile_picture}
+                src={profilePicUrl}
                 alt="Current profile"
                 style={{
                   width: 120,
