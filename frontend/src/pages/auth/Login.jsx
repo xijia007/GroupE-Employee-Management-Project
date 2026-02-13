@@ -1,64 +1,95 @@
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { Form, Input, Button, Card, message, Typography, Alert } from "antd";
-import { UserOutlined, LockOutlined } from "@ant-design/icons";
-import {
-  clearError,
-  loginUser,
-  selectAuthError,
-  selectAuthLoading,
-  selectUser,
-} from "../../features/auth/authSlice";
-import api from "../../services/api";
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { 
+    Form, 
+    Input, 
+    Button, 
+    Card, 
+    message, 
+    Typography, 
+    Alert 
+} from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { clearError, loginUser, selectAuthError, selectAuthLoading, selectUser } from '../../features/auth/authSlice';
 
 const { Title, Text } = Typography;
 
 const Login = () => {
-  // Hooks
-  const dispatch = useDispatch(); // dispatch: Call Redux actions
+    // Hooks 
+    const dispatch = useDispatch(); // dispatch: Call Redux actions
 
-  const navigate = useNavigate(); // Navigate to different pages
+    const navigate = useNavigate(); // Navigate to different pages
 
-  // Get state from Redux store
-  const user = useSelector(selectUser);
+    // Get state from Redux store 
+    const user = useSelector(selectUser);
+    
+    const loading = useSelector(selectAuthLoading);
 
-  const loading = useSelector(selectAuthLoading);
+    const error = useSelector(selectAuthError);
 
-  const error = useSelector(selectAuthError);
+    // ════════════════════════════════════════════════════════
+    // useEffect: Navigate after successful login
+    // useEffect: 登录成功后导航
+    //
+    // IMPORTANT: Only redirect when on login page to avoid loop
+    // 重要：仅在登录页面时重定向以避免循环
+    // ════════════════════════════════════════════════════════
+    useEffect(() => {
+        if (!user || window.location.pathname !== '/login') return;
 
-  // ════════════════════════════════════════════════════════
-  // useEffect: Navigate after successful login
-  // useEffect: 登录成功后导航
-  //
-  // IMPORTANT: Only redirect when on login page to avoid loop
-  // 重要：仅在登录页面时重定向以避免循环
-  // ════════════════════════════════════════════════════════
-  useEffect(() => {
-    if (!user || window.location.pathname !== "/login") return;
+        // ════════════════════════════════════════════════════════
+        // Redirect based on onboardingStatus from login response
+        // 使用 login 返回的 onboardingStatus 来决定跳转
+        //
+        // This avoids an extra API call that could have timing issues
+        // with the newly-set token.
+        // ════════════════════════════════════════════════════════
+        const redirectByStatus = () => {
+            message.success(`Welcome back, ${user.username}!`);
 
-    const redirectByStatus = async () => {
-      message.success(`Welcome back, ${user.username}!`);
+            if (user.role === 'HR') {
+                navigate('/home', { replace: true });
+                return;
+            }
 
-      if (user.role === "HR") {
-        navigate("/home", { replace: true });
-        return;
-      }
+            const status = user.onboardingStatus;
 
-      try {
-        const statusResponse = await api.get("/onboarding/status");
-        const status = statusResponse?.data?.status;
+            if (status === 'Approved') {
+                // Approved employees go to personal information
+                navigate('/personInformation', { replace: true });
+                return;
+            }
 
-        if (status === "Approved") {
-          navigate("/personInformation", { replace: true });
-          return;
-        }
+            if (status === 'Never Submitted' || status === 'Rejected') {
+                // Need to fill out or revise the onboarding form
+                navigate('/onboarding', { replace: true });
+                return;
+            }
 
-        navigate("/onboarding", { replace: true });
-      } catch {
-        // Fallback to onboarding for employee if status lookup fails.
-        navigate("/onboarding", { replace: true });
-      }
+            // Pending → go to home page which shows "Under Review" message
+            // 待审批 → 跳转到首页，显示"审核中"提示
+            navigate('/home', { replace: true });
+        };
+
+        redirectByStatus();
+    }, [user, navigate]);
+
+    // Handle form submission
+    const handleSubmit = (values) => {
+        // Clear previous error 
+        dispatch(clearError());
+
+        // Dispatch login action
+        dispatch(loginUser({
+            username: values.username,
+            password: values.password
+        }));
+        // This triggers the async thunk / 这会触发异步 thunk
+        // 1. pending → loading = true
+        // 2. API call → POST /api/auth/login
+        // 3. fulfilled → update user state / 更新用户状态
+        //    OR rejected → set error / 或设置错误
     };
 
     redirectByStatus();
