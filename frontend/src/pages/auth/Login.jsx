@@ -28,23 +28,11 @@ const Login = () => {
 
     const error = useSelector(selectAuthError);
 
-    // ════════════════════════════════════════════════════════
-    // useEffect: Navigate after successful login
-    // useEffect: 登录成功后导航
-    //
-    // IMPORTANT: Only redirect when on login page to avoid loop
-    // 重要：仅在登录页面时重定向以避免循环
-    // ════════════════════════════════════════════════════════
+    // Navigate after successful login (only on login page to avoid loops)
     useEffect(() => {
         if (!user || window.location.pathname !== '/login') return;
 
-        // ════════════════════════════════════════════════════════
         // Redirect based on onboardingStatus from login response
-        // 使用 login 返回的 onboardingStatus 来决定跳转
-        //
-        // This avoids an extra API call that could have timing issues
-        // with the newly-set token.
-        // ════════════════════════════════════════════════════════
         const redirectByStatus = () => {
             message.success(`Welcome back, ${user.username}!`);
 
@@ -66,9 +54,7 @@ const Login = () => {
                 navigate('/onboarding', { replace: true });
                 return;
             }
-
-            // Pending → go to home page which shows "Under Review" message
-            // 待审批 → 跳转到首页，显示"审核中"提示
+            // Pending -> go to home page which shows "Under Review" message
             navigate('/home', { replace: true });
         };
 
@@ -85,11 +71,8 @@ const Login = () => {
             username: values.username,
             password: values.password
         }));
-        // This triggers the async thunk / 这会触发异步 thunk
-        // 1. pending → loading = true
-        // 2. API call → POST /api/auth/login
-        // 3. fulfilled → update user state / 更新用户状态
-        //    OR rejected → set error / 或设置错误
+        // This triggers the async thunk
+        // 1. pending -> loading = true, 2. API call, 3. fulfilled -> update user, OR rejected -> set errornt
     };
 
 

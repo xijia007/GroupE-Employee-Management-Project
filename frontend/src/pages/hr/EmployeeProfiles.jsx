@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Space, Typography, message, Empty, Input } from 'antd';
+import { Card, Table, Space, Typography, message, Empty, Input, Tag } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { getAllEmployees } from '../../services/hrService';
 
@@ -96,12 +96,41 @@ function EmployeeProfilesPage() {
         }
       },
     },
-
     {
       title: 'Work Authorization',
       dataIndex: 'visaTitle',
       key: 'visaTitle',
       render: (visaTitle) => visaTitle || <Text type="secondary">N/A</Text>,
+    },
+    {
+      title: 'Status',
+      key: 'status',
+      render: (_, record) => {
+        // Use workAuthorizationTitle calculated by backend
+        const rawStatus = record.workAuthorizationTitle || record.onboardingStatus || 'Unknown';
+        
+        let color = 'default';
+        let text = rawStatus;
+
+        if (rawStatus === 'Active' || rawStatus.includes('Active')) {
+          color = 'green';
+          text = 'Approved'; 
+        } else if (rawStatus === 'Visa Status Management') {
+          color = 'orange';
+          text = 'Visa Review';
+        } else if (rawStatus === 'Onboarding Review Needed' || rawStatus === 'Pending') {
+          color = 'blue';
+          text = 'Application Pending';
+        } else if (rawStatus.includes('Rejected')) {
+          color = 'red';
+          text = 'Rejected';
+        } else if (rawStatus === 'Not Started' || rawStatus === 'Never Submitted') {
+          color = 'default';
+          text = 'Not Started';
+        }
+
+        return <Tag color={color}>{text}</Tag>;
+      },
     },
     {
       title: 'Phone',
