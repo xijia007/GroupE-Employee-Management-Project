@@ -131,8 +131,7 @@ function SafeProfileAvatar({ avatarUrl, fullName }) {
         source
           ? undefined
           : {
-              background:
-                "linear-gradient(135deg, #1677ff 0%, #69b1ff 100%)",
+              background: "linear-gradient(135deg, #1677ff 0%, #69b1ff 100%)",
               color: "#fff",
               fontWeight: 700,
             }
@@ -679,19 +678,20 @@ export default function HrVisaStatusPage() {
                     : "No document to review"
                 }
               >
-                <Dropdown.Button
-                  icon={<EllipsisOutlined />}
-                  trigger={["click"]}
-                  disabled={!reviewDocType}
-                  menu={approvedMenu}
-                  onClick={() => {
-                    if (!reviewDocType) return;
-                    const path = docs?.[reviewDocType];
-                    handlePreview(path);
-                  }}
-                >
-                  <EyeOutlined />
-                </Dropdown.Button>
+                <Space.Compact>
+                  <Button
+                    icon={<EyeOutlined />}
+                    disabled={!reviewDocType}
+                    onClick={() => {
+                      if (!reviewDocType) return;
+                      const path = docs?.[reviewDocType];
+                      handlePreview(path);
+                    }}
+                  />
+                  <Dropdown menu={approvedMenu} trigger={["click"]}>
+                    <Button icon={<EllipsisOutlined />} />
+                  </Dropdown>
+                </Space.Compact>
               </Tooltip>
             </Space>
           );
@@ -971,7 +971,7 @@ export default function HrVisaStatusPage() {
   return (
     <Card
       title={<span style={{ fontWeight: 700 }}>Visa Status</span>}
-      bodyStyle={{ paddingTop: 12 }}
+      style={{ body: { paddingTop: 12 } }}
     >
       {/* Toolbar */}
       <div

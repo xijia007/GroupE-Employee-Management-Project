@@ -80,11 +80,6 @@ function PersonInformation({ userId, onboardingApplicationId }) {
   // Fetch profile data
   useEffect(() => {
     const fetchProfileData = async () => {
-      console.log("PersonInformation props:", {
-        userId,
-        onboardingApplicationId,
-      });
-
       if (!userId && !onboardingApplicationId) {
         console.log(
           "No userId or onboardingApplicationId provided, skipping data fetch",

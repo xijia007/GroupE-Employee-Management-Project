@@ -220,7 +220,7 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
         </Title>
         <Alert
           type="info"
-          message="No work authorization documents required"
+          title="No work authorization documents required"
           description="You did not select OPT for onboarding, so this page is not applicable."
           showIcon
         />
@@ -267,7 +267,7 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
         <Alert
           type="warning"
           showIcon
-          message="Locked"
+          title="Locked"
           description="Complete the previous step first."
         />
       );
@@ -283,7 +283,7 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
         <Alert
           type="warning"
           showIcon
-          message="Not Uploaded"
+          title="Not Uploaded"
           description={msgMap[key]}
         />
       );
@@ -300,7 +300,7 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
         <Alert
           type="info"
           showIcon
-          message="In review"
+          title="In review"
           description={msgMap[key]}
         />
       );
@@ -317,7 +317,7 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
         <Alert
           type="success"
           showIcon
-          message="Approved"
+          title="Approved"
           description={msgMap[key]}
         />
       );
@@ -328,7 +328,7 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
       <Alert
         type="error"
         showIcon
-        message="Rejected"
+        title="Rejected"
         description={
           feedback ||
           "HR has rejected this document. Please check feedback and re-upload."
@@ -491,7 +491,7 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
         ]}
       />
       <Space
-        direction="vertical"
+        orientation="vertical"
         size={isMobile ? 8 : 12}
         style={{ width: "100%" }}
       >
@@ -503,7 +503,7 @@ function VisaStatusManagementPage({ isOPTUser = true }) {
         ].map((step) => (
           <Card
             key={step.key}
-            bodyStyle={{ padding: isMobile ? 16 : 24 }}
+            style={{ body: { padding: isMobile ? 16 : 24 } }}
             title={
               <Space>
                 <Text strong>{step.title}</Text>
